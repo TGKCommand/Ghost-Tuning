@@ -215,7 +215,7 @@ tr.row-click:hover td{background:var(--bg3)}
         </div>
         <div class="sync-sub" onclick="doLogout()">Sign out</div>
         <div class="version-row">
-          <span>v1.10</span>
+          <span>v1.20</span>
           <span id="buildDate"></span>
         </div>
       </div>
@@ -264,7 +264,7 @@ const NAV = [
 ];
 
 const S = { user:null, page:'dashboard', applications:[], openAppId:null, messages:{}, files:{}, activity:{}, recentActivity:[], templates:[], activeTab:'overview', filter:'active', search:'',
-  pendingLogs:[], platformLibrary:[], ecuReference:[], revisionCount:0, lookupQuery:'', libraryFormOpen:false, ecuFormOpen:false };
+  pendingLogs:[], platformLibrary:[], ecuReference:[], revisionCount:0, lookupQuery:'', libraryFormOpen:false, ecuFormOpen:false, tuners:[] };
 
 function escapeHtml(s){
   return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){
@@ -384,6 +384,8 @@ async function afterLogin(user){
   await loadPlatformLibrary();
   await loadEcuReference();
   await loadRevisionCount();
+  await loadTuners();
+  subscribeGlobalRealtime();
   renderNav();
   goPage('dashboard');
 }
@@ -480,6 +482,77 @@ async function loadRevisionCount(){
     (data || []).forEach(function(r){ distinct[r.application_id] = true; });
     S.revisionCount = Object.keys(distinct).length;
   }catch(e){ S.revisionCount = 0; }
+}
+
+async function loadTuners(){
+  try{
+    const { data, error } = await sb.from('profiles').select('email,full_name').eq('ghost_tuning_access', true).order('email', { ascending:true });
+    if(error) throw error;
+    S.tuners = data || [];
+  }catch(e){ S.tuners = []; }
+}
+
+/* ================= REALTIME ================= */
+// Global: keeps the applications list, nav badges, and dashboard live for
+// every staff member watching, without anyone needing to refresh - the
+// same expectation Support Center and ERP already set.
+let globalChannel = null;
+function subscribeGlobalRealtime(){
+  if(globalChannel) return;
+  globalChannel = sb.channel('tuning-applications-global')
+    .on('postgres_changes', { event:'*', schema:'public', table:'tuning_applications' }, function(payload){
+      if(payload.eventType === 'DELETE'){
+        S.applications = S.applications.filter(function(a){ return a.id !== payload.old.id; });
+      }else{
+        const idx = S.applications.findIndex(function(a){ return a.id === payload.new.id; });
+        if(idx !== -1) Object.assign(S.applications[idx], payload.new);
+        else S.applications.unshift(payload.new);
+        if(S.openAppId === payload.new.id) renderPanelShell_refresh(payload.new);
+      }
+      renderNav();
+      renderPage();
+    })
+    .subscribe();
+}
+
+// Per-application: while a panel is open, live-append new messages/files
+// from either side (customer portal or another tuner) without polling.
+// Also doubles as the send channel for pinging the customer portal so it
+// can refresh instantly without ever needing direct table access itself.
+let appChannel = null;
+let appChannelId = null;
+function subscribeAppRealtime(appId){
+  if(appChannelId === appId && appChannel) return;
+  unsubscribeAppRealtime();
+  appChannel = sb.channel('tuning-portal-' + appId)
+    .on('postgres_changes', { event:'INSERT', schema:'public', table:'tuning_messages', filter:'application_id=eq.' + appId }, function(payload){
+      if(!S.messages[appId]) S.messages[appId] = [];
+      if(!S.messages[appId].some(function(m){ return m.id === payload.new.id; })){
+        S.messages[appId].push(payload.new);
+        if(S.openAppId === appId && S.activeTab === 'messages') renderPanelBody();
+      }
+    })
+    .on('postgres_changes', { event:'INSERT', schema:'public', table:'tuning_files', filter:'application_id=eq.' + appId }, function(payload){
+      if(!S.files[appId]) S.files[appId] = [];
+      if(!S.files[appId].some(function(f){ return f.id === payload.new.id; })){
+        S.files[appId].unshift(payload.new);
+        if(S.openAppId === appId && S.activeTab === 'files') renderPanelBody();
+      }
+    })
+    .subscribe();
+  appChannelId = appId;
+}
+function unsubscribeAppRealtime(){
+  if(appChannel){ sb.removeChannel(appChannel); appChannel = null; appChannelId = null; }
+}
+
+// Content-free "something changed" ping so the customer portal (anon key,
+// no direct table access by design) knows to refresh through its own
+// token-gated edge function rather than being pushed the data directly.
+function pingPortal(appId){
+  try{
+    if(appChannel && appChannelId === appId) appChannel.send({ type:'broadcast', event:'update', payload:{} });
+  }catch(e){ /* non-critical */ }
 }
 
 async function callNotify(action, extra){
@@ -636,7 +709,7 @@ function setAppSearch(v){ S.search = v; renderPage(); }
 window.setAppSearch = setAppSearch;
 
 function appTable(rows){
-  let html = '<table><thead><tr><th>#</th><th>Customer</th><th>Car</th><th>Status</th><th>Submitted</th></tr></thead><tbody>';
+  let html = '<table><thead><tr><th>#</th><th>Customer</th><th>Car</th><th>Status</th><th>Submitted</th><th></th></tr></thead><tbody>';
   rows.forEach(function(a){
     html += '<tr class="row-click" onclick="openApplication(\'' + a.id + '\')">'
       + '<td>' + (a.has_unread ? '<span class="unread-dot"></span>' : '') + '#' + a.application_number + '</td>'
@@ -644,6 +717,10 @@ function appTable(rows){
       + '<td>' + escapeHtml([a.car_year, a.car_make, a.car_model].filter(Boolean).join(' ')) + '</td>'
       + '<td><span class="pill ' + (STATUS_PILL[a.status]||'pill-muted') + '">' + (STATUS_LABEL[a.status]||a.status) + '</span></td>'
       + '<td>' + fmtDateShort(a.created_at) + '</td>'
+      + '<td onclick="event.stopPropagation()" style="white-space:nowrap">'
+        + '<button class="btn btn-sm" onclick="toggleUnread(\'' + a.id + '\')" title="' + (a.has_unread ? 'Mark read' : 'Mark unread') + '">' + (a.has_unread ? 'Read' : 'Unread') + '</button>'
+        + (a.status !== 'archived' ? ' <button class="btn btn-sm" onclick="archiveApplication(\'' + a.id + '\')" title="Archive">Archive</button>' : '')
+      + '</td>'
       + '</tr>';
   });
   html += '</tbody></table>';
@@ -670,6 +747,7 @@ async function openApplication(id){
     }catch(e){ /* non-critical */ }
   }
 
+  subscribeAppRealtime(id);
   await Promise.all([loadMessages(id), loadFiles(id), loadActivity(id)]);
   renderPanelBody();
 }
@@ -679,6 +757,7 @@ function closePanel(){
   document.getElementById('tk-overlay').classList.remove('open');
   document.getElementById('tk-panel').classList.remove('open');
   S.openAppId = null;
+  unsubscribeAppRealtime();
 }
 window.closePanel = closePanel;
 
@@ -711,10 +790,69 @@ function statusSelector(app){
     html += '<option value="' + s + '" ' + (app.status===s?'selected':'') + '>' + STATUS_LABEL[s] + '</option>';
   });
   html += '</select>';
-  if(app.assigned_tuner) html += '<span class="file-meta">Assigned: ' + escapeHtml(app.assigned_tuner) + '</span>';
+
+  html += '<select class="form-input" style="width:auto;padding:6px 10px;font-size:var(--t-sm)" onchange="reassignApplication(\'' + app.id + '\',this.value)" title="Reassign">';
+  html += '<option value="">Unassigned</option>';
+  (S.tuners || []).forEach(function(t){
+    html += '<option value="' + escapeHtml(t.email) + '" ' + (app.assigned_tuner===t.email?'selected':'') + '>' + escapeHtml(t.full_name || t.email) + '</option>';
+  });
+  if(app.assigned_tuner && !(S.tuners||[]).some(function(t){ return t.email===app.assigned_tuner; })){
+    html += '<option value="' + escapeHtml(app.assigned_tuner) + '" selected>' + escapeHtml(app.assigned_tuner) + '</option>';
+  }
+  html += '</select>';
+
+  html += '<button class="btn btn-sm" onclick="toggleUnread(\'' + app.id + '\')">' + (app.has_unread ? 'Mark Read' : 'Mark Unread') + '</button>';
+  if(app.status !== 'archived') html += '<button class="btn btn-sm" onclick="archiveApplication(\'' + app.id + '\')">Archive</button>';
   html += '</div>';
   return html;
 }
+
+async function reassignApplication(appId, email){
+  try{
+    const { error } = await sb.from('tuning_applications').update({ assigned_tuner: email || null }).eq('id', appId);
+    if(error) throw error;
+    const app = S.applications.find(function(a){ return a.id === appId; });
+    const oldVal = app ? app.assigned_tuner : null;
+    if(app) app.assigned_tuner = email || null;
+    await logActivity(appId, 'assigned_tuner', oldVal, email || 'Unassigned');
+    toast(email ? 'Reassigned to ' + email : 'Unassigned');
+  }catch(e){ toast('Failed to reassign: ' + e.message, true); }
+}
+window.reassignApplication = reassignApplication;
+
+async function archiveApplication(appId){
+  if(!confirm('Archive this application? It moves out of the active views but stays searchable.')) return;
+  const app = S.applications.find(function(a){ return a.id === appId; });
+  if(!app) return;
+  const oldStatus = app.status;
+  try{
+    const { error } = await sb.from('tuning_applications').update({ status:'archived', updated_at:new Date().toISOString() }).eq('id', appId);
+    if(error) throw error;
+    app.status = 'archived';
+    await logActivity(appId, 'status', oldStatus, 'archived');
+    if(S.openAppId === appId) renderPanelShell_refresh(app);
+    renderPage();
+    renderNav();
+    toast('Archived');
+  }catch(e){ toast('Failed to archive: ' + e.message, true); }
+}
+window.archiveApplication = archiveApplication;
+
+async function toggleUnread(appId){
+  const app = S.applications.find(function(a){ return a.id === appId; });
+  if(!app) return;
+  const newVal = !app.has_unread;
+  try{
+    const { error } = await sb.from('tuning_applications').update({ has_unread:newVal, unread_count:newVal?1:0 }).eq('id', appId);
+    if(error) throw error;
+    app.has_unread = newVal; app.unread_count = newVal?1:0;
+    renderNav();
+    if(S.openAppId === appId) renderPanelShell_refresh(app);
+    renderPage();
+    toast(newVal ? 'Marked unread' : 'Marked read');
+  }catch(e){ toast('Failed: ' + e.message, true); }
+}
+window.toggleUnread = toggleUnread;
 
 async function updateStatus(appId, newStatus){
   const app = S.applications.find(function(a){ return a.id === appId; });
@@ -742,6 +880,7 @@ async function updateStatus(appId, newStatus){
     Object.assign(app, data);
     await logActivity(appId, 'status', oldStatus, newStatus);
     callNotify('status_changed', { application_id: appId, new_status: newStatus });
+    pingPortal(appId);
     toast('Status updated to ' + STATUS_LABEL[newStatus]);
     renderPanelShell_refresh(app);
     renderPage();
@@ -948,6 +1087,7 @@ async function sendMessage(appId){
       const app = S.applications.find(function(x){ return x.id === appId; });
       if(app) app.customer_has_unread = true;
       callNotify('new_message', { application_id: appId, message_body: body });
+      pingPortal(appId);
     }
     await logActivity(appId, isNote ? 'internal_note' : 'message', null, null);
     renderPanelBody();
@@ -1019,6 +1159,7 @@ async function uploadFile(appId){
       if(app) app.customer_has_unread = true;
     }
     callNotify('file_uploaded', { application_id: appId, file_name: file.name, file_type: type });
+    pingPortal(appId);
     renderPanelBody();
     toast('File uploaded');
   }catch(e){
