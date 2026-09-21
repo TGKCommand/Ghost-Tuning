@@ -223,7 +223,7 @@ tr.row-click:hover td{background:var(--bg3)}
         </div>
         <div class="sync-sub" onclick="doLogout()">Sign out</div>
         <div class="version-row">
-          <span>v1.30</span>
+          <span>v1.31</span>
           <span id="buildDate"></span>
         </div>
       </div>
@@ -681,16 +681,32 @@ function statCard(num, label, accentClass){
 }
 
 /* ================= APPLICATIONS LIST ================= */
+const APP_FILTERS = [
+  { id:'active', label:'Active', test: function(a){ return ['submitted','under_review','needs_info','accepted','active','tune_sent','revision_requested'].indexOf(a.status) !== -1; } },
+  { id:'new', label:'New', test: function(a){ return a.status === 'submitted'; } },
+  { id:'completed', label:'Completed', test: function(a){ return a.status === 'completed'; } },
+  { id:'declined', label:'Declined', test: function(a){ return a.status === 'declined'; } },
+  { id:'archived', label:'Archived', test: function(a){ return a.status === 'archived'; } },
+  { id:'all', label:'All', test: function(){ return true; } }
+];
+
 function renderApplications(){
-  const filters = [
-    { id:'active', label:'Active', test: function(a){ return ['submitted','under_review','needs_info','accepted','active','tune_sent','revision_requested'].indexOf(a.status) !== -1; } },
-    { id:'new', label:'New', test: function(a){ return a.status === 'submitted'; } },
-    { id:'completed', label:'Completed', test: function(a){ return a.status === 'completed'; } },
-    { id:'declined', label:'Declined', test: function(a){ return a.status === 'declined'; } },
-    { id:'archived', label:'Archived', test: function(a){ return a.status === 'archived'; } },
-    { id:'all', label:'All', test: function(){ return true; } }
-  ];
-  const active = filters.find(function(f){ return f.id === S.filter; }) || filters[0];
+  let html = '<div class="filter-row">';
+  html += '<span id="appFilterChips" style="display:contents">' + renderAppFilterChips() + '</span>';
+  html += '<input class="form-input search-input" placeholder="Search name, email, car..." value="' + escapeHtml(S.search) + '" oninput="setAppSearch(this.value)">';
+  html += '</div>';
+  html += '<div id="appResults">' + renderAppResultsHtml() + '</div>';
+  return html;
+}
+
+function renderAppFilterChips(){
+  return APP_FILTERS.map(function(f){
+    return '<div class="filter-chip ' + (S.filter === f.id ? 'active' : '') + '" onclick="setAppFilter(\'' + f.id + '\')">' + escapeHtml(f.label) + '</div>';
+  }).join('');
+}
+
+function renderAppResultsHtml(){
+  const active = APP_FILTERS.find(function(f){ return f.id === S.filter; }) || APP_FILTERS[0];
   let rows = S.applications.filter(active.test);
   if(S.search.trim()){
     const q = S.search.trim().toLowerCase();
@@ -701,19 +717,18 @@ function renderApplications(){
         || (a.car_model||'').toLowerCase().indexOf(q) !== -1;
     });
   }
-
-  let html = '<div class="filter-row">';
-  filters.forEach(function(f){
-    html += '<div class="filter-chip ' + (S.filter === f.id ? 'active' : '') + '" onclick="setAppFilter(\'' + f.id + '\')">' + escapeHtml(f.label) + '</div>';
-  });
-  html += '<input class="form-input search-input" placeholder="Search name, email, car..." value="' + escapeHtml(S.search) + '" oninput="setAppSearch(this.value)">';
-  html += '</div>';
-  html += '<div class="card" style="padding:0">' + (rows.length ? appTable(rows) : '<div class="empty-state"><div class="big">-</div>No applications match this filter.</div>') + '</div>';
-  return html;
+  return '<div class="card" style="padding:0">' + (rows.length ? appTable(rows) : '<div class="empty-state"><div class="big">-</div>No applications match this filter.</div>') + '</div>';
 }
-function setAppFilter(id){ S.filter = id; renderPage(); }
+function setAppFilter(id){
+  S.filter = id;
+  document.getElementById('appFilterChips').innerHTML = renderAppFilterChips();
+  document.getElementById('appResults').innerHTML = renderAppResultsHtml();
+}
 window.setAppFilter = setAppFilter;
-function setAppSearch(v){ S.search = v; renderPage(); }
+function setAppSearch(v){
+  S.search = v;
+  document.getElementById('appResults').innerHTML = renderAppResultsHtml();
+}
 window.setAppSearch = setAppSearch;
 
 function appTable(rows){
