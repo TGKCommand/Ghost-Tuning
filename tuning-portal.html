@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Ghost Tuning Application - TGK Motorsport</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+<style>
+.tgk-tuning-portal,.tgk-tuning-portal *,.tgk-tuning-portal *::before,.tgk-tuning-portal *::after{box-sizing:border-box;margin:0;padding:0}
+.tgk-tuning-portal{
+  --navy:#141b25;--navy2:#1c2531;
+  --teal:#2dd4bf;--teal-d:#14b8a6;
+  --orange:#ea580c;--orange-d:#c2410c;
+  --bg:#ffffff;--bg2:#f7f8fa;--bg3:#f0f2f5;
+  --border:#e2e6eb;--border2:#c8cdd5;
+  --text:#111827;--text2:#374151;--text3:#6b7280;
+  --red:#dc2626;--red-dim:rgba(220,38,38,.09);
+  --green:#16a34a;--green-dim:rgba(22,163,74,.1);
+  --yellow:#d97706;--yellow-dim:rgba(217,119,6,.1);
+  --r:6px;--r-lg:10px;--font:'DM Sans',sans-serif;
+  font-family:var(--font);color:var(--text);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased;
+}
+.tgk-tuning-portal h1,.tgk-tuning-portal h2,.tgk-tuning-portal p{margin:0;padding:0}
+.tgk-tuning-portal .wrap{max-width:760px;margin:0 auto;padding:28px 20px 80px}
+.tgk-tuning-portal .card{background:var(--bg);border:1px solid var(--border);border-radius:var(--r-lg);padding:22px 24px;margin-bottom:16px;box-shadow:0 1px 4px rgba(0,0,0,.06);position:relative;overflow:hidden}
+.tgk-tuning-portal .card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--teal),var(--orange) 60%,transparent)}
+.tgk-tuning-portal h1{font-size:20px;font-weight:800;margin-bottom:2px;color:var(--navy)}
+.tgk-tuning-portal h2{font-size:14.5px;font-weight:700;margin-bottom:10px;color:var(--navy)}
+.tgk-tuning-portal .sub{font-size:13px;color:var(--text3);margin-bottom:6px}
+.tgk-tuning-portal .status-blurb{font-size:13px;color:var(--text2);line-height:1.6;margin-top:10px}
+
+.pill{display:inline-flex;align-items:center;padding:3px 10px;font-size:11.5px;font-weight:700;border-radius:6px;border:1px solid transparent}
+.pill-teal{background:rgba(45,212,191,.12);color:var(--teal-d);border-color:rgba(45,212,191,.25)}
+.pill-orange{background:rgba(234,88,12,.1);color:var(--orange-d);border-color:rgba(234,88,12,.22)}
+.pill-red{background:var(--red-dim);color:var(--red);border-color:rgba(220,38,38,.2)}
+.pill-green{background:var(--green-dim);color:var(--green);border-color:rgba(22,163,74,.2)}
+.pill-yellow{background:var(--yellow-dim);color:var(--yellow);border-color:rgba(217,119,6,.2)}
+.pill-muted{background:var(--bg3);color:var(--text3);border-color:var(--border)}
+
+.car-line{font-size:15px;font-weight:700;color:var(--text);margin-top:6px}
+
+.form-input{width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r);color:var(--text);padding:10px 12px;font-size:14px;outline:none;transition:border-color .15s;font-family:inherit}
+.tgk-tuning-portal textarea.form-input{resize:vertical;min-height:70px}
+.form-input:focus{border-color:var(--teal)}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:11px 22px;font-size:13.5px;font-weight:700;border:none;border-radius:var(--r);background:var(--orange);color:#fff;cursor:pointer;transition:background-color .15s,box-shadow .15s,transform .1s;box-shadow:0 1px 2px rgba(0,0,0,.12)}
+.tgk-tuning-portal .btn:hover{background:var(--orange-d);box-shadow:0 2px 6px rgba(0,0,0,.16);transform:translateY(-1px)}
+.tgk-tuning-portal .btn:disabled{opacity:.55;cursor:not-allowed;transform:none;box-shadow:none}
+.btn-sm{padding:7px 14px;font-size:12.5px;width:auto}
+
+.msg-list{display:flex;flex-direction:column;gap:10px;margin-bottom:14px;max-height:420px;overflow-y:auto;padding-right:2px}
+.msg{padding:10px 13px;border-radius:var(--r);max-width:85%;font-size:13.5px}
+.msg-them{background:var(--bg3);align-self:flex-start}
+.msg-me{background:rgba(45,212,191,.12);align-self:flex-end;margin-left:auto}
+.msg-system{background:var(--bg3);align-self:center;font-style:italic;color:var(--text3);font-size:12.5px;max-width:100%;text-align:center}
+.msg-meta{font-size:10.5px;color:var(--text3);margin-bottom:3px;font-weight:600;letter-spacing:.02em;text-transform:uppercase}
+.msg-body{white-space:pre-wrap;word-break:break-word;line-height:1.5}
+
+.file-row{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid var(--border)}
+.file-row:last-child{border-bottom:none}
+.file-name{font-weight:600;font-size:13.5px}
+.file-meta{font-size:11.5px;color:var(--text3);margin-top:2px}
+
+.status-msg{font-size:12.5px;border-radius:var(--r);padding:10px 12px;margin-top:12px;display:none}
+.status-msg.err{display:block;background:var(--red-dim);color:var(--red)}
+.status-msg.ok{display:block;background:var(--green-dim);color:var(--green)}
+.empty-state{text-align:center;padding:24px 10px;color:var(--text3);font-size:13px}
+.footer-note{text-align:center;margin-top:6px;font-size:11px;color:var(--text3)}
+.skeleton{padding:60px 10px;text-align:center;color:var(--text3);font-size:13.5px}
+</style>
+</head>
+<body>
+
+<div class="tgk-tuning-portal">
+  <div class="wrap" id="portalWrap">
+    <div class="skeleton" id="loadingState">Loading your application...</div>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL = "https://piamamighqiielfztgic.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_JHTuiKlkCD_EHoyDtWtKsQ_gyQ6kgfJ";
+let sb = null;
+
+const TOKEN = new URLSearchParams(window.location.search).get('token');
+
+const STATUS_LABEL = {
+  submitted:'Submitted', under_review:'Under Review', needs_info:'Needs Info',
+  accepted:'Accepted', declined:'Declined', active:'Active',
+  tune_sent:'Tune Ready', revision_requested:'Revision Requested',
+  completed:'Completed', archived:'Archived'
+};
+const STATUS_PILL = {
+  submitted:'pill-yellow', under_review:'pill-orange', needs_info:'pill-orange',
+  accepted:'pill-teal', declined:'pill-red', active:'pill-teal',
+  tune_sent:'pill-green', revision_requested:'pill-yellow',
+  completed:'pill-green', archived:'pill-muted'
+};
+const STATUS_BLURB = {
+  submitted:"We've received your application. Our tuning department will review it and follow up within 7 business days.",
+  under_review:"Your application is currently being reviewed by our tuning department.",
+  needs_info:"We need a bit more information from you before we can move forward - check the messages below.",
+  accepted:"Good news - your application was accepted! We'll be in touch about next steps.",
+  declined:"Unfortunately we're not able to move forward with tuning at this time. Check the messages below for details.",
+  active:"Your Ghost Tune is in progress.",
+  tune_sent:"Your tune is ready - download it below.",
+  revision_requested:"We've received your revision request and are looking into it.",
+  completed:"Your Ghost Tune is complete. Thanks for choosing TGK Motorsport!",
+  archived:"This application has been archived."
+};
+
+let STATE = { application:null, messages:[], files:[] };
+
+function escapeHtml(s){
+  return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+  });
+}
+function fmtDate(iso){
+  if(!iso) return '';
+  const d = new Date(iso);
+  return d.toLocaleDateString(undefined, { month:'short', day:'numeric' }) + ' ' + d.toLocaleTimeString(undefined, { hour:'numeric', minute:'2-digit' });
+}
+
+async function callPortal(action, extra){
+  const body = Object.assign({ action: action, token: TOKEN }, extra || {});
+  const resp = await fetch(SUPABASE_URL + '/functions/v1/tuning-portal', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + SUPABASE_ANON_KEY,
+      'apikey': SUPABASE_ANON_KEY
+    },
+    body: JSON.stringify(body)
+  });
+  const data = await resp.json();
+  if(!data.success) throw new Error(data.error || 'Request failed');
+  return data;
+}
+
+function renderInvalid(msg){
+  document.getElementById('portalWrap').innerHTML =
+    '<div class="card"><h1>Ghost Tuning</h1>'
+    + '<p class="status-blurb">' + escapeHtml(msg) + '</p>'
+    + '<p class="footer-note" style="margin-top:14px">If you believe this is a mistake, check the link in your original confirmation email, or contact us directly.</p>'
+    + '</div>';
+}
+
+function renderPortal(){
+  const a = STATE.application;
+  let html = '';
+
+  html += '<div class="card">';
+  html += '<h1>Ghost Tuning Application #' + a.application_number + '</h1>';
+  html += '<div class="sub">' + escapeHtml(a.customer_name) + '</div>';
+  html += '<div style="margin-top:12px"><span class="pill ' + (STATUS_PILL[a.status]||'pill-muted') + '">' + (STATUS_LABEL[a.status]||a.status) + '</span></div>';
+  html += '<div class="car-line">' + escapeHtml([a.car_year, a.car_make, a.car_model].filter(Boolean).join(' ')) + '</div>';
+  html += '<p class="status-blurb">' + escapeHtml(STATUS_BLURB[a.status] || '') + '</p>';
+  html += '</div>';
+
+  html += '<div class="card">';
+  html += '<h2>Messages</h2>';
+  html += '<div class="msg-list" id="msgList">' + renderMessages() + '</div>';
+  html += '<textarea class="form-input" id="msgInput" placeholder="Write a message to your tuner..." style="margin-bottom:10px"></textarea>';
+  html += '<button class="btn" onclick="sendMessage()" id="sendBtn">Send Message</button>';
+  html += '<div class="status-msg err" id="msgErr"></div>';
+  html += '</div>';
+
+  html += '<div class="card">';
+  html += '<h2>Files</h2>';
+  html += '<div id="fileList">' + renderFiles() + '</div>';
+  html += '<div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border)">';
+  html += '<div class="sub" style="margin-bottom:8px">Send a datalog or other file to your tuner</div>';
+  html += '<input type="file" id="fileInput" style="margin-bottom:10px">';
+  html += '<button class="btn btn-sm" onclick="uploadLog()" id="uploadBtn">Upload</button>';
+  html += '<div class="status-msg err" id="uploadErr"></div>';
+  html += '</div>';
+  html += '</div>';
+
+  html += '<p class="footer-note">TGK Motorsport - Ghost Tuning</p>';
+
+  document.getElementById('portalWrap').innerHTML = html;
+}
+
+function renderMessages(){
+  if(!STATE.messages.length) return '<div class="empty-state">No messages yet.</div>';
+  return STATE.messages.map(function(m){
+    const cls = m.sender_type === 'system' ? 'msg-system' : (m.sender_type === 'customer' ? 'msg-me' : 'msg-them');
+    let html = '<div class="msg ' + cls + '">';
+    if(m.sender_type !== 'system'){
+      html += '<div class="msg-meta">' + (m.sender_type === 'customer' ? 'You' : 'Ghost Tuning') + ' &middot; ' + fmtDate(m.created_at) + '</div>';
+    }
+    html += '<div class="msg-body">' + escapeHtml(m.body) + '</div></div>';
+    return html;
+  }).join('');
+}
+
+function renderFiles(){
+  if(!STATE.files.length) return '<div class="empty-state">No files exchanged yet.</div>';
+  return STATE.files.map(function(f){
+    const label = f.uploaded_by === 'tuner' ? 'From your tuner' : 'You sent this';
+    return '<div class="file-row">'
+      + '<div style="flex:1"><div class="file-name">' + escapeHtml(f.file_name) + (f.revision_number ? ' <span class="pill pill-muted">rev ' + f.revision_number + '</span>' : '') + '</div>'
+      + '<div class="file-meta">' + label + ' &middot; ' + fmtDate(f.created_at) + '</div></div>'
+      + (f.uploaded_by === 'tuner' ? '<button class="btn btn-sm" onclick="downloadFile(\'' + f.id + '\')">Download</button>' : '')
+      + '</div>';
+  }).join('');
+}
+
+async function loadStatus(){
+  try{
+    const data = await callPortal('get_status', {});
+    STATE.application = data.application;
+    STATE.messages = data.messages;
+    STATE.files = data.files;
+    renderPortal();
+  }catch(e){
+    renderInvalid(e.message || "This link isn't valid.");
+  }
+}
+
+async function sendMessage(){
+  const input = document.getElementById('msgInput');
+  const body = input.value.trim();
+  const errEl = document.getElementById('msgErr');
+  errEl.className = 'status-msg err'; errEl.textContent = '';
+  if(!body){ errEl.style.display='block'; errEl.textContent = 'Write a message first.'; return; }
+
+  const btn = document.getElementById('sendBtn');
+  btn.disabled = true; btn.textContent = 'Sending...';
+  try{
+    const data = await callPortal('send_message', { body: body });
+    STATE.messages.push(data.message);
+    input.value = '';
+    document.getElementById('msgList').innerHTML = renderMessages();
+    document.getElementById('msgList').scrollTop = document.getElementById('msgList').scrollHeight;
+  }catch(e){
+    errEl.style.display='block'; errEl.textContent = 'Failed to send: ' + e.message;
+  }
+  btn.disabled = false; btn.textContent = 'Send Message';
+}
+window.sendMessage = sendMessage;
+
+async function uploadLog(){
+  const input = document.getElementById('fileInput');
+  const file = input.files[0];
+  const errEl = document.getElementById('uploadErr');
+  errEl.className = 'status-msg err'; errEl.textContent = '';
+  if(!file){ errEl.style.display='block'; errEl.textContent = 'Choose a file first.'; return; }
+
+  const btn = document.getElementById('uploadBtn');
+  btn.disabled = true; btn.textContent = 'Uploading...';
+  try{
+    const req = await callPortal('request_upload_url', { file_name: file.name });
+    const { error: upErr } = await sb.storage.from('tuning-files').uploadToSignedUrl(req.path, req.uploadToken, file);
+    if(upErr) throw upErr;
+
+    const data = await callPortal('confirm_upload', { path: req.path, file_name: file.name, file_type: 'log' });
+    STATE.files.unshift(data.file);
+    document.getElementById('fileList').innerHTML = renderFiles();
+    input.value = '';
+  }catch(e){
+    errEl.style.display='block'; errEl.textContent = 'Upload failed: ' + e.message;
+  }
+  btn.disabled = false; btn.textContent = 'Upload';
+}
+window.uploadLog = uploadLog;
+
+async function downloadFile(fileId){
+  try{
+    const data = await callPortal('download_file', { file_id: fileId });
+    window.open(data.url, '_blank');
+  }catch(e){
+    alert('Could not open file: ' + e.message);
+  }
+}
+window.downloadFile = downloadFile;
+
+document.addEventListener('DOMContentLoaded', function(){
+  sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  if(!TOKEN){
+    renderInvalid("This link is missing its access token. Check the link in your original confirmation email.");
+    return;
+  }
+  loadStatus();
+});
+</script>
+</body>
+</html>
