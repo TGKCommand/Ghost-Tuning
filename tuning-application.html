@@ -573,6 +573,13 @@ async function submitApplication(){
       'Our tuning department will review it and follow up at <strong>' + escapeHtml(APP.customer_email) + '</strong> within 7 business days.';
     currentStep = 'success';
     showStep('success');
+
+    // Confirmation email - fire and forget, never block the success screen on this
+    fetch(SUPABASE_URL + '/functions/v1/tuning-notify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY, 'apikey': SUPABASE_ANON_KEY },
+      body: JSON.stringify({ action: 'application_received', application_id: data.id })
+    }).catch(function(){ /* non-critical: confirmation email failing should not affect the submission */ });
   }catch(e){
     btn.disabled = false; btn.textContent = 'Submit';
     fail('4', 'Something went wrong: ' + (e.message || 'unknown error') + '. Please try again.', null);
