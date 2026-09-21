@@ -288,20 +288,62 @@ async function doLogout(){
 }
 window.doLogout = doLogout;
 
+// [SSO] Accept a session handed down by the Command Center shell - the
+// same protocol ERP and Support Center already use, so Ghost Tuning Center
+// slots into the existing handoff rather than inventing a new one. Only
+// fires when Command Center actually embeds this app in an iframe and
+// posts a token after load; visiting this URL directly still goes through
+// the normal email/password form above, untouched.
+window.addEventListener('message', async function(event){
+  // Only the Command Center's own origin may hand us a session - without
+  // this check any page that managed to embed this app could inject one.
+  if(event.origin !== 'https://command.tgkmotorsport.com') return;
+  var d = event.data;
+
+  if(d && d.source === 'TGK_CC' && d.type === 'SIGN_OUT'){
+    // Command Center's own sign-out already confirmed with the user - this
+    // is the follow-through, not a fresh request, so no second confirm here.
+    try{ await sb.auth.signOut(); location.reload(); }catch(e){ console.warn('[SSO] remote sign-out failed:', e); }
+    return;
+  }
+
+  if(!d || d.source !== 'TGK_CC' || d.type !== 'AUTH_TOKEN' || !d.access_token) return;
+  try{
+    if(!sb){
+      // Client not built yet - retry once this app has initialized rather than dropping it.
+      setTimeout(function(){ try{ window.dispatchEvent(new MessageEvent('message', { data: d, origin: event.origin })); }catch(_){} }, 600);
+      return;
+    }
+    var cur = await sb.auth.getSession();
+    var curEmail = cur && cur.data && cur.data.session && cur.data.session.user ? (cur.data.session.user.email || '').toLowerCase() : null;
+    if(curEmail && d.email && curEmail === String(d.email).toLowerCase()) return; // already signed in as this same person
+
+    var res = await sb.auth.setSession({ access_token: d.access_token, refresh_token: d.refresh_token || '' });
+    if(res && res.error){ console.warn('[SSO] setSession failed:', res.error.message); return; }
+    var got = await sb.auth.getSession();
+    var sess = got && got.data ? got.data.session : null;
+    if(!sess) return;
+    await afterLogin(sess.user);
+    console.log('[SSO] signed in from Command Center as', sess.user && sess.user.email);
+  }catch(e){
+    console.warn('[SSO] token accept failed:', e);
+  }
+});
+
 async function afterLogin(user){
   S.user = user;
   let row = null, lookupError = null;
   try{
-    const { data, error } = await sb.from('team_members').select('email,display_name,tuning_access').ilike('email', user.email).maybeSingle();
+    const { data, error } = await sb.from('profiles').select('email,full_name,ghost_tuning_access').eq('id', user.id).maybeSingle();
     if(error) throw error;
     row = data;
   }catch(e){ lookupError = e; }
 
-  if(!row || row.tuning_access !== true){
+  if(!row || row.ghost_tuning_access !== true){
     let msg = 'Your account does not have Ghost Tuning Center access.';
-    if(lookupError) msg += ' (team_members lookup failed: ' + lookupError.message + ')';
-    else if(!row) msg += ' No team_members row found for ' + user.email + '.';
-    else msg += ' Ask whoever manages the database to set tuning_access = true for this account.';
+    if(lookupError) msg += ' (profiles lookup failed: ' + lookupError.message + ')';
+    else if(!row) msg += ' No profiles row found for ' + user.email + '.';
+    else msg += ' Ask whoever manages users to grant Ghost Tuning access on this account.';
     document.getElementById('login-error').textContent = msg;
     await sb.auth.signOut();
     return;
@@ -309,7 +351,7 @@ async function afterLogin(user){
 
   document.getElementById('auth-gate').classList.add('hidden');
   document.getElementById('tgk-app').classList.remove('hidden');
-  document.getElementById('userLabel').textContent = row.display_name || user.email;
+  document.getElementById('userLabel').textContent = row.full_name || user.email;
 
   await loadApplications();
   await loadTemplates();
@@ -358,6 +400,19 @@ async function loadTemplates(){
     if(error) throw error;
     S.templates = data || [];
   }catch(e){ /* non-critical */ }
+}
+
+async function callNotify(action, extra){
+  try{
+    const { data: sess } = await sb.auth.getSession();
+    const token = sess && sess.session && sess.session.access_token;
+    if(!token) return;
+    await fetch(SUPABASE_URL + '/functions/v1/tuning-notify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token, 'apikey': SUPABASE_ANON_KEY },
+      body: JSON.stringify(Object.assign({ action: action }, extra || {}))
+    });
+  }catch(e){ /* non-critical: a failed email should never block the underlying action */ }
 }
 
 async function logActivity(appId, fieldChanged, oldValue, newValue){
@@ -567,6 +622,7 @@ async function updateStatus(appId, newStatus){
     if(error) throw error;
     Object.assign(app, data);
     await logActivity(appId, 'status', oldStatus, newStatus);
+    callNotify('status_changed', { application_id: appId, new_status: newStatus });
     toast('Status updated to ' + STATUS_LABEL[newStatus]);
     renderPanelShell_refresh(app);
     renderPage();
@@ -705,6 +761,7 @@ async function sendMessage(appId){
       await sb.from('tuning_applications').update({ customer_has_unread:true, updated_at:new Date().toISOString() }).eq('id', appId);
       const app = S.applications.find(function(x){ return x.id === appId; });
       if(app) app.customer_has_unread = true;
+      callNotify('new_message', { application_id: appId, message_body: body });
     }
     await logActivity(appId, isNote ? 'internal_note' : 'message', null, null);
     renderPanelBody();
@@ -775,6 +832,7 @@ async function uploadFile(appId){
       const app = S.applications.find(function(x){ return x.id === appId; });
       if(app) app.customer_has_unread = true;
     }
+    callNotify('file_uploaded', { application_id: appId, file_name: file.name, file_type: type });
     renderPanelBody();
     toast('File uploaded');
   }catch(e){
