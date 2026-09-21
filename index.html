@@ -1024,8 +1024,13 @@ async function updateStatus(appId, newStatus){
   if(oldStatus === newStatus) return;
 
   let declinedReason = app.declined_reason;
-  if(newStatus === 'declined' || newStatus === 'needs_info'){
-    const reason = prompt(newStatus === 'declined' ? 'Reason for declining (kept internal, optional):' : 'What do you need from the customer? (optional)');
+  let noteToCustomer = null;
+  if(newStatus === 'needs_info'){
+    const reason = prompt('What do you need from the customer? This is sent to them as a message:');
+    if(reason) noteToCustomer = reason;
+  }
+  if(newStatus === 'declined'){
+    const reason = prompt('Reason for declining (kept internal, optional):');
     if(reason) declinedReason = reason;
   }
 
@@ -1041,6 +1046,21 @@ async function updateStatus(appId, newStatus){
     const { data, error } = await sb.from('tuning_applications').update(patch).eq('id', appId).select().single();
     if(error) throw error;
     Object.assign(app, data);
+
+    if(noteToCustomer){
+      const { data: msgData, error: msgErr } = await sb.from('tuning_messages').insert({
+        application_id: appId,
+        sender_type: 'tuner',
+        sender_name: S.user ? S.user.email : null,
+        body: noteToCustomer
+      }).select().single();
+      if(!msgErr){
+        if(!S.messages[appId]) S.messages[appId] = [];
+        S.messages[appId].push(msgData);
+        pingPortal(appId);
+      }
+    }
+
     await logActivity(appId, 'status', oldStatus, newStatus);
     callNotify('status_changed', { application_id: appId, new_status: newStatus });
     pingPortal(appId);
