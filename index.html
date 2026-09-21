@@ -223,7 +223,7 @@ tr.row-click:hover td{background:var(--bg3)}
         </div>
         <div class="sync-sub" onclick="doLogout()">Sign out</div>
         <div class="version-row">
-          <span>v1.31</span>
+          <span>v1.40</span>
           <span id="buildDate"></span>
         </div>
       </div>
@@ -272,7 +272,7 @@ const NAV = [
 ];
 
 const S = { user:null, page:'dashboard', applications:[], openAppId:null, messages:{}, files:{}, activity:{}, recentActivity:[], templates:[], activeTab:'overview', filter:'active', search:'',
-  pendingLogs:[], platformLibrary:[], ecuReference:[], revisionCount:0, lookupQuery:'', libraryFormOpen:false, ecuFormOpen:false, tuners:[] };
+  pendingLogs:[], platformLibrary:[], ecuReference:[], revisionCount:0, lookupQuery:'', libraryFormOpen:false, ecuFormOpen:false, tuners:[], selectedIds:new Set() };
 
 function escapeHtml(s){
   return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){
@@ -660,6 +660,10 @@ function renderDashboard(){
   html += revisionRequests.length ? appTable(revisionRequests) : '<div class="empty-state"><div class="big">&#10003;</div>No open revision requests.</div>';
   html += '</div>';
 
+  html += '<div class="card"><h2>Active Applications</h2><div class="sub" style="color:var(--text3);font-size:var(--t-sm);margin-bottom:12px">Everything in progress, and who needs to act next</div>';
+  html += active.length ? activeAppsTable(active) : '<div class="empty-state"><div class="big">-</div>Nothing in progress right now.</div>';
+  html += '</div>';
+
   html += '<div class="card"><h2>Recent Activity</h2><div class="sub" style="color:var(--text3);font-size:var(--t-sm);margin-bottom:12px">Latest status changes, messages and files across every application</div>';
   html += renderRecentActivity();
   html += '</div>';
@@ -717,7 +721,9 @@ function renderAppResultsHtml(){
         || (a.car_model||'').toLowerCase().indexOf(q) !== -1;
     });
   }
-  return '<div class="card" style="padding:0">' + (rows.length ? appTable(rows) : '<div class="empty-state"><div class="big">-</div>No applications match this filter.</div>') + '</div>';
+  const validIds = {}; rows.forEach(function(a){ validIds[a.id] = true; });
+  Array.from(S.selectedIds).forEach(function(id){ if(!validIds[id]) S.selectedIds.delete(id); });
+  return renderBulkBar() + '<div class="card" style="padding:0">' + (rows.length ? appTable(rows, true) : '<div class="empty-state"><div class="big">-</div>No applications match this filter.</div>') + '</div>';
 }
 function setAppFilter(id){
   S.filter = id;
@@ -731,19 +737,148 @@ function setAppSearch(v){
 }
 window.setAppSearch = setAppSearch;
 
-function appTable(rows){
-  let html = '<table><thead><tr><th>#</th><th>Customer</th><th>Car</th><th>Status</th><th>Submitted</th><th></th></tr></thead><tbody>';
+function daysSince(dateStr){
+  if(!dateStr) return null;
+  const d = new Date(dateStr);
+  if(isNaN(d.getTime())) return null;
+  return Math.floor((Date.now() - d.getTime()) / 86400000);
+}
+
+// Loosely brackets the "7 business days" promise made on the intake form
+// (about 9-10 calendar days once weekends are accounted for) without doing
+// exact business-day math.
+function agingCell(a){
+  const days = daysSince(a.created_at);
+  let html = fmtDateShort(a.created_at);
+  if(a.status === 'submitted' && days !== null){
+    if(days >= 9) html += '<div style="color:var(--red);font-weight:700;font-size:var(--t-xs);margin-top:2px">' + days + 'd old - overdue</div>';
+    else if(days >= 4) html += '<div style="color:var(--orange-d);font-weight:700;font-size:var(--t-xs);margin-top:2px">' + days + 'd old</div>';
+    else html += '<div style="color:var(--text3);font-size:var(--t-xs);margin-top:2px">' + days + 'd old</div>';
+  }
+  return html;
+}
+
+// Who needs to act next, computed from status plus (when relevant) who sent
+// the last customer-facing message - both already sitting on the row, no
+// extra query needed.
+function waitingOnLabel(a){
+  if(a.status === 'tune_sent') return { text:'Waiting on customer', cls:'pill-orange' };
+  if(a.status === 'revision_requested') return { text:'Waiting on tuner', cls:'pill-red' };
+  if(a.status === 'accepted') return { text:'Not started', cls:'pill-muted' };
+  if(a.status === 'active'){
+    if(a.last_message_by === 'customer') return { text:'Waiting on tuner', cls:'pill-red' };
+    if(a.last_message_by === 'tuner') return { text:'Waiting on customer', cls:'pill-orange' };
+    return { text:'In progress', cls:'pill-teal' };
+  }
+  return { text:'-', cls:'pill-muted' };
+}
+
+function toggleBulkSelect(id){
+  if(S.selectedIds.has(id)) S.selectedIds.delete(id); else S.selectedIds.add(id);
+  const bar = document.getElementById('bulkBar');
+  if(bar) bar.outerHTML = renderBulkBar();
+}
+window.toggleBulkSelect = toggleBulkSelect;
+
+function toggleBulkSelectAll(rows, checked){
+  rows.forEach(function(a){ if(checked) S.selectedIds.add(a.id); else S.selectedIds.delete(a.id); });
+  document.getElementById('appResults').innerHTML = renderAppResultsHtml();
+}
+window.toggleBulkSelectAll = toggleBulkSelectAll;
+
+function clearBulkSelection(){
+  S.selectedIds.clear();
+  document.getElementById('appResults').innerHTML = renderAppResultsHtml();
+}
+window.clearBulkSelection = clearBulkSelection;
+
+async function bulkArchive(){
+  const ids = Array.from(S.selectedIds);
+  if(!ids.length) return;
+  if(!confirm('Archive ' + ids.length + ' application' + (ids.length>1?'s':'') + '?')) return;
+  try{
+    const { error } = await sb.from('tuning_applications').update({ status:'archived', updated_at:new Date().toISOString() }).in('id', ids);
+    if(error) throw error;
+    ids.forEach(function(id){
+      const app = S.applications.find(function(a){ return a.id === id; });
+      if(app) app.status = 'archived';
+    });
+    S.selectedIds.clear();
+    renderNav();
+    document.getElementById('appResults').innerHTML = renderAppResultsHtml();
+    toast('Archived ' + ids.length + ' application' + (ids.length>1?'s':''));
+  }catch(e){ toast('Bulk archive failed: ' + e.message, true); }
+}
+window.bulkArchive = bulkArchive;
+
+async function bulkMarkRead(){
+  const ids = Array.from(S.selectedIds);
+  if(!ids.length) return;
+  try{
+    const { error } = await sb.from('tuning_applications').update({ has_unread:false, unread_count:0 }).in('id', ids);
+    if(error) throw error;
+    ids.forEach(function(id){
+      const app = S.applications.find(function(a){ return a.id === id; });
+      if(app){ app.has_unread = false; app.unread_count = 0; }
+    });
+    S.selectedIds.clear();
+    renderNav();
+    document.getElementById('appResults').innerHTML = renderAppResultsHtml();
+    toast('Marked ' + ids.length + ' as read');
+  }catch(e){ toast('Bulk mark-read failed: ' + e.message, true); }
+}
+window.bulkMarkRead = bulkMarkRead;
+
+function renderBulkBar(){
+  const n = S.selectedIds.size;
+  if(!n) return '<div id="bulkBar"></div>';
+  return '<div id="bulkBar" style="display:flex;align-items:center;gap:10px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:10px 14px;margin-bottom:12px">'
+    + '<strong>' + n + ' selected</strong>'
+    + '<button class="btn btn-sm" onclick="bulkMarkRead()">Mark Read</button>'
+    + '<button class="btn btn-sm" onclick="bulkArchive()">Archive</button>'
+    + '<button class="btn btn-sm" onclick="clearBulkSelection()">Clear</button>'
+    + '</div>';
+}
+
+function appTable(rows, selectable){
+  let html = '<table><thead><tr>';
+  if(selectable) html += '<th style="width:24px"><input type="checkbox" onclick="toggleBulkSelectAll(window.__lastRows,this.checked)"></th>';
+  html += '<th>#</th><th>Customer</th><th>Car</th><th>Status</th><th>Submitted</th><th></th></tr></thead><tbody>';
+  if(selectable) window.__lastRows = rows;
   rows.forEach(function(a){
+    html += '<tr class="row-click" onclick="openApplication(\'' + a.id + '\')">';
+    if(selectable){
+      html += '<td onclick="event.stopPropagation()"><input type="checkbox" onclick="toggleBulkSelect(\'' + a.id + '\')" ' + (S.selectedIds.has(a.id)?'checked':'') + '></td>';
+    }
+    html += '<td>' + (a.has_unread ? '<span class="unread-dot"></span>' : '') + '#' + a.application_number + '</td>'
+      + '<td>' + escapeHtml(a.customer_name) + flagChips(a) + '<div class="file-meta">' + escapeHtml(a.customer_email) + '</div></td>'
+      + '<td>' + escapeHtml([a.car_year, a.car_make, a.car_model].filter(Boolean).join(' ')) + '</td>'
+      + '<td><span class="pill ' + (STATUS_PILL[a.status]||'pill-muted') + '">' + (STATUS_LABEL[a.status]||a.status) + '</span></td>'
+      + '<td>' + agingCell(a) + '</td>'
+      + '<td onclick="event.stopPropagation()" style="white-space:nowrap">'
+        + '<button class="btn btn-sm" onclick="toggleUnread(\'' + a.id + '\')" title="' + (a.has_unread ? 'Mark read' : 'Mark unread') + '">' + (a.has_unread ? 'Read' : 'Unread') + '</button>'
+        + (a.status !== 'archived' ? ' <button class="btn btn-sm" onclick="archiveApplication(\'' + a.id + '\')" title="Archive">Archive</button>' : '')
+      + '</td>'
+      + '</tr>';
+  });
+  html += '</tbody></table>';
+  return html;
+}
+
+// Dashboard's "what's in flight and who needs to act" view - accepted,
+// active, and tune_sent applications, with a computed waiting-on signal.
+function activeAppsTable(rows){
+  let html = '<table><thead><tr><th>#</th><th>Customer</th><th>Car</th><th>Status</th><th>Waiting On</th><th>Last Activity</th></tr></thead><tbody>';
+  rows.forEach(function(a){
+    const w = waitingOnLabel(a);
+    const lastActivity = a.last_message_at ? (daysSince(a.last_message_at) + 'd ago') : (daysSince(a.updated_at) + 'd ago (no messages)');
     html += '<tr class="row-click" onclick="openApplication(\'' + a.id + '\')">'
       + '<td>' + (a.has_unread ? '<span class="unread-dot"></span>' : '') + '#' + a.application_number + '</td>'
       + '<td>' + escapeHtml(a.customer_name) + flagChips(a) + '<div class="file-meta">' + escapeHtml(a.customer_email) + '</div></td>'
       + '<td>' + escapeHtml([a.car_year, a.car_make, a.car_model].filter(Boolean).join(' ')) + '</td>'
       + '<td><span class="pill ' + (STATUS_PILL[a.status]||'pill-muted') + '">' + (STATUS_LABEL[a.status]||a.status) + '</span></td>'
-      + '<td>' + fmtDateShort(a.created_at) + '</td>'
-      + '<td onclick="event.stopPropagation()" style="white-space:nowrap">'
-        + '<button class="btn btn-sm" onclick="toggleUnread(\'' + a.id + '\')" title="' + (a.has_unread ? 'Mark read' : 'Mark unread') + '">' + (a.has_unread ? 'Read' : 'Unread') + '</button>'
-        + (a.status !== 'archived' ? ' <button class="btn btn-sm" onclick="archiveApplication(\'' + a.id + '\')" title="Archive">Archive</button>' : '')
-      + '</td>'
+      + '<td><span class="pill ' + w.cls + '">' + w.text + '</span></td>'
+      + '<td>' + lastActivity + '</td>'
       + '</tr>';
   });
   html += '</tbody></table>';
@@ -1171,9 +1306,10 @@ async function sendMessage(appId){
     S.messages[appId].push(data);
 
     if(!isNote){
-      await sb.from('tuning_applications').update({ customer_has_unread:true, updated_at:new Date().toISOString() }).eq('id', appId);
+      const nowIso = new Date().toISOString();
+      await sb.from('tuning_applications').update({ customer_has_unread:true, updated_at:nowIso }).eq('id', appId);
       const app = S.applications.find(function(x){ return x.id === appId; });
-      if(app) app.customer_has_unread = true;
+      if(app){ app.customer_has_unread = true; app.last_message_at = nowIso; app.last_message_by = 'tuner'; }
       callNotify('new_message', { application_id: appId, message_body: body });
       pingPortal(appId);
     }
