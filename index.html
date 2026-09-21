@@ -247,7 +247,7 @@ const NAV = [
   { id:'templates', label:'Templates' }
 ];
 
-const S = { user:null, page:'dashboard', applications:[], openAppId:null, messages:{}, files:{}, activity:{}, templates:[], activeTab:'overview', filter:'active', search:'' };
+const S = { user:null, page:'dashboard', applications:[], openAppId:null, messages:{}, files:{}, activity:{}, recentActivity:[], templates:[], activeTab:'overview', filter:'active', search:'' };
 
 function escapeHtml(s){
   return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){
@@ -362,6 +362,7 @@ async function afterLogin(user){
 
   await loadApplications();
   await loadTemplates();
+  await loadRecentActivity();
   renderNav();
   goPage('dashboard');
 }
@@ -401,6 +402,17 @@ async function loadActivity(appId){
   }catch(e){ toast('Failed to load activity: ' + e.message, true); }
 }
 
+async function loadRecentActivity(){
+  try{
+    const { data, error } = await sb.from('tuning_activity_log')
+      .select('*, tuning_applications(application_number,customer_name)')
+      .order('created_at', { ascending:false })
+      .limit(20);
+    if(error) throw error;
+    S.recentActivity = data || [];
+  }catch(e){ /* non-critical: dashboard just shows without the feed */ }
+}
+
 async function loadTemplates(){
   try{
     const { data, error } = await sb.from('tuning_templates').select('*').order('created_at', { ascending:false });
@@ -424,13 +436,19 @@ async function callNotify(action, extra){
 
 async function logActivity(appId, fieldChanged, oldValue, newValue){
   try{
-    await sb.from('tuning_activity_log').insert({
+    const { data, error } = await sb.from('tuning_activity_log').insert({
       application_id: appId,
       field_changed: fieldChanged,
       old_value: oldValue != null ? String(oldValue) : null,
       new_value: newValue != null ? String(newValue) : null,
       changed_by: S.user ? S.user.email : null
-    });
+    }).select().single();
+    if(error) throw error;
+    const app = S.applications.find(function(a){ return a.id === appId; });
+    S.recentActivity.unshift(Object.assign({}, data, {
+      tuning_applications: app ? { application_number: app.application_number, customer_name: app.customer_name } : null
+    }));
+    if(S.recentActivity.length > 20) S.recentActivity.length = 20;
   }catch(e){ /* non-critical, do not block the real action on log failure */ }
 }
 
@@ -463,25 +481,42 @@ function renderPage(){
 /* ================= DASHBOARD ================= */
 function renderDashboard(){
   const apps = S.applications;
-  const needsAttention = apps.filter(function(a){ return a.status === 'submitted' || a.status === 'revision_requested'; });
+  const newSubmissions = apps.filter(function(a){ return a.status === 'submitted'; });
+  const revisionRequests = apps.filter(function(a){ return a.status === 'revision_requested'; });
+  const needsAttentionCount = newSubmissions.length + revisionRequests.length;
   const active = apps.filter(function(a){ return ['accepted','active','tune_sent'].indexOf(a.status) !== -1; });
   const completed = apps.filter(function(a){ return a.status === 'completed'; });
 
-  const counts = {};
-  STATUS_ORDER.forEach(function(s){ counts[s] = apps.filter(function(a){ return a.status === s; }).length; });
-
   let html = '<div class="stat-row">';
-  html += statCard(needsAttention.length, 'Needs Attention');
+  html += statCard(needsAttentionCount, 'Needs Attention');
   html += statCard(active.length, 'Active Builds');
   html += statCard(completed.length, 'Completed');
   html += statCard(apps.length, 'Total Applications');
   html += '</div>';
 
-  html += '<div class="card"><h2>Needs Attention</h2><div class="sub" style="color:var(--text3);font-size:var(--t-sm);margin-bottom:12px">New submissions and revision requests waiting on you</div>';
-  html += needsAttention.length ? appTable(needsAttention) : '<div class="empty-state"><div class="big">&#10003;</div>All caught up. Nothing needs your attention right now.</div>';
+  html += '<div class="card"><h2>New Submissions</h2><div class="sub" style="color:var(--text3);font-size:var(--t-sm);margin-bottom:12px">Applications waiting on your first review</div>';
+  html += newSubmissions.length ? appTable(newSubmissions) : '<div class="empty-state"><div class="big">&#10003;</div>Nothing new to review.</div>';
+  html += '</div>';
+
+  html += '<div class="card"><h2>Revision Requests</h2><div class="sub" style="color:var(--text3);font-size:var(--t-sm);margin-bottom:12px">Customers waiting on a revised tune</div>';
+  html += revisionRequests.length ? appTable(revisionRequests) : '<div class="empty-state"><div class="big">&#10003;</div>No open revision requests.</div>';
+  html += '</div>';
+
+  html += '<div class="card"><h2>Recent Activity</h2><div class="sub" style="color:var(--text3);font-size:var(--t-sm);margin-bottom:12px">Latest status changes, messages and files across every application</div>';
+  html += renderRecentActivity();
   html += '</div>';
 
   return html;
+}
+function renderRecentActivity(){
+  if(!S.recentActivity.length) return '<div class="empty-state">No activity recorded yet.</div>';
+  return S.recentActivity.map(function(l){
+    const app = l.tuning_applications;
+    const label = app ? ('#' + app.application_number + ' - ' + escapeHtml(app.customer_name)) : 'Application';
+    const clickable = l.application_id ? ' onclick="openApplication(\'' + l.application_id + '\')" style="cursor:pointer"' : '';
+    return '<div class="activity-row"' + clickable + '><div class="when">' + fmtDate(l.created_at) + '</div>'
+      + '<div><strong>' + label + '</strong> - ' + escapeHtml(describeActivity(l)) + ' <span class="file-meta">- ' + escapeHtml(l.changed_by||'') + '</span></div></div>';
+  }).join('');
 }
 function statCard(num, label){
   return '<div class="stat-card"><div class="stat-num">' + num + '</div><div class="stat-label">' + escapeHtml(label) + '</div></div>';
@@ -860,17 +895,21 @@ async function downloadFile(fileId, path){
 window.downloadFile = downloadFile;
 
 /* ---- activity tab ---- */
+function describeActivity(l){
+  let desc = l.field_changed || 'update';
+  if(l.field_changed === 'status') desc = 'Status changed from ' + (STATUS_LABEL[l.old_value]||l.old_value) + ' to ' + (STATUS_LABEL[l.new_value]||l.new_value);
+  else if(l.field_changed === 'message') desc = 'Message sent to customer';
+  else if(l.field_changed === 'internal_note') desc = 'Internal note added';
+  else if(l.field_changed === 'file_uploaded') desc = 'File uploaded: ' + l.new_value;
+  return desc;
+}
+
 function renderActivityTab(a){
   const log = S.activity[a.id] || [];
   if(!log.length) return '<div class="empty-state">No activity recorded yet.</div>';
   let html = '';
   log.forEach(function(l){
-    let desc = l.field_changed || 'update';
-    if(l.field_changed === 'status') desc = 'Status changed from ' + (STATUS_LABEL[l.old_value]||l.old_value) + ' to ' + (STATUS_LABEL[l.new_value]||l.new_value);
-    else if(l.field_changed === 'message') desc = 'Message sent to customer';
-    else if(l.field_changed === 'internal_note') desc = 'Internal note added';
-    else if(l.field_changed === 'file_uploaded') desc = 'File uploaded: ' + l.new_value;
-    html += '<div class="activity-row"><div class="when">' + fmtDate(l.created_at) + '</div><div>' + escapeHtml(desc) + ' <span class="file-meta">- ' + escapeHtml(l.changed_by||'') + '</span></div></div>';
+    html += '<div class="activity-row"><div class="when">' + fmtDate(l.created_at) + '</div><div>' + escapeHtml(describeActivity(l)) + ' <span class="file-meta">- ' + escapeHtml(l.changed_by||'') + '</span></div></div>';
   });
   return html;
 }
