@@ -128,6 +128,9 @@ tr.row-click:hover td{background:var(--bg3)}
 .panel-head .sub{font-size:var(--t-sm);color:var(--text3);margin-top:2px}
 .panel-close{background:none;border:none;font-size:20px;cursor:pointer;color:var(--text3);line-height:1;padding:4px}
 .panel-close:hover{color:var(--text)}
+.panel-head-actions{display:flex;align-items:center;gap:4px;flex-shrink:0}
+.icon-btn{background:none;border:1px solid var(--border2);border-radius:var(--r);font-size:var(--t-md);cursor:pointer;color:var(--text3);line-height:1;padding:7px 9px;transition:all .12s}
+.icon-btn:hover{color:var(--text);background:var(--bg3);border-color:var(--border2)}
 .panel-tabs{display:flex;gap:2px;padding:0 20px;border-bottom:1px solid var(--border);flex-shrink:0}
 .panel-tab{padding:10px 14px;font-size:var(--t-sm);font-weight:600;color:var(--text3);cursor:pointer;border-bottom:2px solid transparent}
 .panel-tab.active{color:var(--teal);border-color:var(--teal)}
@@ -138,7 +141,12 @@ tr.row-click:hover td{background:var(--bg3)}
 .dl-item{display:flex;flex-direction:column;gap:2px}
 .dl-item.full{grid-column:1/-1}
 .dl-label{font-size:var(--t-xs);font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--text3)}
-.dl-value{font-size:var(--t-lg);color:var(--text);white-space:pre-wrap;word-break:break-word}
+.dl-value{font-size:var(--t-lg);color:var(--text);white-space:pre-wrap;word-break:break-word;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:9px 11px}
+.notice-banner{border-left:3px solid var(--orange);background:var(--orange-dim);border-radius:0 var(--r) var(--r) 0;padding:12px 14px;margin-bottom:16px;font-size:var(--t-sm);color:var(--text2)}
+.notice-banner.red{border-left-color:var(--red);background:var(--red-dim)}
+.notice-banner a{color:var(--orange-d);font-weight:700;cursor:pointer;text-decoration:underline}
+.notice-banner ul{margin:6px 0 0 18px;padding:0}
+.flag-chip{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;font-size:var(--t-xs);font-weight:700;border-radius:6px;background:var(--red-dim);color:var(--red);border:1px solid rgba(220,38,38,.2);margin-left:6px}
 .section-title{font-size:var(--t-md);font-weight:700;color:var(--teal-d);text-transform:uppercase;letter-spacing:.05em;margin:20px 0 10px}
 .section-title:first-child{margin-top:0}
 
@@ -215,7 +223,7 @@ tr.row-click:hover td{background:var(--bg3)}
         </div>
         <div class="sync-sub" onclick="doLogout()">Sign out</div>
         <div class="version-row">
-          <span>v1.20</span>
+          <span>v1.30</span>
           <span id="buildDate"></span>
         </div>
       </div>
@@ -713,7 +721,7 @@ function appTable(rows){
   rows.forEach(function(a){
     html += '<tr class="row-click" onclick="openApplication(\'' + a.id + '\')">'
       + '<td>' + (a.has_unread ? '<span class="unread-dot"></span>' : '') + '#' + a.application_number + '</td>'
-      + '<td>' + escapeHtml(a.customer_name) + '<div class="file-meta">' + escapeHtml(a.customer_email) + '</div></td>'
+      + '<td>' + escapeHtml(a.customer_name) + flagChips(a) + '<div class="file-meta">' + escapeHtml(a.customer_email) + '</div></td>'
       + '<td>' + escapeHtml([a.car_year, a.car_make, a.car_model].filter(Boolean).join(' ')) + '</td>'
       + '<td><span class="pill ' + (STATUS_PILL[a.status]||'pill-muted') + '">' + (STATUS_LABEL[a.status]||a.status) + '</span></td>'
       + '<td>' + fmtDateShort(a.created_at) + '</td>'
@@ -765,9 +773,13 @@ function renderPanelShell(app){
   return '<div class="panel-head">'
     + '<div><h3>#' + app.application_number + ' - ' + escapeHtml(app.customer_name) + '</h3>'
     + '<div class="sub">' + escapeHtml(app.customer_email) + '</div></div>'
-    + '<button class="panel-close" onclick="closePanel()">&times;</button>'
+    + '<div class="panel-head-actions">'
+      + '<button class="icon-btn" onclick="toggleUnread(\'' + app.id + '\')" title="' + (app.has_unread ? 'Mark read' : 'Mark unread') + '">' + (app.has_unread ? 'Mark Read' : 'Mark Unread') + '</button>'
+      + (app.status !== 'archived' ? '<button class="icon-btn" onclick="archiveApplication(\'' + app.id + '\')" title="Archive">Archive</button>' : '')
+      + '<button class="panel-close" onclick="closePanel()">&times;</button>'
     + '</div>'
-    + '<div style="padding:14px 20px 0">' + statusSelector(app) + '</div>'
+    + '</div>'
+    + '<div style="padding:16px 20px 0">' + statusSelector(app) + '</div>'
     + '<div class="panel-tabs" id="panelTabs">' + tabButtons() + '</div>'
     + '<div class="panel-body" id="panelBody"></div>';
 }
@@ -784,14 +796,17 @@ function switchTab(t){
 window.switchTab = switchTab;
 
 function statusSelector(app){
-  let html = '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">';
-  html += '<select class="form-input" style="width:auto;padding:6px 10px;font-size:var(--t-sm)" onchange="updateStatus(\'' + app.id + '\',this.value)">';
+  let html = '<div class="dl-grid" style="margin-bottom:16px">';
+
+  html += '<div class="dl-item"><div class="dl-label">Status</div>';
+  html += '<select class="form-input" onchange="updateStatus(\'' + app.id + '\',this.value)">';
   STATUS_ORDER.forEach(function(s){
     html += '<option value="' + s + '" ' + (app.status===s?'selected':'') + '>' + STATUS_LABEL[s] + '</option>';
   });
-  html += '</select>';
+  html += '</select></div>';
 
-  html += '<select class="form-input" style="width:auto;padding:6px 10px;font-size:var(--t-sm)" onchange="reassignApplication(\'' + app.id + '\',this.value)" title="Reassign">';
+  html += '<div class="dl-item"><div class="dl-label">Assigned To</div>';
+  html += '<select class="form-input" onchange="reassignApplication(\'' + app.id + '\',this.value)">';
   html += '<option value="">Unassigned</option>';
   (S.tuners || []).forEach(function(t){
     html += '<option value="' + escapeHtml(t.email) + '" ' + (app.assigned_tuner===t.email?'selected':'') + '>' + escapeHtml(t.full_name || t.email) + '</option>';
@@ -799,10 +814,8 @@ function statusSelector(app){
   if(app.assigned_tuner && !(S.tuners||[]).some(function(t){ return t.email===app.assigned_tuner; })){
     html += '<option value="' + escapeHtml(app.assigned_tuner) + '" selected>' + escapeHtml(app.assigned_tuner) + '</option>';
   }
-  html += '</select>';
+  html += '</select></div>';
 
-  html += '<button class="btn btn-sm" onclick="toggleUnread(\'' + app.id + '\')">' + (app.has_unread ? 'Mark Read' : 'Mark Unread') + '</button>';
-  if(app.status !== 'archived') html += '<button class="btn btn-sm" onclick="archiveApplication(\'' + app.id + '\')">Archive</button>';
   html += '</div>';
   return html;
 }
@@ -913,6 +926,45 @@ function dlFull(label, value){
   return '<div class="dl-item full"><div class="dl-label">' + escapeHtml(label) + '</div><div class="dl-value">' + escapeHtml(value || '-') + '</div></div>';
 }
 
+// Best-effort, computed client-side from data already loaded - no schema
+// changes needed. Maintenance dates are free text by design (see schema
+// notes), so date parsing here is a heuristic: it only ever flags things
+// it's confident about, never blocks or corrects what the customer typed.
+function computeFlags(a){
+  const flags = [];
+  if(a.has_ds1 === false && a.purchasing_ds1_through_us === false) flags.push('No DS1 plan');
+
+  function monthsSince(dateStr){
+    if(!dateStr) return null;
+    const d = new Date(dateStr);
+    if(isNaN(d.getTime())) return null;
+    return (Date.now() - d.getTime()) / (1000*60*60*24*30);
+  }
+  [['spark_plug_date','Plugs overdue'], ['oil_change_date','Oil overdue'],
+   ['trans_service_date','Trans service overdue'], ['air_filter_date','Air filter overdue']].forEach(function(f){
+    const m = monthsSince(a[f[0]]);
+    if(m !== null && m > 18) flags.push(f[1]);
+  });
+
+  if(a.maintenance_self_performed === false && !a.maintenance_shop_name) flags.push('Missing shop name');
+
+  const coreFields = ['car_year','car_make','car_model','car_mileage','customer_name','customer_email'];
+  if(coreFields.some(function(f){ return !a[f]; })) flags.push('Incomplete profile');
+
+  return flags;
+}
+
+function findRepeatApplications(a){
+  if(!a.customer_email) return [];
+  return S.applications.filter(function(x){
+    return x.id !== a.id && x.customer_email && x.customer_email.toLowerCase() === a.customer_email.toLowerCase();
+  });
+}
+
+function flagChips(a){
+  return computeFlags(a).map(function(f){ return '<span class="flag-chip">' + escapeHtml(f) + '</span>'; }).join('');
+}
+
 function paymentLabel(s){
   return { paid:'Paid', pending:'Pending', refunded:'Refunded', partially_refunded:'Partially Refunded', voided:'Voided', unknown:'Unknown' }[s] || (s || 'Not checked');
 }
@@ -968,7 +1020,28 @@ window.checkShopifyOrder = checkShopifyOrder;
 
 function renderOverview(a){
   let html = '';
+
+  const repeats = findRepeatApplications(a);
+  if(repeats.length){
+    html += '<div class="notice-banner">';
+    html += '<strong>Repeat applicant</strong> - this email has ' + repeats.length + ' other application' + (repeats.length>1?'s':'') + ' on file:';
+    html += '<ul>';
+    repeats.forEach(function(r){
+      html += '<li><a onclick="jumpToApplication(\'' + r.id + '\')">#' + r.application_number + '</a> - '
+        + '<span class="pill ' + (STATUS_PILL[r.status]||'pill-muted') + '">' + (STATUS_LABEL[r.status]||r.status) + '</span>'
+        + (r.status === 'declined' && r.declined_reason ? ' - ' + escapeHtml(r.declined_reason) : '')
+        + '</li>';
+    });
+    html += '</ul></div>';
+  }
+
+  const flags = computeFlags(a);
+  if(flags.length){
+    html += '<div class="notice-banner red"><strong>Flagged:</strong> ' + flags.map(escapeHtml).join(', ') + '</div>';
+  }
+
   html += '<div class="section-title">Order &amp; Payment</div><div class="dl-grid">'
+    + dl('Source', a.source)
     + dl('Shopify Order #', a.shopify_order_number)
     + '<div class="dl-item"><div class="dl-label">Payment Status</div><div class="dl-value">'
       + (a.payment_status ? '<span class="pill ' + paymentPillClass(a.payment_status) + '">' + paymentLabel(a.payment_status) + '</span>' : 'Not checked')
