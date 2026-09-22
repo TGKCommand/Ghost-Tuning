@@ -119,13 +119,16 @@ tr.row-click:hover td{background:var(--bg3)}
 .search-input{flex:1;min-width:200px;max-width:280px}
 
 /* ---- side panel ---- */
+/* Panel width mirrors Support Center's ticket panel exactly: three presets
+   cycled by a header button and remembered per-user via localStorage,
+   rather than a free-drag handle. */
 #tk-overlay{position:fixed;inset:0;background:rgba(17,24,39,.35);z-index:40;opacity:0;pointer-events:none;transition:opacity .15s}
 #tk-overlay.open{opacity:1;pointer-events:auto}
-#tk-panel{position:fixed;top:0;right:0;bottom:0;width:640px;max-width:94vw;background:var(--bg);box-shadow:-6px 0 24px rgba(0,0,0,.14);z-index:41;transform:translateX(100%);transition:transform .18s;display:flex;flex-direction:column}
+#tk-panel{position:fixed;top:0;right:0;bottom:0;width:var(--tk-w,960px);max-width:96vw;background:var(--bg);box-shadow:-6px 0 24px rgba(0,0,0,.14);z-index:41;transform:translateX(100%);transition:transform .18s;display:flex;flex-direction:column}
 #tk-panel.open{transform:translateX(0)}
-#tk-resize-handle{position:fixed;top:0;bottom:0;right:640px;width:7px;margin-right:-3px;z-index:42;cursor:ew-resize;background:transparent;display:none}
-#tk-resize-handle.open{display:block}
-#tk-resize-handle:hover,#tk-resize-handle.dragging{background:var(--teal-dim)}
+#tk-panel[data-w="narrow"]{--tk-w:520px}
+#tk-panel[data-w="wide"]{--tk-w:960px}
+#tk-panel[data-w="full"]{--tk-w:1600px}
 .panel-head{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-shrink:0}
 .panel-head h3{font-size:var(--t-xl);font-weight:700;margin:0}
 .panel-head .sub{font-size:var(--t-sm);color:var(--text3);margin-top:2px}
@@ -190,8 +193,7 @@ tr.row-click:hover td{background:var(--bg3)}
 .empty-state .big{font-size:32px;margin-bottom:8px}
 
 @media(max-width:820px){
-  #tk-panel{width:100%;max-width:100%}
-  #tk-resize-handle{display:none!important}
+  #tk-panel{width:100vw;max-width:100vw}
   .dl-grid{grid-template-columns:1fr}
 }
 </style>
@@ -291,7 +293,7 @@ tr.row-click:hover td{background:var(--bg3)}
         </div>
         <div class="sync-sub" onclick="doLogout()">Sign out</div>
         <div class="version-row">
-          <span>v1.42</span>
+          <span>v1.43</span>
           <span id="buildDate"></span>
         </div>
       </div>
@@ -306,7 +308,6 @@ tr.row-click:hover td{background:var(--bg3)}
 </div>
 
 <div id="tk-overlay" onclick="closePanel()"></div>
-<div id="tk-resize-handle" title="Drag to resize"></div>
 <div id="tk-panel"></div>
 <div id="toast"></div>
 
@@ -1071,53 +1072,30 @@ function activeAppsTable(rows){
   return html;
 }
 
-/* ================= PANEL RESIZE ================= */
-// Same idea as Support Center's resizable ticket panel - remembers the
-// tuner's preferred width across sessions via localStorage.
-const PANEL_WIDTH_KEY = 'tgk_ghost_panel_width';
-const PANEL_MIN_WIDTH = 420;
-function getPanelMaxWidth(){ return Math.min(1100, window.innerWidth * 0.94); }
-function getSavedPanelWidth(){
-  const saved = parseInt(localStorage.getItem(PANEL_WIDTH_KEY), 10);
-  if(isNaN(saved)) return 640;
-  return Math.max(PANEL_MIN_WIDTH, Math.min(getPanelMaxWidth(), saved));
+/* ================= PANEL WIDTH ================= */
+// Mirrors Support Center's ticket panel exactly: a three-step width cycle
+// (narrow/wide/full) via a header button, remembered per-user across
+// sessions. Applied to the element via data-w rather than rewritten into
+// the CSS, so the slide-in transition keeps working.
+function _ghostWidthGet(){
+  try{ const v = localStorage.getItem('ghost_panel_width'); if(v==='narrow'||v==='wide'||v==='full') return v; }catch(_){}
+  return 'wide';
 }
-function applyPanelWidth(px){
-  const panel = document.getElementById('tk-panel');
-  const handle = document.getElementById('tk-resize-handle');
-  if(panel) panel.style.width = px + 'px';
-  if(handle) handle.style.right = px + 'px';
+function applyGhostPanelWidth(){
+  const p = document.getElementById('tk-panel');
+  if(!p) return;
+  const w = _ghostWidthGet();
+  p.setAttribute('data-w', w);
+  const b = document.getElementById('tk-width-btn');
+  if(b) b.title = 'Panel width: ' + w + ' (click to cycle)';
 }
-function initPanelResize(){
-  const handle = document.getElementById('tk-resize-handle');
-  if(!handle) return;
-  let dragging = false, startX = 0, startWidth = 0;
-  function onMove(clientX){
-    const delta = startX - clientX; // dragging toward the left widens the panel
-    applyPanelWidth(Math.max(PANEL_MIN_WIDTH, Math.min(getPanelMaxWidth(), startWidth + delta)));
-  }
-  function startDrag(clientX){
-    dragging = true;
-    startX = clientX;
-    startWidth = document.getElementById('tk-panel').offsetWidth;
-    handle.classList.add('dragging');
-    document.body.style.userSelect = 'none';
-  }
-  function endDrag(){
-    if(!dragging) return;
-    dragging = false;
-    handle.classList.remove('dragging');
-    document.body.style.userSelect = '';
-    const panel = document.getElementById('tk-panel');
-    if(panel) localStorage.setItem(PANEL_WIDTH_KEY, String(panel.offsetWidth));
-  }
-  handle.addEventListener('mousedown', function(e){ startDrag(e.clientX); e.preventDefault(); });
-  window.addEventListener('mousemove', function(e){ if(dragging) onMove(e.clientX); });
-  window.addEventListener('mouseup', endDrag);
-  handle.addEventListener('touchstart', function(e){ startDrag(e.touches[0].clientX); }, { passive:true });
-  window.addEventListener('touchmove', function(e){ if(dragging) onMove(e.touches[0].clientX); }, { passive:true });
-  window.addEventListener('touchend', endDrag);
+function cycleGhostPanelWidth(){
+  const order = ['narrow','wide','full'];
+  const next = order[(order.indexOf(_ghostWidthGet()) + 1) % order.length];
+  try{ localStorage.setItem('ghost_panel_width', next); }catch(_){}
+  applyGhostPanelWidth();
 }
+window.cycleGhostPanelWidth = cycleGhostPanelWidth;
 
 /* ================= APPLICATION DETAIL PANEL ================= */
 async function openApplication(id){
@@ -1130,8 +1108,7 @@ async function openApplication(id){
   const panel = document.getElementById('tk-panel');
   panel.innerHTML = renderPanelShell(app);
   panel.classList.add('open');
-  applyPanelWidth(getSavedPanelWidth());
-  document.getElementById('tk-resize-handle').classList.add('open');
+  applyGhostPanelWidth();
 
   if(app.has_unread){
     try{
@@ -1150,7 +1127,6 @@ window.openApplication = openApplication;
 function closePanel(){
   document.getElementById('tk-overlay').classList.remove('open');
   document.getElementById('tk-panel').classList.remove('open');
-  document.getElementById('tk-resize-handle').classList.remove('open');
   S.openAppId = null;
   unsubscribeAppRealtime();
 }
@@ -1163,6 +1139,7 @@ function renderPanelShell(app){
     + '<div class="panel-head-actions">'
       + '<button class="icon-btn" onclick="toggleUnread(\'' + app.id + '\')" title="' + (app.has_unread ? 'Mark read' : 'Mark unread') + '">' + (app.has_unread ? 'Mark Read' : 'Mark Unread') + '</button>'
       + (app.status !== 'archived' ? '<button class="icon-btn" onclick="archiveApplication(\'' + app.id + '\')" title="Archive">Archive</button>' : '')
+      + '<button class="icon-btn" id="tk-width-btn" title="Cycle panel width (narrow / wide / full)" onclick="cycleGhostPanelWidth()">&#10529;</button>'
       + '<button class="panel-close" onclick="closePanel()">&times;</button>'
     + '</div>'
     + '</div>'
@@ -1312,6 +1289,7 @@ window.updateStatus = updateStatus;
 
 function renderPanelShell_refresh(app){
   document.getElementById('tk-panel').innerHTML = renderPanelShell(app);
+  applyGhostPanelWidth();
   renderPanelBody();
 }
 
@@ -2120,7 +2098,6 @@ window.deleteTemplate = deleteTemplate;
 var inPasswordRecovery = false;
 document.addEventListener('DOMContentLoaded', async function(){
   sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-  initPanelResize();
 
   // A click on the "reset password" email link lands back here with a
   // recovery session. Catch that before the normal session check below
