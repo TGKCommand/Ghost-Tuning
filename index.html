@@ -138,7 +138,26 @@ tr.row-click:hover td{background:var(--bg3)}
 #modalOverlay{position:fixed;inset:0;background:rgba(17,24,39,.4);z-index:60;display:flex;align-items:center;justify-content:center;padding:16px}
 .modal{background:var(--bg);border-radius:var(--r-lg);padding:22px 24px;width:100%;max-width:420px;box-shadow:0 10px 40px rgba(0,0,0,.25)}
 .modal-title{font-size:var(--t-xl);font-weight:700;margin-bottom:14px}
+.modal-sub{color:var(--text3);font-size:var(--t-sm);margin:-8px 0 16px}
 .modal-footer{display:flex;justify-content:flex-end;gap:8px;margin-top:18px}
+.invoice-box{border:1px solid var(--border);border-radius:var(--r-md);background:var(--bg2);padding:14px 16px;margin-bottom:16px}
+.invoice-line{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;padding:7px 0;border-bottom:1px dashed var(--border);font-size:var(--t-sm)}
+.invoice-line:last-of-type{border-bottom:none}
+.invoice-line-desc{flex:1}
+.invoice-line-amt{display:flex;align-items:center;gap:10px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.invoice-line-remove{cursor:pointer;color:var(--text3);font-size:16px;line-height:1;padding:0 2px}
+.invoice-line-remove:hover{color:var(--red)}
+.invoice-empty{color:var(--text3);font-size:var(--t-sm);text-align:center;padding:18px 4px}
+.invoice-total{display:flex;justify-content:space-between;align-items:baseline;padding-top:10px;margin-top:2px;border-top:2px solid var(--text);font-weight:700}
+.invoice-total .amt{font-size:18px;font-variant-numeric:tabular-nums}
+.invoice-add-section{border-top:1px solid var(--border);padding-top:14px;margin-top:-2px}
+.invoice-add-label{font-size:var(--t-xs);font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text3);margin-bottom:6px}
+.invoice-add-row{display:flex;gap:6px;margin-bottom:12px}
+.invoice-add-row .form-input{height:34px;box-sizing:border-box}
+.price-input{position:relative;width:92px;flex-shrink:0}
+.price-input span{position:absolute;left:9px;top:50%;transform:translateY(-50%);color:var(--text3);font-size:var(--t-sm);pointer-events:none}
+.price-input input{padding-left:20px;width:100%}
+.qty-input{width:52px;flex-shrink:0;text-align:center;padding-left:6px;padding-right:6px}
 .panel-head{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-shrink:0}
 .panel-head h3{font-size:var(--t-xl);font-weight:700;margin:0}
 .panel-head .sub{font-size:var(--t-sm);color:var(--text3);margin-top:2px}
@@ -306,7 +325,7 @@ tr.row-click:hover td{background:var(--bg3)}
         </div>
         <div class="sync-sub" onclick="doLogout()">Sign out</div>
         <div class="version-row">
-          <span>v1.53</span>
+          <span>v1.54</span>
           <span id="buildDate"></span>
         </div>
       </div>
@@ -1600,7 +1619,7 @@ async function openSendInvoiceModal(appId){
   if(!app) return;
   // Resend/Edit starts from whatever was sent last time; a fresh send starts empty.
   S.modalInvoiceLines = Array.isArray(app.invoice_line_items) ? JSON.parse(JSON.stringify(app.invoice_line_items)) : [];
-  openModal('<div class="modal"><div class="modal-title">Loading products from Shopify&hellip;</div></div>');
+  openModal('<div class="modal" style="max-width:520px"><div class="modal-title">Loading products from Shopify&hellip;</div></div>');
   await loadInvoiceCatalog();
   openModal(renderInvoiceModalHtml(appId, app.invoice_notes || ''));
 }
@@ -1614,34 +1633,36 @@ function renderInvoiceModalHtml(appId, notesValue){
   }).join('');
 
   const linesHtml = S.modalInvoiceLines.length ? S.modalInvoiceLines.map(function(l, i){
-    return '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);font-size:var(--t-sm)">'
-      + '<div>' + (l.quantity > 1 ? l.quantity + '&times; ' : '') + escapeHtml(l.title) + (l.type === 'custom' ? ' <span class="pill pill-muted">custom</span>' : '') + '</div>'
-      + '<div style="display:flex;align-items:center;gap:10px"><span>$' + (Number(l.price) * Number(l.quantity||1)).toFixed(2) + '</span>'
-      + '<span onclick="removeInvoiceLine(\'' + appId + '\',' + i + ')" style="cursor:pointer;color:var(--red)" title="Remove">&times;</span></div>'
+    return '<div class="invoice-line">'
+      + '<div class="invoice-line-desc">' + (l.quantity > 1 ? l.quantity + '&times; ' : '') + escapeHtml(l.title) + (l.type === 'custom' ? ' <span class="pill pill-muted">custom</span>' : '') + '</div>'
+      + '<div class="invoice-line-amt"><span>$' + (Number(l.price) * Number(l.quantity||1)).toFixed(2) + '</span>'
+      + '<span class="invoice-line-remove" onclick="removeInvoiceLine(\'' + appId + '\',' + i + ')" title="Remove">&times;</span></div>'
       + '</div>';
-  }).join('') : '<div class="file-meta" style="padding:8px 0">No line items yet - add a product or a custom item below.</div>';
+  }).join('') : '<div class="invoice-empty">No line items yet - add a product or a custom item below.</div>';
 
-  return '<div class="modal" style="max-width:480px">'
+  return '<div class="modal" style="max-width:520px">'
     + '<div class="modal-title">' + (app.invoice_status === 'not_sent' ? 'Send Invoice' : 'Edit &amp; Resend Invoice') + '</div>'
+    + '<div class="modal-sub">Application #' + app.application_number + ' - ' + escapeHtml(app.customer_name) + '</div>'
 
-    + '<div style="margin-bottom:14px">' + linesHtml
-      + '<div style="display:flex;justify-content:space-between;padding-top:10px;font-weight:700">'
-      + '<span>Total</span><span>$' + invoiceLineTotal().toFixed(2) + '</span></div></div>'
+    + '<div class="invoice-box">' + linesHtml
+      + '<div class="invoice-total"><span>Total</span><span class="amt">$' + invoiceLineTotal().toFixed(2) + '</span></div></div>'
 
-    + '<div class="form-group"><label class="form-label">Add a Ghost Tuning product</label>'
-      + '<div style="display:flex;gap:6px">'
+    + '<div class="invoice-add-section">'
+      + '<div class="invoice-add-label">Add a Ghost Tuning product</div>'
+      + '<div class="invoice-add-row">'
       + '<select class="form-input" id="invoiceProductSelect" style="flex:1">' + (catalog.length ? catalogOptions : '<option value="">No products found in Shopify</option>') + '</select>'
-      + '<input class="form-input" id="invoiceProductQty" type="number" min="1" step="1" value="1" style="width:56px">'
+      + '<input class="form-input qty-input" id="invoiceProductQty" type="number" min="1" step="1" value="1" title="Quantity">'
       + '<button class="btn btn-sm" onclick="addProductLine(\'' + appId + '\')" ' + (catalog.length ? '' : 'disabled') + '>Add</button>'
-      + '</div></div>'
+      + '</div>'
 
-    + '<div class="form-group"><label class="form-label">Or add a custom item</label>'
-      + '<div style="display:flex;gap:6px">'
+      + '<div class="invoice-add-label">Or add a custom item</div>'
+      + '<div class="invoice-add-row">'
       + '<input class="form-input" id="invoiceCustomTitle" placeholder="Item description" style="flex:1">'
-      + '<input class="form-input" id="invoiceCustomPrice" type="number" step="0.01" min="0" placeholder="$" style="width:80px">'
-      + '<input class="form-input" id="invoiceCustomQty" type="number" min="1" step="1" value="1" style="width:56px">'
+      + '<div class="price-input"><span>$</span><input class="form-input" id="invoiceCustomPrice" type="number" step="0.01" min="0" placeholder="0.00"></div>'
+      + '<input class="form-input qty-input" id="invoiceCustomQty" type="number" min="1" step="1" value="1" title="Quantity">'
       + '<button class="btn btn-sm" onclick="addCustomLine(\'' + appId + '\')">Add</button>'
-      + '</div></div>'
+      + '</div>'
+    + '</div>'
 
     + '<div class="form-group"><label class="form-label">Message to customer (included in the email, optional)</label>'
       + '<textarea class="form-input" id="invoiceNotesInput" placeholder="e.g. Covers dyno time and revision work">' + escapeHtml(notesValue) + '</textarea></div>'
