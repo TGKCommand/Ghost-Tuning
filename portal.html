@@ -139,6 +139,19 @@ body{background-image:url('data:image/webp;base64,UklGRqIrAABXRUJQVlA4WAoAAAAQAA
 .empty-state{text-align:center;padding:24px 10px;color:var(--text3);font-size:13px}
 .footer-note{text-align:center;margin-top:6px;font-size:11px;color:var(--text3)}
 .skeleton{padding:60px 10px;text-align:center;color:var(--text3);font-size:13.5px}
+
+@media(max-width:480px){
+  /* Six stage labels in a space-between row genuinely overflow/crowd on a
+     real phone width - keep the dots (they scale fine) but only show the
+     current stage's label, invisibility rather than removal so it stays
+     positioned above its correct dot instead of the row re-flowing. */
+  .stepper-labels span:not(.current){visibility:hidden}
+  .tgk-tuning-portal .wrap{padding:14px 14px 60px}
+  .tgk-tuning-portal .portal-brand{padding:20px 14px 10px}
+  .tgk-tuning-portal .card{padding:18px 16px}
+  .hero-carbon{padding:20px 18px}
+  .tgk-tuning-portal .hero-carbon h1{font-size:18px}
+}
 </style>
 </head>
 <body>
@@ -192,7 +205,7 @@ const STATUS_ACCENT = {
   completed:'#16a34a', archived:'#9ca3af'
 };
 
-let STATE = { application:null, messages:[], files:[], _channel:null, _prevMsgCount:0 };
+let STATE = { application:null, messages:[], files:[], invoices:[], _channel:null, _prevMsgCount:0 };
 
 function escapeHtml(s){
   return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){
@@ -323,7 +336,7 @@ function renderPortal(){
   html += renderRevisionCta(a);
   html += '</div></div>';
 
-  html += renderInvoiceCard(a);
+  html += renderInvoiceCard();
 
   html += '<div class="card">';
   html += '<h2>Messages</h2>';
@@ -358,27 +371,40 @@ window.renderPortal = renderPortal;
 
 // Only shows once the tuner has actually sent an invoice - a fresh
 // application with no invoice yet gets nothing here, not an empty box.
-function renderInvoiceCard(a){
-  if(!a.invoice_status || a.invoice_status === 'not_sent') return '';
-  const isPaid = a.invoice_status === 'paid';
-  const lines = Array.isArray(a.invoice_line_items) ? a.invoice_line_items : [];
-  const linesHtml = lines.map(function(l){
-    return '<div class="invoice-line"><div>' + (l.quantity > 1 ? l.quantity + '&times; ' : '') + escapeHtml(l.title) + '</div><div>$' + (Number(l.price) * Number(l.quantity||1)).toFixed(2) + '</div></div>';
-  }).join('');
-  const total = a.invoice_amount != null ? Number(a.invoice_amount).toFixed(2) : '0.00';
+// Only shows once the tuner has actually sent at least one invoice - a
+// fresh application with none yet gets nothing here, not an empty box.
+// A customer who orders an additional tune later just sees a second
+// invoice-box appear here, independent of the first.
+function renderInvoiceCard(){
+  const invoices = STATE.invoices || [];
+  if(!invoices.length) return '';
 
   let html = '<div class="card">';
-  html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">';
-  html += '<h2>Invoice</h2>';
-  html += '<span class="pill ' + (isPaid ? 'pill-green' : 'pill-yellow') + '">' + (isPaid ? 'Paid' : 'Awaiting Payment') + '</span>';
-  html += '</div>';
-  html += '<div class="invoice-box">' + linesHtml + '<div class="invoice-total"><span>Total</span><span class="amt">$' + total + '</span></div></div>';
-  if(a.invoice_notes) html += '<p class="sub" style="margin-bottom:12px">' + escapeHtml(a.invoice_notes) + '</p>';
-  if(isPaid){
-    html += '<p class="sub">Paid' + (a.invoice_paid_at ? ' ' + fmtDate(a.invoice_paid_at) : '') + '. Thank you!</p>';
-  } else if(a.invoice_url){
-    html += '<a href="' + escapeHtml(a.invoice_url) + '" target="_blank" rel="noopener" class="btn" style="text-decoration:none">Pay Invoice - $' + total + '</a>';
-  }
+  html += '<h2 style="margin-bottom:12px">Invoices</h2>';
+  html += invoices.map(function(inv){
+    const isPaid = inv.status === 'paid';
+    const lines = Array.isArray(inv.line_items) ? inv.line_items : [];
+    const linesHtml = lines.map(function(l){
+      return '<div class="invoice-line"><div style="flex:1;min-width:0">' + (l.quantity > 1 ? l.quantity + '&times; ' : '') + escapeHtml(l.title) + '</div><div style="flex-shrink:0;white-space:nowrap">$' + (Number(l.price) * Number(l.quantity||1)).toFixed(2) + '</div></div>';
+    }).join('');
+    const total = inv.amount != null ? Number(inv.amount).toFixed(2) : '0.00';
+
+    let block = '<div class="invoice-box" style="margin-bottom:14px">';
+    block += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px">';
+    block += '<span class="pill ' + (isPaid ? 'pill-green' : 'pill-yellow') + '">' + (isPaid ? 'Paid' : 'Awaiting Payment') + '</span>';
+    block += '<span class="sub" style="font-size:12px">' + fmtDate(inv.sent_at || inv.created_at) + '</span>';
+    block += '</div>';
+    block += linesHtml;
+    block += '<div class="invoice-total"><span>Total</span><span class="amt">$' + total + '</span></div>';
+    if(inv.notes) block += '<p class="sub" style="margin:8px 0 0;font-size:13px">' + escapeHtml(inv.notes) + '</p>';
+    if(isPaid){
+      block += '<p class="sub" style="margin-top:8px">Paid' + (inv.paid_at ? ' ' + fmtDate(inv.paid_at) : '') + '. Thank you!</p>';
+    } else if(inv.invoice_url){
+      block += '<div style="margin-top:10px"><a href="' + escapeHtml(inv.invoice_url) + '" target="_blank" rel="noopener" class="btn" style="text-decoration:none">Pay Invoice - $' + total + '</a></div>';
+    }
+    block += '</div>';
+    return block;
+  }).join('');
   html += '</div>';
   return html;
 }
@@ -420,6 +446,7 @@ async function loadStatus(silent){
     STATE.application = data.application;
     STATE.messages = data.messages;
     STATE.files = data.files;
+    STATE.invoices = data.invoices || [];
     renderPortal();
     const newDraftEl = document.getElementById('msgInput');
     if(newDraftEl && draft) newDraftEl.value = draft;
