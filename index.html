@@ -295,7 +295,7 @@ tr.row-click:hover td{background:var(--bg3)}
         </div>
         <div class="sync-sub" onclick="doLogout()">Sign out</div>
         <div class="version-row">
-          <span>v1.44</span>
+          <span>v1.45</span>
           <span id="buildDate"></span>
         </div>
       </div>
@@ -952,8 +952,7 @@ function waitingOnLabel(a){
 
 function toggleBulkSelect(id){
   if(S.selectedIds.has(id)) S.selectedIds.delete(id); else S.selectedIds.add(id);
-  const bar = document.getElementById('bulkBar');
-  if(bar) bar.outerHTML = renderBulkBar();
+  document.getElementById('appResults').innerHTML = renderAppResultsHtml();
 }
 window.toggleBulkSelect = toggleBulkSelect;
 
@@ -969,51 +968,49 @@ function clearBulkSelection(){
 }
 window.clearBulkSelection = clearBulkSelection;
 
-async function bulkArchive(){
+async function bulkUpdateField(field, value){
   const ids = Array.from(S.selectedIds);
   if(!ids.length) return;
-  if(!confirm('Archive ' + ids.length + ' application' + (ids.length>1?'s':'') + '?')) return;
   try{
-    const { error } = await sb.from('tuning_applications').update({ status:'archived', updated_at:new Date().toISOString() }).in('id', ids);
+    const patch = { [field]: value, updated_at: new Date().toISOString() };
+    const { data, error } = await sb.from('tuning_applications').update(patch).in('id', ids).select();
     if(error) throw error;
-    ids.forEach(function(id){
-      const app = S.applications.find(function(a){ return a.id === id; });
-      if(app) app.status = 'archived';
+    (data || []).forEach(function(updated){
+      const idx = S.applications.findIndex(function(a){ return a.id === updated.id; });
+      if(idx !== -1) S.applications[idx] = updated;
     });
+    ids.forEach(function(id){ logActivity(id, field, null, value); });
+    toast('Updated ' + ids.length + ' application' + (ids.length===1?'':'s'));
     S.selectedIds.clear();
     renderNav();
     document.getElementById('appResults').innerHTML = renderAppResultsHtml();
-    toast('Archived ' + ids.length + ' application' + (ids.length>1?'s':''));
-  }catch(e){ toast('Bulk archive failed: ' + e.message, true); }
+  }catch(e){
+    toast('Bulk update failed: ' + e.message, true);
+  }
 }
-window.bulkArchive = bulkArchive;
+window.bulkUpdateField = bulkUpdateField;
 
-async function bulkMarkRead(){
-  const ids = Array.from(S.selectedIds);
-  if(!ids.length) return;
-  try{
-    const { error } = await sb.from('tuning_applications').update({ has_unread:false, unread_count:0 }).in('id', ids);
-    if(error) throw error;
-    ids.forEach(function(id){
-      const app = S.applications.find(function(a){ return a.id === id; });
-      if(app){ app.has_unread = false; app.unread_count = 0; }
-    });
-    S.selectedIds.clear();
-    renderNav();
-    document.getElementById('appResults').innerHTML = renderAppResultsHtml();
-    toast('Marked ' + ids.length + ' as read');
-  }catch(e){ toast('Bulk mark-read failed: ' + e.message, true); }
-}
-window.bulkMarkRead = bulkMarkRead;
+function bulkSetStatus(status){ bulkUpdateField('status', status); }
+window.bulkSetStatus = bulkSetStatus;
+
+function bulkAssignTuner(value){ bulkUpdateField('assigned_tuner', value==='__unassigned__' ? null : value); }
+window.bulkAssignTuner = bulkAssignTuner;
 
 function renderBulkBar(){
   const n = S.selectedIds.size;
-  if(!n) return '<div id="bulkBar"></div>';
-  return '<div id="bulkBar" style="display:flex;align-items:center;gap:10px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:10px 14px;margin-bottom:12px">'
-    + '<strong>' + n + ' selected</strong>'
-    + '<button class="btn btn-sm" onclick="bulkMarkRead()">Mark Read</button>'
-    + '<button class="btn btn-sm" onclick="bulkArchive()">Archive</button>'
-    + '<button class="btn btn-sm" onclick="clearBulkSelection()">Clear</button>'
+  if(!n) return '';
+  return '<div class="panel" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 16px;margin-bottom:12px;background:var(--teal-dim);border-color:rgba(13,148,136,.25)">'
+    + '<span style="font-size:var(--t-md);font-weight:600;color:var(--teal)">' + n + ' selected</span>'
+    + '<select class="form-input" style="width:auto" onchange="if(this.value){bulkSetStatus(this.value); this.value=\'\';}">'
+      + '<option value="">Set Status...</option>'
+      + STATUS_ORDER.map(function(s){ return '<option value="' + s + '">' + STATUS_LABEL[s] + '</option>'; }).join('')
+    + '</select>'
+    + '<select class="form-input" style="width:auto" onchange="if(this.value){bulkAssignTuner(this.value); this.value=\'\';}">'
+      + '<option value="">Assign To...</option>'
+      + '<option value="__unassigned__">Unassigned</option>'
+      + (S.tuners || []).map(function(t){ return '<option value="' + escapeHtml(t.email) + '">' + escapeHtml(t.full_name || t.email) + '</option>'; }).join('')
+    + '</select>'
+    + '<button class="btn btn-sm" onclick="clearBulkSelection()">Clear Selection</button>'
     + '</div>';
 }
 
