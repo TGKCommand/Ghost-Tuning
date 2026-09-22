@@ -308,7 +308,7 @@ tr.row-click:hover td{background:var(--bg3)}
         </div>
         <div class="sync-sub" onclick="doLogout()">Sign out</div>
         <div class="version-row">
-          <span>v1.50</span>
+          <span>v1.51</span>
           <span id="buildDate"></span>
         </div>
       </div>
@@ -360,7 +360,8 @@ const NAV = [
 
 const S = { user:null, page:'dashboard', applications:[], openAppId:null, messages:{}, files:{}, activity:{}, recentActivity:[], templates:[], activeTab:'overview', filter:'active', search:'',
   pendingLogs:[], platformLibrary:[], ecuReference:[], revisionCount:0, lookupQuery:'', libraryFormOpen:false, ecuFormOpen:false, tuners:[], selectedIds:new Set(),
-  fullActivity:[], fullActivityOffset:0, fullActivityHasMore:true, fullActivityLoading:false };
+  fullActivity:[], fullActivityOffset:0, fullActivityHasMore:true, fullActivityLoading:false,
+  invoiceCatalog:null, invoiceCatalogLoading:false, modalInvoiceLines:[] };
 
 function escapeHtml(s){
   return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){
@@ -1507,31 +1508,131 @@ async function checkShopifyOrder(appId){
 }
 window.checkShopifyOrder = checkShopifyOrder;
 
-function openSendInvoiceModal(appId){
+async function loadInvoiceCatalog(){
+  if(S.invoiceCatalog || S.invoiceCatalogLoading) return S.invoiceCatalog;
+  S.invoiceCatalogLoading = true;
+  try{
+    const { data: sess } = await sb.auth.getSession();
+    const token = sess && sess.session && sess.session.access_token;
+    if(!token) throw new Error('Not signed in');
+    const resp = await fetch(SUPABASE_URL + '/functions/v1/tuning-invoice', {
+      method: 'POST',
+      headers: { 'Content-Type':'application/json', 'Authorization':'Bearer ' + token, 'apikey': SUPABASE_ANON_KEY },
+      body: JSON.stringify({ action: 'catalog' })
+    });
+    const result = await resp.json();
+    if(!result.success) throw new Error(result.error || 'Catalog load failed');
+    S.invoiceCatalog = result.variants || [];
+  }catch(e){
+    toast('Failed to load Shopify product catalog: ' + e.message, true);
+    S.invoiceCatalog = [];
+  }
+  S.invoiceCatalogLoading = false;
+  return S.invoiceCatalog;
+}
+
+function invoiceLineTotal(){
+  return S.modalInvoiceLines.reduce(function(sum, l){ return sum + (Number(l.price)||0) * (Number(l.quantity)||1); }, 0);
+}
+
+async function openSendInvoiceModal(appId){
   const app = S.applications.find(function(a){ return a.id === appId; });
   if(!app) return;
-  const amount = app.invoice_amount != null ? app.invoice_amount : '';
-  const notes = app.invoice_notes || '';
-  openModal(
-    '<div class="modal">'
-    + '<div class="modal-title">' + (app.invoice_status === 'not_sent' ? 'Send Invoice' : 'Edit &amp; Resend Invoice') + '</div>'
-    + '<div class="form-group"><label class="form-label">Amount (USD)</label>'
-      + '<input class="form-input" id="invoiceAmountInput" type="number" step="0.01" min="0" placeholder="0.00" value="' + escapeHtml(amount) + '"></div>'
-    + '<div class="form-group"><label class="form-label">Notes (included in the email, optional)</label>'
-      + '<textarea class="form-input" id="invoiceNotesInput" placeholder="e.g. Stage 2 tune, dyno time, revision work">' + escapeHtml(notes) + '</textarea></div>'
-    + '<div class="modal-footer">'
-      + '<button class="btn btn-sm" onclick="closeModal()">Cancel</button>'
-      + '<button class="btn btn-sm btn-primary" onclick="confirmSendInvoice(\'' + appId + '\')">Send</button>'
-    + '</div></div>'
-  );
+  // Resend/Edit starts from whatever was sent last time; a fresh send starts empty.
+  S.modalInvoiceLines = Array.isArray(app.invoice_line_items) ? JSON.parse(JSON.stringify(app.invoice_line_items)) : [];
+  openModal('<div class="modal"><div class="modal-title">Loading products from Shopify&hellip;</div></div>');
+  await loadInvoiceCatalog();
+  openModal(renderInvoiceModalHtml(appId, app.invoice_notes || ''));
 }
 window.openSendInvoiceModal = openSendInvoiceModal;
 
-async function confirmSendInvoice(appId){
-  const amountInput = document.getElementById('invoiceAmountInput');
+function renderInvoiceModalHtml(appId, notesValue){
+  const app = S.applications.find(function(a){ return a.id === appId; });
+  const catalog = S.invoiceCatalog || [];
+  const catalogOptions = catalog.map(function(v, i){
+    return '<option value="' + i + '">' + escapeHtml(v.title) + ' - $' + Number(v.price).toFixed(2) + (v.sku ? ' (' + escapeHtml(v.sku) + ')' : '') + '</option>';
+  }).join('');
+
+  const linesHtml = S.modalInvoiceLines.length ? S.modalInvoiceLines.map(function(l, i){
+    return '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);font-size:var(--t-sm)">'
+      + '<div>' + (l.quantity > 1 ? l.quantity + '&times; ' : '') + escapeHtml(l.title) + (l.type === 'custom' ? ' <span class="pill pill-muted">custom</span>' : '') + '</div>'
+      + '<div style="display:flex;align-items:center;gap:10px"><span>$' + (Number(l.price) * Number(l.quantity||1)).toFixed(2) + '</span>'
+      + '<span onclick="removeInvoiceLine(\'' + appId + '\',' + i + ')" style="cursor:pointer;color:var(--red)" title="Remove">&times;</span></div>'
+      + '</div>';
+  }).join('') : '<div class="file-meta" style="padding:8px 0">No line items yet - add a product or a custom item below.</div>';
+
+  return '<div class="modal" style="max-width:480px">'
+    + '<div class="modal-title">' + (app.invoice_status === 'not_sent' ? 'Send Invoice' : 'Edit &amp; Resend Invoice') + '</div>'
+
+    + '<div style="margin-bottom:14px">' + linesHtml
+      + '<div style="display:flex;justify-content:space-between;padding-top:10px;font-weight:700">'
+      + '<span>Total</span><span>$' + invoiceLineTotal().toFixed(2) + '</span></div></div>'
+
+    + '<div class="form-group"><label class="form-label">Add a Ghost Tuning product</label>'
+      + '<div style="display:flex;gap:6px">'
+      + '<select class="form-input" id="invoiceProductSelect" style="flex:1">' + (catalog.length ? catalogOptions : '<option value="">No products found in Shopify</option>') + '</select>'
+      + '<input class="form-input" id="invoiceProductQty" type="number" min="1" step="1" value="1" style="width:56px">'
+      + '<button class="btn btn-sm" onclick="addProductLine(\'' + appId + '\')" ' + (catalog.length ? '' : 'disabled') + '>Add</button>'
+      + '</div></div>'
+
+    + '<div class="form-group"><label class="form-label">Or add a custom item</label>'
+      + '<div style="display:flex;gap:6px">'
+      + '<input class="form-input" id="invoiceCustomTitle" placeholder="Item description" style="flex:1">'
+      + '<input class="form-input" id="invoiceCustomPrice" type="number" step="0.01" min="0" placeholder="$" style="width:80px">'
+      + '<input class="form-input" id="invoiceCustomQty" type="number" min="1" step="1" value="1" style="width:56px">'
+      + '<button class="btn btn-sm" onclick="addCustomLine(\'' + appId + '\')">Add</button>'
+      + '</div></div>'
+
+    + '<div class="form-group"><label class="form-label">Message to customer (included in the email, optional)</label>'
+      + '<textarea class="form-input" id="invoiceNotesInput" placeholder="e.g. Covers dyno time and revision work">' + escapeHtml(notesValue) + '</textarea></div>'
+
+    + '<div class="modal-footer">'
+      + '<button class="btn btn-sm" onclick="closeModal()">Cancel</button>'
+      + '<button class="btn btn-sm btn-primary" onclick="confirmSendInvoice(\'' + appId + '\')" ' + (S.modalInvoiceLines.length ? '' : 'disabled') + '>Send</button>'
+      + '</div></div>';
+}
+
+function reopenInvoiceModal(appId){
   const notesInput = document.getElementById('invoiceNotesInput');
-  const amount = parseFloat(amountInput.value);
-  if(isNaN(amount) || amount <= 0){ toast('Enter a valid invoice amount', true); return; }
+  const notesValue = notesInput ? notesInput.value : '';
+  openModal(renderInvoiceModalHtml(appId, notesValue));
+}
+
+function addProductLine(appId){
+  const select = document.getElementById('invoiceProductSelect');
+  const qtyInput = document.getElementById('invoiceProductQty');
+  const idx = select.value;
+  if(idx === '' || !S.invoiceCatalog || !S.invoiceCatalog[idx]){ toast('Pick a product first', true); return; }
+  const v = S.invoiceCatalog[idx];
+  const qty = Math.max(1, parseInt(qtyInput.value, 10) || 1);
+  S.modalInvoiceLines.push({ type:'product', variant_id: v.variant_id, sku: v.sku, title: v.title, price: v.price, quantity: qty });
+  reopenInvoiceModal(appId);
+}
+window.addProductLine = addProductLine;
+
+function addCustomLine(appId){
+  const titleInput = document.getElementById('invoiceCustomTitle');
+  const priceInput = document.getElementById('invoiceCustomPrice');
+  const qtyInput = document.getElementById('invoiceCustomQty');
+  const title = titleInput.value.trim();
+  const price = parseFloat(priceInput.value);
+  const qty = Math.max(1, parseInt(qtyInput.value, 10) || 1);
+  if(!title){ toast('Enter an item description', true); return; }
+  if(isNaN(price) || price <= 0){ toast('Enter a valid price', true); return; }
+  S.modalInvoiceLines.push({ type:'custom', title: title, price: price, quantity: qty });
+  reopenInvoiceModal(appId);
+}
+window.addCustomLine = addCustomLine;
+
+function removeInvoiceLine(appId, idx){
+  S.modalInvoiceLines.splice(idx, 1);
+  reopenInvoiceModal(appId);
+}
+window.removeInvoiceLine = removeInvoiceLine;
+
+async function confirmSendInvoice(appId){
+  if(!S.modalInvoiceLines.length){ toast('Add at least one line item', true); return; }
+  const notesInput = document.getElementById('invoiceNotesInput');
   const notes = notesInput.value.trim() || null;
 
   const sendBtn = document.querySelector('#modalOverlay .btn-primary');
@@ -1544,7 +1645,7 @@ async function confirmSendInvoice(appId){
     const resp = await fetch(SUPABASE_URL + '/functions/v1/tuning-invoice', {
       method: 'POST',
       headers: { 'Content-Type':'application/json', 'Authorization':'Bearer ' + token, 'apikey': SUPABASE_ANON_KEY },
-      body: JSON.stringify({ action: 'send', application_id: appId, amount: amount, notes: notes })
+      body: JSON.stringify({ action: 'send', application_id: appId, line_items: S.modalInvoiceLines, notes: notes })
     });
     const result = await resp.json();
     if(!result.success) throw new Error(result.error || 'Send failed');
@@ -1626,15 +1727,23 @@ function renderOverview(a){
     + '</div>';
 
   if(canManageInvoice(a)){
+    const lineItemsHtml = (Array.isArray(a.invoice_line_items) && a.invoice_line_items.length)
+      ? '<div class="dl-item full"><div class="dl-label">Line Items</div><div class="dl-value">'
+        + a.invoice_line_items.map(function(l){
+            return (l.quantity > 1 ? l.quantity + '&times; ' : '') + escapeHtml(l.title) + ' - $' + (Number(l.price) * Number(l.quantity||1)).toFixed(2);
+          }).join('<br>')
+        + '</div></div>'
+      : '';
     html += '<div class="section-title">Invoice</div><div class="dl-grid">'
       + '<div class="dl-item"><div class="dl-label">Status</div><div class="dl-value">'
         + '<span class="pill ' + invoiceStatusPillClass(a.invoice_status) + '">' + invoiceStatusLabel(a.invoice_status) + '</span>'
         + '</div></div>'
-      + dl('Amount', a.invoice_amount != null ? '$' + Number(a.invoice_amount).toFixed(2) : '-')
+      + dl('Total', a.invoice_amount != null ? '$' + Number(a.invoice_amount).toFixed(2) : '-')
+      + lineItemsHtml
       + dl('Shopify Draft Order', a.shopify_draft_order_name || '-')
       + dl('Sent', a.invoice_sent_at ? fmtDate(a.invoice_sent_at) + (a.invoice_sent_by ? ' by ' + a.invoice_sent_by : '') : '-')
       + dl('Paid', a.invoice_paid_at ? fmtDate(a.invoice_paid_at) + (a.invoice_paid_by ? ' by ' + a.invoice_paid_by : '') : '-')
-      + (a.invoice_notes ? dlFull('Notes', a.invoice_notes) : '')
+      + (a.invoice_notes ? dlFull('Message to Customer', a.invoice_notes) : '')
       + (a.invoice_url ? '<div class="dl-item full"><div class="dl-label">Payment Link</div><div class="dl-value"><a href="' + escapeHtml(a.invoice_url) + '" target="_blank" rel="noopener">' + escapeHtml(a.invoice_url) + '</a></div></div>' : '')
       + '</div>';
     html += '<div style="display:flex;gap:8px;align-items:center;margin:0 0 20px">';
