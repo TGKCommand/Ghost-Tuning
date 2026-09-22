@@ -49,6 +49,12 @@ body{background-image:url('data:image/webp;base64,UklGRqIrAABXRUJQVlA4WAoAAAAQAA
 .tgk-tuning-portal .card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--teal),var(--orange) 60%,transparent)}
 .tgk-tuning-portal .card.status-card{border-left:4px solid var(--status-accent, var(--teal))}
 
+.tgk-tuning-portal .invoice-box{border:1px solid var(--border);border-radius:var(--r);background:var(--bg2);padding:12px 16px;margin-bottom:12px}
+.tgk-tuning-portal .invoice-line{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;padding:6px 0;border-bottom:1px dashed var(--border);font-size:13.5px}
+.tgk-tuning-portal .invoice-line:last-of-type{border-bottom:none}
+.tgk-tuning-portal .invoice-total{display:flex;justify-content:space-between;align-items:baseline;padding-top:8px;margin-top:2px;border-top:2px solid var(--text);font-weight:700}
+.tgk-tuning-portal .invoice-total .amt{font-size:18px}
+
 
 /* Carbon-fiber hero header replacing the plain white status card */
 .hero-carbon{
@@ -317,6 +323,8 @@ function renderPortal(){
   html += renderRevisionCta(a);
   html += '</div></div>';
 
+  html += renderInvoiceCard(a);
+
   html += '<div class="card">';
   html += '<h2>Messages</h2>';
   html += '<div class="msg-list" id="msgList">' + renderMessages() + '</div>';
@@ -347,6 +355,33 @@ function renderPortal(){
   STATE._prevMsgCount = STATE.messages.length;
 }
 window.renderPortal = renderPortal;
+
+// Only shows once the tuner has actually sent an invoice - a fresh
+// application with no invoice yet gets nothing here, not an empty box.
+function renderInvoiceCard(a){
+  if(!a.invoice_status || a.invoice_status === 'not_sent') return '';
+  const isPaid = a.invoice_status === 'paid';
+  const lines = Array.isArray(a.invoice_line_items) ? a.invoice_line_items : [];
+  const linesHtml = lines.map(function(l){
+    return '<div class="invoice-line"><div>' + (l.quantity > 1 ? l.quantity + '&times; ' : '') + escapeHtml(l.title) + '</div><div>$' + (Number(l.price) * Number(l.quantity||1)).toFixed(2) + '</div></div>';
+  }).join('');
+  const total = a.invoice_amount != null ? Number(a.invoice_amount).toFixed(2) : '0.00';
+
+  let html = '<div class="card">';
+  html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">';
+  html += '<h2>Invoice</h2>';
+  html += '<span class="pill ' + (isPaid ? 'pill-green' : 'pill-yellow') + '">' + (isPaid ? 'Paid' : 'Awaiting Payment') + '</span>';
+  html += '</div>';
+  html += '<div class="invoice-box">' + linesHtml + '<div class="invoice-total"><span>Total</span><span class="amt">$' + total + '</span></div></div>';
+  if(a.invoice_notes) html += '<p class="sub" style="margin-bottom:12px">' + escapeHtml(a.invoice_notes) + '</p>';
+  if(isPaid){
+    html += '<p class="sub">Paid' + (a.invoice_paid_at ? ' ' + fmtDate(a.invoice_paid_at) : '') + '. Thank you!</p>';
+  } else if(a.invoice_url){
+    html += '<a href="' + escapeHtml(a.invoice_url) + '" target="_blank" rel="noopener" class="btn" style="text-decoration:none">Pay Invoice - $' + total + '</a>';
+  }
+  html += '</div>';
+  return html;
+}
 
 function renderMessages(){
   if(!STATE.messages.length) return '<div class="empty-state">No messages yet.</div>';
