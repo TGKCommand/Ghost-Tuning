@@ -69,6 +69,12 @@ textarea.form-input{resize:vertical;min-height:70px}
 /* ---- generic ---- */
 .card{background:rgba(255,255,255,.93);border:1px solid var(--border);border-radius:var(--r-lg);padding:18px 20px;margin-bottom:16px;backdrop-filter:blur(1px)}
 .card h2{font-size:var(--t-xl);font-weight:700;margin:0 0 4px}
+/* Tables sit in this instead of .card - noticeably more translucent (.66 vs
+   .93) so the background watermark actually bleeds through the table body
+   and pills, matching Support Center. Nesting this inside .card would just
+   compound two translucent layers and make the watermark LESS visible, not
+   more, so table sections use this in place of .card, not inside it. */
+.tbl-wrap{background:rgba(255,255,255,.66);border:1px solid transparent;border-radius:var(--r-md);overflow-x:auto;box-shadow:0 1px 2px rgba(14,20,24,.05),0 0 0 1px var(--border);margin-bottom:16px}
 .stat-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:20px}
 .stat-card{
   background-color:var(--cb-c);background-image:var(--cb-i);
@@ -302,7 +308,7 @@ tr.row-click:hover td{background:var(--bg3)}
         </div>
         <div class="sync-sub" onclick="doLogout()">Sign out</div>
         <div class="version-row">
-          <span>v1.49</span>
+          <span>v1.50</span>
           <span id="buildDate"></span>
         </div>
       </div>
@@ -897,17 +903,14 @@ function renderDashboard(){
   html += statCard(apps.length, 'Total Applications', '');
   html += '</div>';
 
-  html += '<div class="card"><h2>New Submissions</h2><div class="sub" style="color:var(--text3);font-size:var(--t-sm);margin-bottom:12px">Applications waiting on your first review</div>';
-  html += newSubmissions.length ? appTable(newSubmissions) : '<div class="empty-state"><div class="big">&#10003;</div>Nothing new to review.</div>';
-  html += '</div>';
+  html += '<div class="section-title">New Submissions</div><div class="sub" style="color:var(--text3);font-size:var(--t-sm);margin-bottom:10px">Applications waiting on your first review</div>';
+  html += '<div class="tbl-wrap">' + (newSubmissions.length ? appTable(newSubmissions) : '<div class="empty-state"><div class="big">&#10003;</div>Nothing new to review.</div>') + '</div>';
 
-  html += '<div class="card"><h2>Revision Requests</h2><div class="sub" style="color:var(--text3);font-size:var(--t-sm);margin-bottom:12px">Customers waiting on a revised tune</div>';
-  html += revisionRequests.length ? appTable(revisionRequests) : '<div class="empty-state"><div class="big">&#10003;</div>No open revision requests.</div>';
-  html += '</div>';
+  html += '<div class="section-title">Revision Requests</div><div class="sub" style="color:var(--text3);font-size:var(--t-sm);margin-bottom:10px">Customers waiting on a revised tune</div>';
+  html += '<div class="tbl-wrap">' + (revisionRequests.length ? appTable(revisionRequests) : '<div class="empty-state"><div class="big">&#10003;</div>No open revision requests.</div>') + '</div>';
 
-  html += '<div class="card"><h2>Active Applications</h2><div class="sub" style="color:var(--text3);font-size:var(--t-sm);margin-bottom:12px">Everything in progress, and who needs to act next</div>';
-  html += active.length ? activeAppsTable(active) : '<div class="empty-state"><div class="big">-</div>Nothing in progress right now.</div>';
-  html += '</div>';
+  html += '<div class="section-title">Active Applications</div><div class="sub" style="color:var(--text3);font-size:var(--t-sm);margin-bottom:10px">Everything in progress, and who needs to act next</div>';
+  html += '<div class="tbl-wrap">' + (active.length ? activeAppsTable(active) : '<div class="empty-state"><div class="big">-</div>Nothing in progress right now.</div>') + '</div>';
 
   html += '<div class="card"><h2>Recent Activity</h2><div class="sub" style="color:var(--text3);font-size:var(--t-sm);margin-bottom:12px">Latest status changes, messages and files across every application</div>';
   html += renderRecentActivity();
@@ -973,7 +976,7 @@ function renderAppResultsHtml(){
   }
   const validIds = {}; rows.forEach(function(a){ validIds[a.id] = true; });
   Array.from(S.selectedIds).forEach(function(id){ if(!validIds[id]) S.selectedIds.delete(id); });
-  return renderBulkBar() + '<div class="card" style="padding:0">' + (rows.length ? appTable(rows, true) : '<div class="empty-state"><div class="big">-</div>No applications match this filter.</div>') + '</div>';
+  return renderBulkBar() + '<div class="tbl-wrap">' + (rows.length ? appTable(rows, true) : '<div class="empty-state"><div class="big">-</div>No applications match this filter.</div>') + '</div>';
 }
 function setAppFilter(id){
   S.filter = id;
