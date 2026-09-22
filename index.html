@@ -132,11 +132,13 @@ tr.row-click:hover td{background:var(--bg3)}
 .panel-head{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-shrink:0}
 .panel-head h3{font-size:var(--t-xl);font-weight:700;margin:0}
 .panel-head .sub{font-size:var(--t-sm);color:var(--text3);margin-top:2px}
-.panel-close{background:none;border:none;font-size:20px;cursor:pointer;color:var(--text3);line-height:1;padding:4px}
-.panel-close:hover{color:var(--text)}
+.tk-close{background:none;border:none;font-size:var(--t-xl);color:var(--text3);cursor:pointer;padding:2px 6px;border-radius:var(--r-sm)}
+.tk-close:hover{background:var(--bg4);color:var(--text)}
 .panel-head-actions{display:flex;align-items:center;gap:4px;flex-shrink:0}
-.icon-btn{background:none;border:1px solid var(--border2);border-radius:var(--r);font-size:var(--t-md);cursor:pointer;color:var(--text3);line-height:1;padding:7px 9px;transition:all .12s}
-.icon-btn:hover{color:var(--text);background:var(--bg3);border-color:var(--border2)}
+.ic{display:inline-block;width:1.05em;height:1.05em;vertical-align:-0.15em;margin-right:.4em;background-color:currentColor;flex-shrink:0;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;-webkit-mask-position:center;mask-position:center;-webkit-mask-size:contain;mask-size:contain}
+.ic-mail{-webkit-mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 4h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z M22 6l-10 7L2 6'/%3E%3C/svg%3E");mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 4h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z M22 6l-10 7L2 6'/%3E%3C/svg%3E")}
+.ic-trash{-webkit-mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 6h18 M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2 M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6'/%3E%3C/svg%3E");mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 6h18 M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2 M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6'/%3E%3C/svg%3E")}
+.ic-x{-webkit-mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M18 6 6 18M6 6l12 12'/%3E%3C/svg%3E");mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M18 6 6 18M6 6l12 12'/%3E%3C/svg%3E")}
 .panel-tabs{display:flex;gap:2px;padding:0 20px;border-bottom:1px solid var(--border);flex-shrink:0}
 .panel-tab{padding:10px 14px;font-size:var(--t-sm);font-weight:600;color:var(--text3);cursor:pointer;border-bottom:2px solid transparent}
 .panel-tab.active{color:var(--teal);border-color:var(--teal)}
@@ -293,7 +295,7 @@ tr.row-click:hover td{background:var(--bg3)}
         </div>
         <div class="sync-sub" onclick="doLogout()">Sign out</div>
         <div class="version-row">
-          <span>v1.43</span>
+          <span>v1.44</span>
           <span id="buildDate"></span>
         </div>
       </div>
@@ -1018,7 +1020,7 @@ function renderBulkBar(){
 function appTable(rows, selectable){
   let html = '<table><thead><tr>';
   if(selectable) html += '<th style="width:24px"><input type="checkbox" onclick="toggleBulkSelectAll(window.__lastRows,this.checked)"></th>';
-  html += '<th>#</th><th>Customer</th><th>Car</th><th>Status</th><th>Submitted</th><th></th></tr></thead><tbody>';
+  html += '<th>#</th><th>Customer</th><th>Car</th><th>Status</th><th>Submitted</th></tr></thead><tbody>';
   if(selectable) window.__lastRows = rows;
   rows.forEach(function(a){
     html += '<tr class="row-click" onclick="openApplication(\'' + a.id + '\')">';
@@ -1030,10 +1032,6 @@ function appTable(rows, selectable){
       + '<td>' + escapeHtml([a.car_year, a.car_make, a.car_model].filter(Boolean).join(' ')) + '</td>'
       + '<td><span class="pill ' + (STATUS_PILL[a.status]||'pill-muted') + '">' + (STATUS_LABEL[a.status]||a.status) + '</span></td>'
       + '<td>' + agingCell(a) + '</td>'
-      + '<td onclick="event.stopPropagation()" style="white-space:nowrap">'
-        + '<button class="btn btn-sm" onclick="toggleUnread(\'' + a.id + '\')" title="' + (a.has_unread ? 'Mark read' : 'Mark unread') + '">' + (a.has_unread ? 'Read' : 'Unread') + '</button>'
-        + (a.status !== 'archived' ? ' <button class="btn btn-sm" onclick="archiveApplication(\'' + a.id + '\')" title="Archive">Archive</button>' : '')
-      + '</td>'
       + '</tr>';
   });
   html += '</tbody></table>';
@@ -1051,7 +1049,7 @@ function activeAppsTable(rows){
     const db = daysSince(b.last_message_at || b.updated_at) || 0;
     return db - da; // longest-waiting first within the same urgency
   });
-  let html = '<table><thead><tr><th>#</th><th>Customer</th><th>Car</th><th>Status</th><th>Waiting On</th><th>Last Activity</th><th></th></tr></thead><tbody>';
+  let html = '<table><thead><tr><th>#</th><th>Customer</th><th>Car</th><th>Status</th><th>Waiting On</th><th>Last Activity</th></tr></thead><tbody>';
   sorted.forEach(function(a){
     const w = waitingOnLabel(a);
     const lastActivity = a.last_message_at ? (daysSince(a.last_message_at) + 'd ago') : (daysSince(a.updated_at) + 'd ago (no activity)');
@@ -1062,10 +1060,6 @@ function activeAppsTable(rows){
       + '<td><span class="pill ' + (STATUS_PILL[a.status]||'pill-muted') + '">' + (STATUS_LABEL[a.status]||a.status) + '</span></td>'
       + '<td><span class="pill ' + w.cls + '">' + w.text + '</span></td>'
       + '<td>' + lastActivity + '</td>'
-      + '<td onclick="event.stopPropagation()" style="white-space:nowrap">'
-        + '<button class="btn btn-sm" onclick="toggleUnread(\'' + a.id + '\')" title="' + (a.has_unread ? 'Mark read' : 'Mark unread') + '">' + (a.has_unread ? 'Read' : 'Unread') + '</button>'
-        + ' <button class="btn btn-sm" onclick="archiveApplication(\'' + a.id + '\')" title="Archive">Archive</button>'
-      + '</td>'
       + '</tr>';
   });
   html += '</tbody></table>';
@@ -1137,10 +1131,10 @@ function renderPanelShell(app){
     + '<div><h3>#' + app.application_number + ' - ' + escapeHtml(app.customer_name) + '</h3>'
     + '<div class="sub">' + escapeHtml(app.customer_email) + '</div></div>'
     + '<div class="panel-head-actions">'
-      + '<button class="icon-btn" onclick="toggleUnread(\'' + app.id + '\')" title="' + (app.has_unread ? 'Mark read' : 'Mark unread') + '">' + (app.has_unread ? 'Mark Read' : 'Mark Unread') + '</button>'
-      + (app.status !== 'archived' ? '<button class="icon-btn" onclick="archiveApplication(\'' + app.id + '\')" title="Archive">Archive</button>' : '')
-      + '<button class="icon-btn" id="tk-width-btn" title="Cycle panel width (narrow / wide / full)" onclick="cycleGhostPanelWidth()">&#10529;</button>'
-      + '<button class="panel-close" onclick="closePanel()">&times;</button>'
+      + '<button class="tk-close" title="Mark as unread" onclick="markApplicationUnread(\'' + app.id + '\')"><span class="ic ic-mail"></span></button>'
+      + (app.status !== 'archived' ? '<button class="tk-close" title="Archive application" style="color:var(--red)" onclick="archiveApplication(\'' + app.id + '\')"><span class="ic ic-trash"></span></button>' : '')
+      + '<button class="tk-close" id="tk-width-btn" title="Cycle panel width (narrow / wide / full)" onclick="cycleGhostPanelWidth()">&#10529;</button>'
+      + '<button class="tk-close" onclick="closePanel()"><span class="ic ic-x"></span></button>'
     + '</div>'
     + '</div>'
     + '<div style="padding:16px 20px 0">' + statusSelector(app) + '</div>'
@@ -1207,7 +1201,7 @@ async function archiveApplication(appId){
     if(error) throw error;
     app.status = 'archived';
     await logActivity(appId, 'status', oldStatus, 'archived');
-    if(S.openAppId === appId) renderPanelShell_refresh(app);
+    closePanel();
     renderPage();
     renderNav();
     toast('Archived');
@@ -1215,21 +1209,26 @@ async function archiveApplication(appId){
 }
 window.archiveApplication = archiveApplication;
 
-async function toggleUnread(appId){
+async function markApplicationUnread(appId){
   const app = S.applications.find(function(a){ return a.id === appId; });
   if(!app) return;
-  const newVal = !app.has_unread;
   try{
-    const { error } = await sb.from('tuning_applications').update({ has_unread:newVal, unread_count:newVal?1:0 }).eq('id', appId);
+    const { data, error } = await sb.from('tuning_applications').update({
+      has_unread: true,
+      unread_count: Math.max(app.unread_count || 0, 1)
+    }).eq('id', appId).select().single();
     if(error) throw error;
-    app.has_unread = newVal; app.unread_count = newVal?1:0;
+    const idx = S.applications.findIndex(function(a){ return a.id === appId; });
+    if(idx !== -1) S.applications[idx] = data;
+    toast('Application #' + data.application_number + ' marked unread');
     renderNav();
-    if(S.openAppId === appId) renderPanelShell_refresh(app);
-    renderPage();
-    toast(newVal ? 'Marked unread' : 'Marked read');
-  }catch(e){ toast('Failed: ' + e.message, true); }
+    closePanel();
+    if(S.page !== 'dashboard') renderPage();
+  }catch(e){
+    toast('Failed to mark unread: ' + e.message, true);
+  }
 }
-window.toggleUnread = toggleUnread;
+window.markApplicationUnread = markApplicationUnread;
 
 async function updateStatus(appId, newStatus){
   const app = S.applications.find(function(a){ return a.id === appId; });
