@@ -255,9 +255,37 @@ tr.row-click:hover td{background:var(--bg3)}
 .log-rule{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px dashed var(--border);font-size:var(--t-sm)}
 .log-rule-form{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
 .log-rule-form select.form-input{width:auto;max-width:220px}
+.fx-card{border:1px solid var(--border);border-radius:var(--r-lg);background:var(--bg);padding:14px 16px;margin-bottom:12px}
+.fx-head{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+.fx-title{font-size:var(--t-md);font-weight:700;color:var(--text)}
+.fx-note{font-size:var(--t-xs);color:var(--text3);margin-top:8px}
+.fx-suggest{margin-top:8px}
+.fx-seg{display:inline-flex;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:2px}
+.fx-seg button{background:none;border:none;border-radius:6px;padding:5px 12px;font-size:var(--t-sm);font-weight:600;color:var(--text3);cursor:pointer;font-family:inherit}
+.fx-seg button.on{background:var(--bg);color:var(--text);box-shadow:0 1px 2px rgba(0,0,0,.1)}
+.fx-grid{display:grid;grid-template-columns:120px minmax(0,1fr) auto;gap:10px;margin-top:12px;align-items:end}
+.fx-field{display:flex;flex-direction:column;gap:5px;min-width:0}
+.fx-switch-field{align-items:flex-start}
+.fx-switch-field .t-switch{margin:8px 0}
+.fx-actions{display:flex;justify-content:flex-end;margin-top:12px}
+.dropzone{display:flex;align-items:center;justify-content:center;min-height:60px;border:1.5px dashed var(--border2);border-radius:var(--r-lg);background:var(--bg2);padding:10px 14px;cursor:pointer;transition:border-color .15s,background .15s;position:relative;font-size:var(--t-sm);color:var(--text3);text-align:center}
+.dropzone:hover,.dropzone.drag{border-color:var(--teal);background:var(--teal-dim)}
+.dz-input{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden;pointer-events:none}
+.dz-strong{color:var(--text2);font-weight:600}
+.dz-link{color:var(--teal-d);font-weight:600;text-decoration:underline;text-underline-offset:2px}
+.dz-file{display:none;align-items:center;gap:10px;width:100%;text-align:left}
+.dropzone.has-file{border-style:solid;justify-content:flex-start;background:var(--bg)}
+.dropzone.has-file .dz-empty{display:none}
+.dropzone.has-file .dz-file{display:flex}
+.dz-name{flex:1;min-width:0;color:var(--text);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dz-size{color:var(--text3);font-size:var(--t-xs);flex-shrink:0}
+.dz-clear{background:none;border:none;color:var(--text3);font-size:20px;line-height:1;cursor:pointer;padding:4px 6px;flex-shrink:0}
+.dz-clear:hover{color:var(--red)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.file-actions{display:flex;gap:6px;flex-shrink:0;flex-wrap:wrap;justify-content:flex-end}
 .file-toolbar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin:4px 0 10px}
-.file-kinds{display:flex;gap:6px;flex-wrap:wrap}
-.fk{background:var(--bg);border:1px solid var(--border2);border-radius:999px;padding:4px 11px;font-size:var(--t-xs);font-weight:700;color:var(--text2);cursor:pointer;font-family:inherit}
+.file-kinds{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.fk{line-height:1.3;background:var(--bg);border:1px solid var(--border2);border-radius:999px;padding:4px 11px;font-size:var(--t-xs);font-weight:700;color:var(--text2);cursor:pointer;font-family:inherit}
 .fk span{color:var(--text3);font-weight:600;margin-left:2px}
 .fk.on{background:var(--teal);border-color:var(--teal);color:#fff}
 .fk.on span{color:rgba(255,255,255,.8)}
@@ -357,7 +385,8 @@ tr.row-click:hover td{background:var(--bg3)}
 
 .file-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)}
 .file-row:last-child{border-bottom:none}
-.file-name{font-weight:600;font-size:var(--t-md)}
+.file-name{font-weight:600;font-size:var(--t-md);overflow-wrap:anywhere;word-break:break-word}
+.file-info{flex:1;min-width:0}
 .file-meta{font-size:var(--t-xs);color:var(--text3)}
 
 .activity-row{display:flex;gap:10px;padding:8px 10px;border-bottom:1px solid var(--border);font-size:var(--t-sm);border-left:3px solid transparent}
@@ -411,6 +440,30 @@ tr.row-click:hover td{background:var(--bg3)}
   .invoice-add-row .btn{flex-basis:100%}
   .modal{padding:18px 16px}
   .content{padding:16px 14px}
+  /* iOS zooms the whole page when a field with text under 16px is
+     focused - 16px on phones stops that. */
+  .form-input,select.form-input,textarea.form-input,input.form-input{font-size:16px}
+  .fx-grid{grid-template-columns:1fr 1fr}
+  .fx-switch-field{grid-column:1 / -1;flex-direction:row;align-items:center;justify-content:space-between}
+  .fx-switch-field .t-switch{margin:0}
+  .fx-seg{width:100%}
+  .fx-seg button{flex:1;padding:8px 4px}
+  .fx-actions .btn{width:100%;justify-content:center}
+  /* File rows: actions drop onto their own line instead of overflowing. */
+  .file-row{flex-wrap:wrap}
+  .file-info{flex:1 1 100%;width:100%}
+  .file-actions{width:100%;justify-content:flex-start}
+  .file-toolbar{flex-direction:column;align-items:stretch}
+  .file-kinds{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:2px}
+  .fk{flex-shrink:0}
+}
+
+/* Touch devices: small buttons get a finger-sized hit area. */
+@media (pointer:coarse){
+  .btn{min-height:40px}
+  .btn-sm{min-height:36px;padding:6px 12px;font-size:var(--t-sm)}
+  .fk,.fx-seg button,.lv-chip{min-height:34px}
+  .t-switch{transform:scale(1.15);transform-origin:left center}
 }
 </style>
 </head>
@@ -509,7 +562,7 @@ tr.row-click:hover td{background:var(--bg3)}
         </div>
         <div class="sync-sub" onclick="doLogout()">Sign out</div>
         <div class="version-row">
-          <span>v1.71</span>
+          <span>v1.73</span>
           <span id="buildDate"></span>
         </div>
       </div>
@@ -1099,13 +1152,18 @@ function subscribeGlobalRealtime(){
 
   rtChannel('tgk-rt-activity', 'tuning_activity_log', 'INSERT', function(payload){
       const entry = payload.new;
-      const app = S.applications.find(function(a){ return a.id === entry.application_id; });
-      const decorated = Object.assign({}, entry, {
-        tuning_applications: app ? { application_number: app.application_number, customer_name: app.customer_name } : null
-      });
-      S.recentActivity.unshift(decorated);
-      if(S.recentActivity.length > 20) S.recentActivity.length = 20;
-      if(S.activity[entry.application_id]) S.activity[entry.application_id].unshift(entry);
+      if(!entry) return;
+      // Skip only the dashboard list if logActivity already added it locally;
+      // the per-application Activity tab still needs it.
+      if(!S.recentActivity.some(function(x){ return x.id === entry.id; })){
+        const app = S.applications.find(function(a){ return a.id === entry.application_id; });
+        const decorated = Object.assign({}, entry, {
+          tuning_applications: app ? { application_number: app.application_number, customer_name: app.customer_name } : null
+        });
+        S.recentActivity.unshift(decorated);
+        if(S.recentActivity.length > 20) S.recentActivity.length = 20;
+      }
+      if(S.activity[entry.application_id] && !S.activity[entry.application_id].some(function(x){ return x.id === entry.id; })) S.activity[entry.application_id].unshift(entry);
       if(S.page === 'dashboard') renderPage();
       if(S.openAppId === entry.application_id && S.activeTab === 'activity') renderPanelBody();
     });
@@ -1222,11 +1280,15 @@ async function logActivity(appId, fieldChanged, oldValue, newValue){
       changed_by: S.user ? S.user.email : null
     }).select().single();
     if(error) throw error;
-    const app = S.applications.find(function(a){ return a.id === appId; });
-    S.recentActivity.unshift(Object.assign({}, data, {
-      tuning_applications: app ? { application_number: app.application_number, customer_name: app.customer_name } : null
-    }));
-    if(S.recentActivity.length > 20) S.recentActivity.length = 20;
+    // The realtime feed echoes this same row back - whichever arrives
+    // second is skipped, so your own actions don't show twice.
+    if(!S.recentActivity.some(function(x){ return x.id === data.id; })){
+      const app = S.applications.find(function(a){ return a.id === appId; });
+      S.recentActivity.unshift(Object.assign({}, data, {
+        tuning_applications: app ? { application_number: app.application_number, customer_name: app.customer_name } : null
+      }));
+      if(S.recentActivity.length > 20) S.recentActivity.length = 20;
+    }
   }catch(e){ /* non-critical, do not block the real action on log failure */ }
 }
 
@@ -1843,6 +1905,7 @@ function renderPanelBody(){
   // Keep the tab badges (unpaid invoice count) in step with every re-render.
   const tabs = document.getElementById('panelTabs');
   if(tabs) tabs.innerHTML = tabButtons();
+  wireDropzones();
 }
 
 function openModal(html){
@@ -2620,23 +2683,29 @@ function renderFilesTab(a){
   const files = S.files[a.id] || [];
   const fuelOpts = TUNE_FUELS.map(function(f){ return '<option>' + f + '</option>'; }).join('');
   let html = renderLogGuideSection(a);
-  html += '<div style="margin-bottom:16px">';
-  html += '<label class="form-label">Upload a Tune File or Log</label>';
-  html += '<input type="file" id="fileInput" style="margin-top:6px">';
-  html += '<div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">';
-  html += '<select class="form-input" id="fileTypeSelect" style="width:auto" onchange="toggleTuneFields()">'
-    + '<option value="tune">Tune</option><option value="log">Log</option><option value="other">Other</option></select>';
-  html += '</div>';
-  // Tune-only metadata: this is what the customer sees in their Tune Versions list.
-  html += '<div id="tuneFields" style="margin-top:10px">'
-    + '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">'
-      + '<input class="form-input" id="fileRevision" type="number" min="1" value="' + nextRevisionNumber(a.id) + '" title="Revision #" style="width:110px">'
-      + '<select class="form-input" id="fileFuel" style="width:auto"><option value="">Fuel...</option>' + fuelOpts + '</select>'
-      + '<label style="display:flex;align-items:center;gap:6px;font-size:var(--t-sm)"><input type="checkbox" id="fileIsCurrent" checked> Currently flashed</label>'
-    + '</div>'
-    + '<textarea class="form-input" id="fileChangelog" placeholder="Changelog - what changed in this revision (shown to the customer)" style="min-height:52px"></textarea>'
-    + '</div>';
-  html += '<div style="margin-top:10px"><button class="btn btn-primary" onclick="uploadFile(\'' + a.id + '\')">Upload</button></div>';
+
+  // Upload card. The type toggle drives which fields show: tune metadata
+  // (revision, fuel, currently flashed, changelog) is what the customer
+  // sees in their Tune Versions list, so it only appears for tunes.
+  const upType = S.uploadType || 'tune';
+  html += '<div class="fx-card">';
+  html += '<div class="fx-head"><span class="fx-title">Upload a file</span>'
+    + '<div class="fx-seg" role="group" aria-label="File type">'
+    + [['tune','Tune'],['log','Log'],['dyno','Dyno'],['other','Other']].map(function(t){
+        return '<button type="button" class="' + (upType === t[0] ? 'on' : '') + '" onclick="setUploadType(\'' + t[0] + '\')">' + t[1] + '</button>';
+      }).join('')
+    + '</div><input type="hidden" id="fileTypeSelect" value="' + upType + '"></div>';
+  html += fileDropHtml('fileInput', 'uploadBtn');
+  if(upType === 'tune'){
+    html += '<div class="fx-grid">'
+      + '<label class="fx-field"><span class="form-label">Revision</span><input class="form-input" id="fileRevision" type="number" inputmode="numeric" min="1" value="' + nextRevisionNumber(a.id) + '"></label>'
+      + '<label class="fx-field"><span class="form-label">Fuel</span><select class="form-input" id="fileFuel"><option value="">Select...</option>' + fuelOpts + '</select></label>'
+      + '<label class="fx-field fx-switch-field"><span class="form-label">Currently flashed</span><span class="t-switch"><input type="checkbox" id="fileIsCurrent" checked><span class="t-slider"></span></span></label>'
+      + '</div>'
+      + '<label class="fx-field" style="margin-top:10px"><span class="form-label">Changelog (shown to the customer)</span>'
+      + '<textarea class="form-input" id="fileChangelog" placeholder="What changed in this revision" style="min-height:60px"></textarea></label>';
+  }
+  html += '<div class="fx-actions"><button class="btn btn-primary" id="uploadBtn" onclick="uploadFile(\'' + a.id + '\')" disabled>Upload ' + ({ tune:'tune', log:'log', dyno:'dyno sheet', other:'file' })[upType] + '</button></div>';
   html += '</div>';
 
   // Type filter + sort. Counts come from the full list so the chips always
@@ -2660,7 +2729,7 @@ function renderFilesTab(a){
   shown.forEach(function(f){
     const isTune = f.file_type === 'tune';
     html += '<div class="file-row">'
-      + '<div style="flex:1;min-width:0">'
+      + '<div class="file-info">'
       + '<div class="file-name">' + escapeHtml(f.file_name)
         + (f.revision_number ? ' <span class="pill pill-muted">rev ' + f.revision_number + '</span>' : '')
         + ' <span class="pill ' + (isTune?'pill-teal':(f.file_type==='log'?'pill-orange':(f.file_type==='dyno'?'pill-green':'pill-muted'))) + '">' + escapeHtml(f.file_type||'file') + '</span>'
@@ -2670,7 +2739,7 @@ function renderFilesTab(a){
       + '<div class="file-meta">' + escapeHtml(f.uploaded_by_name || f.uploaded_by) + ' &middot; ' + fmtDate(f.created_at) + '</div>'
       + (isTune && f.description ? '<div class="file-meta" style="font-style:italic;white-space:pre-wrap">' + escapeHtml(f.description) + '</div>' : '')
       + '</div>'
-      + '<div style="display:flex;gap:6px;flex-shrink:0">'
+      + '<div class="file-actions">'
       + (isTune && !f.is_current ? '<button class="btn btn-sm" onclick="setCurrentTune(\'' + a.id + '\',\'' + f.id + '\')">Mark current</button>' : '')
       + (isLogFile(f) ? '<button class="btn btn-sm btn-teal" onclick="openLogViewer(\'' + f.id + '\',\'' + f.file_path + '\')">View</button>' : '')
       + '<button class="btn btn-sm" onclick="downloadFile(\'' + f.id + '\',\'' + f.file_path + '\')">Download</button>'
@@ -2714,11 +2783,59 @@ async function deleteFile(appId, fileId){
 }
 window.deleteFile = deleteFile;
 
-function toggleTuneFields(){
-  const el = document.getElementById('tuneFields');
-  if(el) el.style.display = document.getElementById('fileTypeSelect').value === 'tune' ? '' : 'none';
+function setUploadType(t){
+  // Keep a chosen file across the switch - re-rendering would drop it.
+  const input = document.getElementById('fileInput');
+  const kept = input && input.files && input.files.length ? input.files : null;
+  S.uploadType = t;
+  renderPanelBody();
+  if(kept){
+    const fresh = document.getElementById('fileInput');
+    try{ fresh.files = kept; dzChanged('fileInput'); }catch(e){ /* older browser: re-pick */ }
+  }
 }
-window.toggleTuneFields = toggleTuneFields;
+window.setUploadType = setUploadType;
+
+// Styled file picker: the real input is hidden inside a drop zone, so the
+// browser's native "Choose File" button never shows. Drag-and-drop works
+// on desktop; tapping opens the picker on phones.
+function fileDropHtml(id, enableBtnId){
+  return '<label class="dropzone" id="dz-' + id + '" data-input="' + id + '"' + (enableBtnId ? ' data-btn="' + enableBtnId + '"' : '') + '>'
+    + '<input type="file" id="' + id + '" class="dz-input" onchange="dzChanged(\'' + id + '\')">'
+    + '<span class="dz-empty"><span class="dz-strong">Drop a file here</span> or <span class="dz-link">browse</span></span>'
+    + '<span class="dz-file"><span class="dz-name"></span><span class="dz-size"></span>'
+    + '<button type="button" class="dz-clear" aria-label="Remove file" onclick="event.preventDefault();dzClear(\'' + id + '\')">&times;</button></span>'
+    + '</label>';
+}
+function fmtBytes(n){ return n < 1024 ? n + ' B' : (n < 1048576 ? (n / 1024).toFixed(0) + ' KB' : (n / 1048576).toFixed(1) + ' MB'); }
+function dzChanged(id){
+  const input = document.getElementById(id), zone = document.getElementById('dz-' + id);
+  if(!input || !zone) return;
+  const f = input.files && input.files[0];
+  zone.classList.toggle('has-file', !!f);
+  if(f){ zone.querySelector('.dz-name').textContent = f.name; zone.querySelector('.dz-size').textContent = fmtBytes(f.size); }
+  const btnId = zone.getAttribute('data-btn');
+  const btn = btnId && document.getElementById(btnId);
+  if(btn) btn.disabled = !f;
+}
+window.dzChanged = dzChanged;
+function dzClear(id){ const input = document.getElementById(id); if(input){ input.value = ''; dzChanged(id); } }
+window.dzClear = dzClear;
+function wireDropzones(){
+  document.querySelectorAll('.dropzone').forEach(function(zone){
+    if(zone._wired) return;
+    zone._wired = true;
+    ['dragenter','dragover'].forEach(function(ev){ zone.addEventListener(ev, function(e){ e.preventDefault(); zone.classList.add('drag'); }); });
+    ['dragleave','drop'].forEach(function(ev){ zone.addEventListener(ev, function(e){ e.preventDefault(); zone.classList.remove('drag'); }); });
+    zone.addEventListener('drop', function(e){
+      const id = zone.getAttribute('data-input'), input = document.getElementById(id);
+      if(input && e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length){
+        try{ input.files = e.dataTransfer.files; }catch(err){ /* very old browser */ }
+        dzChanged(id);
+      }
+    });
+  });
+}
 
 // Clears the current flag on every tune for this application. Must run
 // BEFORE marking a new one - the unique index allows only one current tune.
@@ -2751,10 +2868,14 @@ async function uploadFile(appId){
   if(!file){ toast('Choose a file first', true); return; }
   const type = document.getElementById('fileTypeSelect').value;
   const isTune = type === 'tune';
-  const revision = isTune ? (document.getElementById('fileRevision').value || null) : null;
-  const fuel = isTune ? (document.getElementById('fileFuel').value || null) : null;
-  const changelog = isTune ? (document.getElementById('fileChangelog').value.trim() || null) : null;
-  const markCurrent = isTune && document.getElementById('fileIsCurrent').checked;
+  const val = function(id){ const el = document.getElementById(id); return el ? el.value : ''; };
+  const revision = isTune ? (val('fileRevision') || null) : null;
+  const fuel = isTune ? (val('fileFuel') || null) : null;
+  const changelog = isTune ? (val('fileChangelog').trim() || null) : null;
+  const cur = document.getElementById('fileIsCurrent');
+  const markCurrent = isTune && !!(cur && cur.checked);
+  const upBtn = document.getElementById('uploadBtn');
+  if(upBtn){ upBtn.disabled = true; upBtn.textContent = 'Uploading...'; }
   const path = appId + '/' + Date.now() + '_' + file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
 
   try{
@@ -2792,6 +2913,7 @@ async function uploadFile(appId){
     toast('File uploaded');
   }catch(e){
     toast('Upload failed: ' + e.message, true);
+    if(upBtn){ upBtn.disabled = false; upBtn.textContent = 'Retry upload'; }
   }
 }
 window.uploadFile = uploadFile;
@@ -4381,21 +4503,26 @@ function renderLogGuideSection(a){
   const logs = files.filter(function(f){ return f.uploaded_by === 'customer' && f.file_type === 'log'; });
   const current = S.logGuides.find(function(g){ return g.id === a.log_guide_id; });
   const suggested = !current ? suggestLogGuide(a) : null;
-  const opts = '<option value="">- None -</option>' + S.logGuides.map(function(g){
+  const opts = '<option value="">No guide assigned</option>' + S.logGuides.map(function(g){
     return '<option value="' + g.id + '"' + (g.id === a.log_guide_id ? ' selected' : '') + '>' + escapeHtml(g.name) + (suggested && suggested.id === g.id ? ' (suggested)' : '') + '</option>';
   }).join('');
+  const status = logs.length
+    ? '<span class="pill pill-green">Baseline log received</span>'
+    : '<span class="pill pill-orange">No customer log yet</span>';
 
-  let html = '<div class="section-title">Logging</div>';
-  html += '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px">'
-    + '<select class="form-input" style="width:auto;min-width:220px" onchange="assignLogGuide(\'' + a.id + '\', this.value)">' + opts + '</select>'
-    + (suggested ? '<button class="btn btn-sm" onclick="assignLogGuide(\'' + a.id + '\',\'' + suggested.id + '\')">Use suggested: ' + escapeHtml(suggested.name) + '</button>' : '')
-    + (!S.logGuides.length ? '<span class="file-meta">No guides yet - add one under Logging Guides.</span>' : '')
-    + '</div>';
-  html += '<div style="margin:0 0 20px">'
+  let html = '<div class="fx-card">';
+  html += '<div class="fx-head"><span class="fx-title">Logging guide</span>' + status + '</div>';
+  if(!S.logGuides.length){
+    html += '<div class="file-meta">No guides yet. Add one under <a onclick="goPage(\'logguides\')" style="cursor:pointer;color:var(--teal-d);font-weight:600">Logging Guides</a> so customers know how to log.</div>';
+  } else {
+    html += '<select class="form-input" onchange="assignLogGuide(\'' + a.id + '\', this.value)">' + opts + '</select>';
+    if(suggested) html += '<button class="btn btn-sm fx-suggest" onclick="assignLogGuide(\'' + a.id + '\',\'' + suggested.id + '\')">Use suggested: ' + escapeHtml(suggested.name) + '</button>';
+  }
+  html += '<div class="fx-note">'
     + (logs.length
-        ? '<span class="pill pill-green">Baseline log received</span> <span class="file-meta">' + logs.length + ' customer log' + (logs.length > 1 ? 's' : '') + ', latest ' + fmtDate(logs[0].created_at) + '</span>'
-        : '<span class="pill pill-orange">No customer log yet</span>' + (current ? ' <span class="file-meta">The customer can see the "' + escapeHtml(current.name) + '" instructions on their portal.</span>' : ' <span class="file-meta">Assign a guide so the customer knows how to log.</span>'))
-    + '</div>';
+        ? logs.length + ' customer log' + (logs.length > 1 ? 's' : '') + ' &middot; latest ' + fmtDate(logs[0].created_at)
+        : (current ? 'The customer sees the "' + escapeHtml(current.name) + '" instructions on their portal.' : 'Assign a guide so the customer knows how to log.'))
+    + '</div></div>';
   return html;
 }
 
