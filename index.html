@@ -207,13 +207,17 @@ tr.row-click:hover td{background:var(--bg3)}
 .lv-legend-note{display:flex;align-items:center;gap:6px;font-size:var(--t-xs);color:var(--text2);margin-top:8px}
 .lg-solid,.lg-dash{display:inline-block;width:20px;border-top:2px solid var(--text2);margin-left:4px}
 .lg-dash{border-top-style:dashed;margin-left:12px}
-.lv-readout{font-size:var(--t-sm);margin:4px 0 6px;min-height:18px;font-variant-numeric:tabular-nums}
+.lv-readout{font-size:var(--t-sm);margin:4px 0 6px;min-height:18px;font-variant-numeric:tabular-nums;position:sticky;top:0;z-index:3;background:var(--bg);padding:6px 0;border-bottom:1px solid var(--border)}
 .lc{border:1px solid var(--border);border-radius:var(--r-md);background:var(--bg);margin-bottom:6px;padding:8px 10px 8px 0}
 .lc-head{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;padding-left:10px;margin-bottom:4px}
+.lc-legend{flex:1 1 auto}
 .lc-legend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:var(--t-sm);min-width:0}
-.lg-item{display:inline-flex;align-items:baseline;gap:5px;white-space:nowrap}
+.lg-item{display:inline-flex;align-items:baseline;gap:5px;flex-wrap:wrap;max-width:100%}
 .lg-item i{display:inline-block;width:10px;height:3px;border-radius:2px;transform:translateY(-3px)}
 .lg-name{font-weight:700;color:var(--text)}
+.lg-group{flex-basis:100%;font-weight:700;color:var(--text);font-size:var(--t-sm)}
+.lg-compact .lg-name{font-family:var(--mono);font-weight:600}
+.lg-compact .lg-val{min-width:32px;display:inline-block}
 .lg-raw{font-size:10.5px;color:var(--text3);font-family:var(--mono)}
 .lg-val{font-weight:700;font-variant-numeric:tabular-nums;color:var(--text);min-width:0}
 .lg-valb{font-variant-numeric:tabular-nums;color:var(--text3)}
@@ -235,7 +239,26 @@ tr.row-click:hover td{background:var(--bg3)}
 .lc-x-track{position:relative;flex:1;height:16px;margin-right:10px}
 .lc-x-track span{position:absolute;transform:translateX(-50%);font-size:10.5px;color:var(--text3);font-variant-numeric:tabular-nums}
 .lc-x-title{text-align:center;font-size:var(--t-xs);color:var(--text3);margin-top:2px}
-@media(max-width:720px){.lc-y,.lc-y-sp{width:40px}.lg-raw{display:none}.lv-seg{margin-left:0}}
+@media(max-width:720px){
+  .lc-y,.lc-y-sp{width:40px}.lg-raw{display:none}.lv-seg{margin-left:0}
+  /* Overlay/remove controls get their own row above the legend so they
+     can never sit on top of channel names. */
+  .lc-head{flex-direction:column;align-items:stretch;gap:4px;padding-right:0}
+  .lc-tools{order:-1;justify-content:flex-end}
+  .lc-legend{gap:3px 10px}
+  .lg-name{font-size:12px}
+  .lv-svg{height:170px}
+  .log-modal{padding:14px 12px !important}
+  .lv-bar{gap:8px}
+  .lv-presets{width:100%;flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:2px}
+  .lv-chip{flex-shrink:0}
+  .lv-tool select.form-input{max-width:100%}
+  .log-channels .log-ch{min-width:0;width:100%}
+}
+@media (pointer:coarse){
+  .lg-x{padding:6px 8px;font-size:18px}
+  .lc-add{min-height:32px;font-size:13px}
+}
 .log-line-b{fill:none;stroke:var(--orange);stroke-width:1.5;stroke-dasharray:5 3;vector-effect:non-scaling-stroke;opacity:.9}
 .log-toolbar{display:flex;flex-wrap:wrap;gap:8px 18px;align-items:center;margin:12px 0 4px;font-size:var(--t-sm)}
 .log-tool{display:flex;align-items:center;gap:6px;color:var(--text2)}
@@ -562,7 +585,7 @@ tr.row-click:hover td{background:var(--bg3)}
         </div>
         <div class="sync-sub" onclick="doLogout()">Sign out</div>
         <div class="version-row">
-          <span>v1.74</span>
+          <span>v1.75</span>
           <span id="buildDate"></span>
         </div>
       </div>
@@ -3427,7 +3450,7 @@ function renderLogViewer(){
     + others.map(function(f){ return '<option value="' + f.id + '"' + (V.compare && V.compare.fileId === f.id ? ' selected' : '') + '>' + escapeHtml(f.file_name) + ' (' + fmtDate(f.created_at) + ')</option>'; }).join('')
     + '</select></label>'
     + (fc ? '<label class="lv-tool"><input type="checkbox" ' + (V.hideFuelCut ? 'checked' : '') + ' onchange="toggleFuelCut(this.checked)"> Hide fuel cut on lambda <span class="file-meta">(' + fc + ')</span></label>' : '')
-    + '<span class="lv-zoom">' + (V.range ? 'Zoom ' + fmtNum(r.a) + '-' + fmtNum(r.b) + ' s <a onclick="logResetZoom()">Reset</a>' : 'Drag across a chart to zoom') + '</span>'
+    + '<span class="lv-zoom">' + (V.range ? 'Zoom ' + fmtNum(r.a) + '-' + fmtNum(r.b) + ' s <a onclick="logResetZoom()">Reset</a>' : (logIsCoarse() ? 'Pinch a chart to zoom' : 'Drag across a chart to zoom')) + '</span>'
     + (logWotRange(log) ? '<button class="lv-chip" onclick="logZoomWot()">Zoom to WOT</button>' : '')
     + '</div>';
   if(B){
@@ -3450,7 +3473,7 @@ function renderLogViewer(){
   html += '</div>';
 
   // Time readout
-  html += '<div class="lv-readout" id="logReadout"><span class="file-meta">Hover for values &middot; drag to zoom &middot; double-click to reset</span></div>';
+  html += '<div class="lv-readout" id="logReadout"><span class="file-meta">' + logHint() + '</span></div>';
 
   // Charts
   const xt = niceTicks(r.a, r.b, 9);
@@ -3496,14 +3519,22 @@ function renderLogViewer(){
       paths += '<path d="' + seriesPath(log, c, W, H, LOG_PAD, r, yMin, yMax) + '" class="lv-line" style="stroke:' + color + '"/>';
     });
 
-    // Legend with live values
-    const legend = cols.map(function(c, i){
+    // Legend with live values. When every series is one per-cylinder group
+    // (knock [0]..[5]), the name is shown once and each entry is just its
+    // index - much shorter, especially on a phone.
+    const oneGroup = cols.length > 1 && cols.every(function(c){ return chIndex(log.headers[c]) !== null && chGroupKey(log.headers[c]) === chGroupKey(log.headers[cols[0]]); });
+    const groupHead = oneGroup
+      ? '<span class="lg-group">' + escapeHtml(chFriendly(log.headers[cols[0]]) || chGroupKey(log.headers[cols[0]]))
+        + (chConv(log.headers[cols[0]]).unit ? ' <span class="lg-unit">' + escapeHtml(chConv(log.headers[cols[0]]).unit) + '</span>' : '')
+        + (chFriendly(log.headers[cols[0]]) ? ' <span class="lg-raw">' + escapeHtml(chGroupKey(log.headers[cols[0]])) + '</span>' : '') + '</span>'
+      : '';
+    const legend = groupHead + cols.map(function(c, i){
       const h = log.headers[c], color = LOG_COLORS[i % LOG_COLORS.length];
-      const st = seriesStats(log, c, r), unit = chConv(h).unit;
+      const st = seriesStats(log, c, r), unit = oneGroup ? '' : chConv(h).unit;
       const tip = h + (st ? ' | min ' + fmtNum(st.min) + ' avg ' + fmtNum(st.avg) + ' max ' + fmtNum(st.max) : '');
-      return '<span class="lg-item" title="' + escapeHtml(tip) + '"><i style="background:' + color + '"></i>'
-        + '<span class="lg-name">' + escapeHtml(chName(h)) + '</span>'
-        + (chFriendly(h) ? '<span class="lg-raw">' + escapeHtml(chBase(h)) + '</span>' : '')
+      return '<span class="lg-item' + (oneGroup ? ' lg-compact' : '') + '" title="' + escapeHtml(tip) + '"><i style="background:' + color + '"></i>'
+        + '<span class="lg-name">' + escapeHtml(oneGroup ? '[' + chIndex(h) + ']' : chName(h)) + '</span>'
+        + (!oneGroup && chFriendly(h) ? '<span class="lg-raw">' + escapeHtml(chBase(h)) + '</span>' : '')
         + '<span class="lg-val" id="lv-' + k + '-' + i + '"></span>'
         + (B && compareCol(c) !== -1 ? '<span class="lg-valb" id="lvb-' + k + '-' + i + '"></span>' : '')
         + (unit ? '<span class="lg-unit">' + escapeHtml(unit) + '</span>' : '')
@@ -3518,7 +3549,7 @@ function renderLogViewer(){
       + '<div class="lc-tools"><select class="lc-add" onchange="logOverlay(' + k + ', this.value)"><option value="">+ Overlay</option>' + addOpts + '</select>'
       + '<a class="lg-x" onclick="logRemoveChart(' + k + ')" title="Remove chart">&times;</a></div></div>'
       + '<div class="lc-body"><div class="lc-y">' + yt.ticks.map(function(v){ return '<span style="top:' + (yy(v) / H * 100).toFixed(2) + '%">' + fmtTick(v, yt.step) + '</span>'; }).join('') + '</div>'
-      + '<svg viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none" class="lv-svg" data-k="' + k + '" onpointerdown="logDown(event,this)" onpointermove="logMove(event,this)" onpointerup="logUp(event,this)" onpointerleave="logLeave()" ondblclick="logResetZoom()">'
+      + '<svg viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none" class="lv-svg" data-k="' + k + '" onpointerdown="logDown(event,this)" onpointermove="logMove(event,this)" onpointerup="logUp(event,this)" onpointercancel="logUp(event,this)" onpointerleave="logLeave(event)" ondblclick="logResetZoom()">'
       + grid + marks + paths
       + '<rect class="lv-sel" x="0" y="0" width="0" height="' + H + '"/>'
       + '<line class="log-cursor" x1="-10" x2="-10" y1="0" y2="' + H + '"/>'
@@ -3665,14 +3696,75 @@ function logFrac(ev, svg){
   const rect = svg.getBoundingClientRect();
   return Math.min(1, Math.max(0, (ev.clientX - rect.left) / rect.width));
 }
+function logIsTouch(ev){ return ev.pointerType === 'touch' || ev.pointerType === 'pen'; }
+function logTouchCount(){ return Object.keys(S.logView.ptrs || {}).length; }
+
+// Mouse: hover reads values, drag selects a range to zoom.
+// Touch: one finger reads values (tap or slide - the crosshair stays after
+// lifting), two fingers pinch-zoom around the point between them, and a
+// double-tap resets. Vertical swipes still scroll the page (touch-action:
+// pan-y on the chart), so the charts never trap scrolling.
 function logDown(ev, svg){
+  const V = S.logView; if(!V) return;
+  if(logIsTouch(ev)){
+    V.ptrs = V.ptrs || {};
+    V.ptrs[ev.pointerId] = { x: ev.clientX };
+    try{ svg.setPointerCapture(ev.pointerId); }catch(e){ /* not supported */ }
+    const n = logTouchCount();
+    if(n === 1){
+      const now = Date.now();
+      if(V.lastTap && now - V.lastTap < 300 && Math.abs(ev.clientX - V.lastTapX) < 30){
+        V.lastTap = 0; logResetZoom(); return;
+      }
+      V.lastTap = now; V.lastTapX = ev.clientX;
+      logShowCursor(logFrac(ev, svg));
+    } else if(n === 2){
+      const xs = Object.keys(V.ptrs).map(function(k){ return V.ptrs[k].x; });
+      const rect = svg.getBoundingClientRect();
+      const r = logRange();
+      V.pinch = {
+        d0: Math.max(20, Math.abs(xs[0] - xs[1])),
+        cf: Math.min(1, Math.max(0, ((xs[0] + xs[1]) / 2 - rect.left) / rect.width)),
+        a0: r.a, b0: r.b, full: r.full, next: null
+      };
+      V.lastTap = 0;
+      logLeave();
+    }
+    return;
+  }
   if(ev.button !== undefined && ev.button !== 0) return;
-  S.logView.drag = { f0: logFrac(ev, svg) };
+  V.drag = { f0: logFrac(ev, svg) };
   try{ svg.setPointerCapture(ev.pointerId); }catch(e){ /* not supported */ }
 }
 window.logDown = logDown;
+
 function logMove(ev, svg){
   const V = S.logView; if(!V) return;
+  if(logIsTouch(ev)){
+    if(!V.ptrs || !V.ptrs[ev.pointerId]) return;
+    V.ptrs[ev.pointerId].x = ev.clientX;
+    if(V.pinch && logTouchCount() >= 2){
+      const P = V.pinch;
+      const xs = Object.keys(V.ptrs).map(function(k){ return V.ptrs[k].x; });
+      const d = Math.max(20, Math.abs(xs[0] - xs[1]));
+      const span0 = P.b0 - P.a0;
+      const minSpan = Math.max(P.full / 500, 0.05);
+      let span = Math.min(P.full, Math.max(minSpan, span0 * (P.d0 / d)));
+      const tc = P.a0 + P.cf * span0;          // time under the fingers stays put
+      let a = tc - P.cf * span;
+      a = Math.max(0, Math.min(P.full - span, a));
+      P.next = [a, a + span];
+      // Live preview: stretch the already-drawn charts via viewBox; the
+      // real redraw (sharp lines, new axis labels) happens on release.
+      const vx = ((a - P.a0) / span0) * 1000, vw = (span / span0) * 1000;
+      document.querySelectorAll('#logCharts .lv-svg').forEach(function(el){
+        el.setAttribute('viewBox', vx.toFixed(2) + ' 0 ' + vw.toFixed(2) + ' ' + LOG_CH);
+      });
+      return;
+    }
+    if(logTouchCount() === 1 && !V.pinch) logShowCursor(logFrac(ev, svg));
+    return;
+  }
   const f = logFrac(ev, svg);
   logShowCursor(f);
   if(V.drag){
@@ -3681,8 +3773,23 @@ function logMove(ev, svg){
   }
 }
 window.logMove = logMove;
+
 function logUp(ev, svg){
-  const V = S.logView; if(!V || !V.drag) return;
+  const V = S.logView; if(!V) return;
+  if(logIsTouch(ev)){
+    if(V.ptrs) delete V.ptrs[ev.pointerId];
+    if(V.pinch && logTouchCount() < 2){
+      const next = V.pinch.next, full = V.pinch.full;
+      V.pinch = null;
+      V.ptrs = {};
+      if(next){
+        V.range = (next[1] - next[0]) >= full * 0.995 ? null : next;
+        renderLogViewer();
+      }
+    }
+    return;
+  }
+  if(!V.drag) return;
   const f = logFrac(ev, svg), f0 = V.drag.f0;
   V.drag = null;
   document.querySelectorAll('#logCharts .lv-sel').forEach(function(rc){ rc.setAttribute('width', 0); });
@@ -3694,12 +3801,21 @@ function logUp(ev, svg){
   renderLogViewer();
 }
 window.logUp = logUp;
-function logLeave(){
+
+// Mouse leaving clears the crosshair; on touch it stays so the values can
+// be read after lifting the finger.
+function logLeave(ev){
+  if(ev && logIsTouch(ev)) return;
   document.querySelectorAll('#logCharts .log-cursor').forEach(function(l){ l.setAttribute('x1', -10); l.setAttribute('x2', -10); });
 }
 window.logLeave = logLeave;
 
 // Crosshair on every chart plus each series' value at that moment.
+function logIsCoarse(){ try{ return window.matchMedia && window.matchMedia('(pointer:coarse)').matches; }catch(e){ return false; } }
+function logHint(short){
+  if(logIsCoarse()) return short ? 'pinch to zoom &middot; double-tap to reset' : 'Touch a chart to read values &middot; pinch with two fingers to zoom &middot; double-tap to reset';
+  return short ? 'drag to zoom &middot; double-click to reset' : 'Hover for values &middot; drag to zoom &middot; double-click to reset';
+}
 function logShowCursor(f){
   const V = S.logView, log = V.log, B = V.compare ? V.compare.log : null;
   const r = logRange(), t = r.a + f * (r.b - r.a);
@@ -3716,7 +3832,7 @@ function logShowCursor(f){
     });
   });
   const ro = document.getElementById('logReadout');
-  if(ro) ro.innerHTML = '<strong>' + fmtNum(t) + (log.timeIdx !== -1 ? ' s' : '') + '</strong> <span class="file-meta">&middot; drag to zoom &middot; double-click to reset</span>';
+  if(ro) ro.innerHTML = '<strong>' + fmtNum(t) + (log.timeIdx !== -1 ? ' s' : '') + '</strong> <span class="file-meta">&middot; ' + logHint(true) + '</span>';
 }
 
 
