@@ -135,6 +135,25 @@ body{background-image:url('data:image/webp;base64,UklGRqIrAABXRUJQVlA4WAoAAAAQAA
 .msg-me{background:rgba(45,212,191,.12);align-self:flex-end;margin-left:auto}
 .msg-system{background:var(--bg3);align-self:center;font-style:italic;color:var(--text3);font-size:12.5px;max-width:100%;text-align:center}
 .msg-revision{background:var(--red-dim);align-self:flex-end;margin-left:auto;border:1px solid rgba(220,38,38,.25)}
+.action-chips{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:14px}
+.action-label{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#9CA6AF}
+.action-chip{background:var(--orange);color:#fff;border:none;border-radius:999px;padding:6px 14px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit}
+.action-chip:hover{background:var(--orange-d)}
+.tgk-tuning-portal .card.tab-card{padding:0}
+.ptabs{display:flex;overflow-x:auto;border-bottom:1px solid var(--border);padding:0 12px;-webkit-overflow-scrolling:touch}
+.ptab{background:none;border:none;border-bottom:2px solid transparent;padding:14px 12px 11px;font-size:13.5px;font-weight:700;color:var(--text3);cursor:pointer;white-space:nowrap;font-family:inherit;display:flex;align-items:center;gap:6px}
+.ptab.active{color:var(--text);border-bottom-color:var(--orange)}
+.ptab-badge{background:var(--orange);color:#fff;border-radius:9px;font-size:10.5px;padding:0 6px;line-height:17px;min-width:17px;text-align:center}
+.ptab-body{padding:20px 22px}
+.all-paid{color:var(--green);font-weight:700;font-size:14px;padding:6px 0 4px}
+.paid-row{border:1px solid var(--border);border-radius:var(--r);margin-bottom:8px;cursor:pointer;background:var(--bg)}
+.paid-sum{display:flex;align-items:center;gap:10px;padding:10px 12px;font-size:13.5px}
+.paid-row .chev{color:var(--text3);transition:transform .15s}
+.paid-row.open .chev{transform:rotate(180deg)}
+.paid-detail{display:none;padding:0 12px 10px;border-top:1px dashed var(--border)}
+.paid-row.open .paid-detail{display:block}
+.upload-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+@media(max-width:480px){.ptab-body{padding:16px 14px}.ptab{padding:12px 9px 10px;font-size:13px}}
 .queue-line{margin-top:10px;font-size:13px;color:#D6DBE0;text-shadow:0 1px 3px rgba(0,0,0,.6)}
 .queue-num{font-weight:800;color:#5ce6cc;font-size:15px}
 .review-stars span{font-size:28px;color:var(--border2);cursor:pointer;padding-right:4px;transition:color .1s}
@@ -230,7 +249,7 @@ const STATUS_ACCENT = {
   completed:'#16a34a', archived:'#9ca3af'
 };
 
-let STATE = { application:null, messages:[], files:[], invoices:[], logGuide:null, queue:null, _channel:null };
+let STATE = { application:null, messages:[], files:[], invoices:[], logGuide:null, queue:null, tab:'messages', _channel:null };
 
 function escapeHtml(s){
   return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){
@@ -398,6 +417,62 @@ function toastLike(msg){
   setTimeout(function(){ el.remove(); }, 3200);
 }
 
+function portalTabs(a){
+  const tabs = [
+    { id:'messages', label:'Messages' },
+    { id:'files', label:'Files' }
+  ];
+  if((STATE.invoices || []).length) tabs.push({ id:'invoices', label:'Invoices', badge: unpaidInvoices().length });
+  if(hasLoggingTab(a)) tabs.push({ id:'logging', label:'How to Log', badge: needsBaselineLog(a) ? '!' : 0 });
+  return tabs;
+}
+
+function setPortalTab(t){
+  STATE.tab = t;
+  renderPortal();
+  const el = document.getElementById('tabCard');
+  if(el && el.scrollIntoView) el.scrollIntoView({ behavior:'smooth', block:'start' });
+}
+window.setPortalTab = setPortalTab;
+
+// Short "what do I need to do" chips in the hero - only the ones that
+// currently apply, each jumping straight to the right place.
+function renderActionChips(a){
+  const chips = [];
+  const unpaid = unpaidInvoices();
+  if(unpaid.length){
+    const owed = unpaid.reduce(function(t, i){ return t + (Number(i.amount) || 0); }, 0);
+    chips.push('<button class="action-chip" onclick="setPortalTab(\'invoices\')">Pay invoice &middot; $' + owed.toFixed(2) + '</button>');
+  }
+  if(needsBaselineLog(a)) chips.push('<button class="action-chip" onclick="setPortalTab(\'' + (STATE.logGuide ? 'logging' : 'files') + '\')">Upload your baseline log</button>');
+  if(a.status === 'completed' && !a.review_rating) chips.push('<button class="action-chip" onclick="var r=document.getElementById(\'reviewCard\');if(r)r.scrollIntoView({behavior:\'smooth\'})">Leave a review</button>');
+  if(!chips.length) return '';
+  return '<div class="action-chips"><span class="action-label">To do:</span>' + chips.join('') + '</div>';
+}
+
+function renderMessagesTab(a){
+  let html = '<div class="msg-list" id="msgList">' + renderMessages() + '</div>';
+  html += '<textarea class="form-input" id="msgInput" placeholder="Write a message to your tuner..." style="margin-bottom:10px"></textarea>';
+  html += '<button class="btn" onclick="sendMessage()" id="sendBtn">Send Message</button>';
+  html += '<div class="status-msg" id="msgErr"></div>';
+  if(['declined','archived','completed'].indexOf(a.status) === -1){
+    html += '<div id="modUpdateBox" style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border)"><button class="btn btn-sm btn-muted" onclick="showModUpdateForm()">Changed your mods? Let your tuner know</button></div>';
+  }
+  return html;
+}
+
+function renderFilesTab(){
+  let html = '<div id="fileList">' + renderFiles() + '</div>';
+  html += '<div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border)">';
+  html += '<div class="sub" style="margin-bottom:8px">Send a datalog, dyno sheet, or other file to your tuner</div>';
+  html += '<div class="upload-row"><select class="form-input" id="fileTypeSelect" style="width:auto"><option value="log">Datalog</option><option value="dyno">Dyno sheet</option><option value="other">Other</option></select>'
+    + '<input type="file" id="fileInput">'
+    + '<button class="btn btn-sm" onclick="uploadLog()" id="uploadBtn">Upload</button></div>';
+  html += '<div class="status-msg" id="uploadErr"></div>';
+  html += '</div>';
+  return html;
+}
+
 function renderPortal(){
   const a = STATE.application;
   let html = '';
@@ -407,44 +482,31 @@ function renderPortal(){
   html += '<h1 style="margin-bottom:0">Ghost Tuning Application #' + a.application_number + '</h1>';
   html += '<span class="hero-live"><span class="live-dot"></span>Live</span>';
   html += '</div>';
-  html += '<div class="sub" style="margin-top:2px">' + escapeHtml(a.customer_name) + '</div>';
+  html += '<div class="sub" style="margin-top:2px">' + escapeHtml(a.customer_name) + ' &middot; ' + escapeHtml([a.car_year, a.car_make, a.car_model].filter(Boolean).join(' ')) + '</div>';
   html += '<div style="margin-top:12px"><span class="pill ' + (STATUS_PILL[a.status]||'pill-muted') + '">' + (STATUS_LABEL[a.status]||a.status) + '</span></div>';
-  html += '<div class="car-line">' + escapeHtml([a.car_year, a.car_make, a.car_model].filter(Boolean).join(' ')) + '</div>';
   if(['declined','archived'].indexOf(a.status) === -1) html += renderStageStepper(a);
   html += '<p class="status-blurb">' + escapeHtml(STATUS_BLURB[a.status] || '') + '</p>';
   if(STATE.queue){
     html += '<div class="queue-line"><span class="queue-num">#' + STATE.queue.position + '</span> in the build queue'
       + (STATE.queue.in_progress ? ' &middot; ' + STATE.queue.in_progress + ' tune' + (STATE.queue.in_progress > 1 ? 's' : '') + ' currently being built' : '') + '</div>';
   }
+  html += renderActionChips(a);
   html += renderRevisionCta(a);
   html += '</div></div>';
 
   html += renderReviewCard(a);
-  html += renderLogGuideCard(a);
-  html += renderInvoiceCard();
 
-  html += '<div class="card">';
-  html += '<h2>Messages</h2>';
-  html += '<div class="msg-list" id="msgList">' + renderMessages() + '</div>';
-  html += '<textarea class="form-input" id="msgInput" placeholder="Write a message to your tuner..." style="margin-bottom:10px"></textarea>';
-  html += '<button class="btn" onclick="sendMessage()" id="sendBtn">Send Message</button>';
-  html += '<div class="status-msg" id="msgErr"></div>';
-  if(['declined','archived','completed'].indexOf(a.status) === -1){
-    html += '<div id="modUpdateBox" style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border)"><button class="btn btn-sm btn-muted" onclick="showModUpdateForm()">Changed your mods? Let your tuner know</button></div>';
-  }
-  html += '</div>';
-
-  html += '<div class="card">';
-  html += '<h2>Files</h2>';
-  html += '<div id="fileList">' + renderFiles() + '</div>';
-  html += '<div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border)">';
-  html += '<div class="sub" style="margin-bottom:8px">Send a datalog, dyno sheet, or other file to your tuner</div>';
-  html += '<select class="form-input" id="fileTypeSelect" style="width:auto;margin-bottom:10px"><option value="log">Datalog</option><option value="dyno">Dyno sheet</option><option value="other">Other</option></select><br>';
-  html += '<input type="file" id="fileInput" style="margin-bottom:10px">';
-  html += '<button class="btn btn-sm" onclick="uploadLog()" id="uploadBtn">Upload</button>';
-  html += '<div class="status-msg" id="uploadErr"></div>';
-  html += '</div>';
-  html += '</div>';
+  const tabs = portalTabs(a);
+  if(!tabs.some(function(t){ return t.id === STATE.tab; })) STATE.tab = 'messages';
+  html += '<div class="card tab-card" id="tabCard"><div class="ptabs">' + tabs.map(function(t){
+    return '<button class="ptab' + (STATE.tab === t.id ? ' active' : '') + '" onclick="setPortalTab(\'' + t.id + '\')">' + t.label
+      + (t.badge ? '<span class="ptab-badge">' + t.badge + '</span>' : '') + '</button>';
+  }).join('') + '</div><div class="ptab-body">';
+  if(STATE.tab === 'messages') html += renderMessagesTab(a);
+  else if(STATE.tab === 'files') html += renderFilesTab();
+  else if(STATE.tab === 'invoices') html += renderInvoiceCard();
+  else if(STATE.tab === 'logging') html += renderLogGuideCard(a);
+  html += '</div></div>';
 
   html += '<p class="footer-note">TGK Motorsport - Ghost Tuning</p>';
 
@@ -466,50 +528,70 @@ window.renderPortal = renderPortal;
 // fresh application with none yet gets nothing here, not an empty box.
 // A customer who orders an additional tune later just sees a second
 // invoice-box appear here, independent of the first.
+// Invoices tab. Unpaid invoices are shown in full with a Pay button;
+// paid ones collapse into a short payment history, so what needs doing
+// stands out.
+function unpaidInvoices(){ return (STATE.invoices || []).filter(function(i){ return i.status !== 'paid'; }); }
+
+function invoiceLinesHtml(inv){
+  const lines = Array.isArray(inv.line_items) ? inv.line_items : [];
+  return lines.map(function(l){
+    return '<div class="invoice-line"><div style="flex:1;min-width:0">' + (l.quantity > 1 ? l.quantity + '&times; ' : '') + escapeHtml(l.title) + '</div><div style="flex-shrink:0;white-space:nowrap">$' + (Number(l.price) * Number(l.quantity||1)).toFixed(2) + '</div></div>';
+  }).join('');
+}
+
 function renderInvoiceCard(){
   const invoices = STATE.invoices || [];
-  if(!invoices.length) return '';
+  if(!invoices.length) return '<div class="empty-state">No invoices yet.</div>';
+  const unpaid = unpaidInvoices();
+  const paid = invoices.filter(function(i){ return i.status === 'paid'; });
+  let html = '';
 
-  let html = '<div class="card">';
-  html += '<h2 style="margin-bottom:12px">Invoices</h2>';
-  html += invoices.map(function(inv){
-    const isPaid = inv.status === 'paid';
-    const lines = Array.isArray(inv.line_items) ? inv.line_items : [];
-    const linesHtml = lines.map(function(l){
-      return '<div class="invoice-line"><div style="flex:1;min-width:0">' + (l.quantity > 1 ? l.quantity + '&times; ' : '') + escapeHtml(l.title) + '</div><div style="flex-shrink:0;white-space:nowrap">$' + (Number(l.price) * Number(l.quantity||1)).toFixed(2) + '</div></div>';
+  if(unpaid.length){
+    html += '<h2>Awaiting payment</h2>';
+    html += unpaid.map(function(inv){
+      const total = Number(inv.amount || 0).toFixed(2);
+      return '<div class="invoice-box" style="margin-bottom:12px">'
+        + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px"><span class="pill pill-yellow">Awaiting Payment</span><span class="sub" style="font-size:12px;margin:0">' + fmtDate(inv.sent_at || inv.created_at) + '</span></div>'
+        + invoiceLinesHtml(inv)
+        + '<div class="invoice-total"><span>Total</span><span class="amt">$' + total + '</span></div>'
+        + (inv.notes ? '<p class="sub" style="margin:8px 0 0;font-size:13px">' + escapeHtml(inv.notes) + '</p>' : '')
+        + (inv.invoice_url ? '<div style="margin-top:10px"><a href="' + escapeHtml(inv.invoice_url) + '" target="_blank" rel="noopener" class="btn" style="text-decoration:none">Pay Invoice - $' + total + '</a></div>' : '')
+        + '</div>';
     }).join('');
-    const total = inv.amount != null ? Number(inv.amount).toFixed(2) : '0.00';
+  } else {
+    html += '<div class="all-paid">&#10003; You\'re all paid up.</div>';
+  }
 
-    let block = '<div class="invoice-box" style="margin-bottom:14px">';
-    block += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px">';
-    block += '<span class="pill ' + (isPaid ? 'pill-green' : 'pill-yellow') + '">' + (isPaid ? 'Paid' : 'Awaiting Payment') + '</span>';
-    block += '<span class="sub" style="font-size:12px">' + fmtDate(inv.sent_at || inv.created_at) + '</span>';
-    block += '</div>';
-    block += linesHtml;
-    block += '<div class="invoice-total"><span>Total</span><span class="amt">$' + total + '</span></div>';
-    if(inv.notes) block += '<p class="sub" style="margin:8px 0 0;font-size:13px">' + escapeHtml(inv.notes) + '</p>';
-    if(isPaid){
-      block += '<p class="sub" style="margin-top:8px">Paid' + (inv.paid_at ? ' ' + fmtDate(inv.paid_at) : '') + '. Thank you!</p>';
-    } else if(inv.invoice_url){
-      block += '<div style="margin-top:10px"><a href="' + escapeHtml(inv.invoice_url) + '" target="_blank" rel="noopener" class="btn" style="text-decoration:none">Pay Invoice - $' + total + '</a></div>';
-    }
-    block += '</div>';
-    return block;
-  }).join('');
-  html += '</div>';
+  if(paid.length){
+    html += '<h2 style="margin-top:18px">Payment history</h2>';
+    html += paid.map(function(inv){
+      return '<div class="paid-row" onclick="this.classList.toggle(\'open\')">'
+        + '<div class="paid-sum"><span class="pill pill-green">Paid</span><span style="flex:1">' + fmtDate(inv.paid_at || inv.sent_at) + '</span><strong>$' + Number(inv.amount || 0).toFixed(2) + '</strong><span class="chev">&#9662;</span></div>'
+        + '<div class="paid-detail">' + invoiceLinesHtml(inv) + '</div>'
+        + '</div>';
+    }).join('');
+  }
   return html;
 }
 
 // Shows the tuner-assigned DS1 logging instructions, and - until the
 // customer has uploaded one - asks clearly for the baseline log.
+function needsBaselineLog(a){
+  const myLogs = STATE.files.filter(function(f){ return f.uploaded_by === 'customer' && f.file_type === 'log'; });
+  return !myLogs.length && ['submitted','under_review','needs_info','accepted'].indexOf(a.status) !== -1;
+}
+function hasLoggingTab(a){
+  if(['declined','archived','completed'].indexOf(a.status) !== -1) return false;
+  return !!STATE.logGuide || needsBaselineLog(a);
+}
 function renderLogGuideCard(a){
-  if(['declined','archived','completed'].indexOf(a.status) !== -1) return '';
+  if(!hasLoggingTab(a)) return '';
   const g = STATE.logGuide;
   const myLogs = STATE.files.filter(function(f){ return f.uploaded_by === 'customer' && f.file_type === 'log'; });
-  const needsBaseline = !myLogs.length && ['submitted','under_review','needs_info','accepted'].indexOf(a.status) !== -1;
-  if(!g && !needsBaseline) return '';
+  const needsBaseline = needsBaselineLog(a);
 
-  let html = '<div class="card">';
+  let html = '';
   html += '<h2>' + (g ? 'How to log: ' + escapeHtml(g.name) : 'Datalog needed') + '</h2>';
   if(needsBaseline){
     html += '<div class="baseline-banner">Your tuner needs a <strong>baseline (stock) datalog</strong> before your tune can start. '
@@ -529,7 +611,7 @@ function renderLogGuideCard(a){
   if(myLogs.length){
     html += '<div class="sub" style="margin-top:12px"><span class="pill pill-green">Log received</span> Latest: ' + escapeHtml(myLogs[0].file_name) + ' &middot; ' + fmtDate(myLogs[0].created_at) + '</div>';
   }
-  html += '</div>';
+  html += '<div style="margin-top:14px"><button class="btn btn-sm" onclick="setPortalTab(\'files\')">Upload a log</button></div>';
   return html;
 }
 
@@ -543,7 +625,7 @@ function renderReviewCard(a){
       + (a.review_comment ? '<p class="sub" style="margin-top:6px;white-space:pre-wrap">' + escapeHtml(a.review_comment) + '</p>' : '')
       + '<p class="sub" style="margin-top:6px">Thanks for the feedback!</p></div>';
   }
-  return '<div class="card"><h2>How did we do?</h2>'
+  return '<div class="card" id="reviewCard"><h2>How did we do?</h2>'
     + '<div class="sub" style="margin-bottom:8px">Your tune is complete. Rate your experience with Ghost Tuning.</div>'
     + '<div class="review-stars" id="reviewStars">' + [1,2,3,4,5].map(function(n){ return '<span onclick="setReviewRating(' + n + ')" data-n="' + n + '">&#9733;</span>'; }).join('') + '</div>'
     + '<textarea class="form-input" id="reviewComment" placeholder="Anything you\'d like to share? (optional)" style="margin:10px 0;min-height:60px"></textarea>'
@@ -682,6 +764,16 @@ async function submitModUpdate(){
 }
 window.submitModUpdate = submitModUpdate;
 
+function isCustomerEditing(){
+  if(document.getElementById('revFuel')) return true;          // revision form open
+  if(document.getElementById('modChanges')) return true;       // mod update form open
+  const fi = document.getElementById('fileInput');
+  if(fi && fi.files && fi.files.length) return true;          // file chosen, not yet uploaded
+  const rc = document.getElementById('reviewComment');
+  if((rc && rc.value.trim()) || REVIEW_RATING) return true;   // review in progress
+  return false;
+}
+
 async function loadStatus(silent){
   try{
     const data = await callPortal('get_status', {});
@@ -693,6 +785,11 @@ async function loadStatus(silent){
     STATE.invoices = data.invoices || [];
     STATE.logGuide = data.log_guide || null;
     STATE.queue = data.queue || null;
+    // A background refresh (25s poll or realtime ping) must never wipe out
+    // something the customer is halfway through. The data is updated
+    // either way; the re-render just waits until they submit or cancel,
+    // both of which re-render on their own.
+    if(silent && isCustomerEditing()){ subscribeRealtime(); return; }
     renderPortal();
     const newDraftEl = document.getElementById('msgInput');
     if(newDraftEl && draft) newDraftEl.value = draft;

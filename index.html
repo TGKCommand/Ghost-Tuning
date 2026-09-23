@@ -47,6 +47,8 @@ textarea.form-input{resize:vertical;min-height:70px}
 .nav-item{display:flex;align-items:center;gap:9px;padding:8px 14px;margin:1px 8px;border-radius:var(--r-md);cursor:pointer;transition:all .12s;border:1px solid transparent;background:transparent;width:calc(100% - 16px);text-align:left;color:var(--text2);font-size:var(--t-md);font-weight:500;outline:none}
 .nav-item:hover{background:var(--bg3);color:var(--text)}
 .nav-item.active{background:var(--teal-dim);color:var(--teal);border-color:rgba(13,148,136,.2)}
+.nav-group{font-size:var(--t-xs);font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);padding:14px 22px 4px}
+.nav-group:first-child{padding-top:10px}
 .nav-dot{width:5px;height:5px;border-radius:50%;background:var(--text3);flex-shrink:0}
 .nav-item.active .nav-dot{background:var(--teal)}
 .nav-badge{font-size:var(--t-xs);font-family:var(--mono);font-weight:700;color:var(--text3);background:var(--bg4);border:1px solid var(--border);padding:1px 6px;border-radius:var(--r-md);min-width:20px;text-align:center;margin-left:auto}
@@ -174,6 +176,25 @@ tr.row-click:hover td{background:var(--bg3)}
 .ic-trash{-webkit-mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 6h18 M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2 M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6'/%3E%3C/svg%3E");mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 6h18 M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2 M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6'/%3E%3C/svg%3E")}
 .ic-x{-webkit-mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M18 6 6 18M6 6l12 12'/%3E%3C/svg%3E");mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M18 6 6 18M6 6l12 12'/%3E%3C/svg%3E")}
 .panel-tabs{display:flex;gap:2px;padding:0 20px;border-bottom:1px solid var(--border);flex-shrink:0}
+.dash-head{display:flex;justify-content:space-between;align-items:flex-end;gap:10px;margin:20px 0 10px}
+.dash-link{cursor:pointer;font-size:var(--t-sm);font-weight:600;color:var(--teal);white-space:nowrap}
+.inv-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:2px 0 12px;flex-wrap:wrap}
+.inv-row{border:1px solid var(--border);border-radius:var(--r-md);margin-bottom:8px;background:var(--bg)}
+.inv-row.cancelled{opacity:.6}
+.inv-sum{cursor:pointer;display:flex;align-items:center;gap:10px;padding:9px 12px;flex-wrap:wrap}
+.inv-row .inv-detail{display:none}
+.inv-row.open .inv-detail{display:block}
+.inv-title{flex:1;min-width:140px;font-size:var(--t-sm);font-weight:700}
+.inv-amt{font-weight:800;font-variant-numeric:tabular-nums}
+.inv-actions{display:flex;gap:6px;align-items:center}
+.inv-detail{padding:0 12px 12px;border-top:1px dashed var(--border)}
+.more-wrap{position:relative}
+.more-menu{display:none;position:absolute;right:0;top:calc(100% + 4px);background:var(--bg);border:1px solid var(--border);border-radius:var(--r-md);box-shadow:0 8px 24px rgba(0,0,0,.14);z-index:30;min-width:200px;padding:4px 0}
+.more-menu.open{display:block}
+.more-menu a{display:block;padding:8px 14px;font-size:var(--t-sm);color:var(--text);cursor:pointer;text-decoration:none;white-space:nowrap}
+.more-menu a:hover{background:var(--bg3)}
+.more-menu a.danger{color:var(--red)}
+.tab-badge{display:inline-block;font-size:10px;font-weight:800;background:var(--orange);color:#fff;border-radius:9px;padding:0 6px;margin-left:3px;line-height:16px}
 .panel-tab{padding:10px 14px;font-size:var(--t-sm);font-weight:600;color:var(--text3);cursor:pointer;border-bottom:2px solid transparent}
 .panel-tab.active{color:var(--teal);border-color:var(--teal)}
 .panel-body{flex:1;overflow-y:auto;padding:18px 20px}
@@ -205,6 +226,15 @@ tr.row-click:hover td{background:var(--bg3)}
 .inv-chip{display:inline-flex;align-items:center;padding:2px 8px;font-size:var(--t-xs);font-weight:700;border-radius:6px;margin-left:6px;background:rgba(234,88,12,.1);color:var(--orange);border:1px solid rgba(234,88,12,.25)}
 .inv-chip.stale{background:var(--red-dim);color:var(--red);border-color:rgba(220,38,38,.25)}
 .flag-chip{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;font-size:var(--t-xs);font-weight:700;border-radius:6px;background:var(--red-dim);color:var(--red);border:1px solid rgba(220,38,38,.2);margin-left:6px}
+.ov-summary{display:flex;flex-wrap:wrap;gap:12px 20px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-md);padding:12px 14px;margin:4px 0 14px}
+.ov-summary > div{min-width:110px}
+.ov-val{font-size:var(--t-sm);font-weight:600;color:var(--text);margin-top:2px}
+.ov-sec{border:1px solid var(--border);border-radius:var(--r-md);margin-bottom:8px;background:var(--bg)}
+.ov-sec > summary{cursor:pointer;list-style:none;display:block;position:relative;padding:10px 36px 10px 14px;font-size:var(--t-sm);font-weight:700;color:var(--teal-d);text-transform:uppercase;letter-spacing:.05em}
+.ov-sec > summary::-webkit-details-marker{display:none}
+.ov-sec > summary::after{content:'+';position:absolute;right:14px;top:50%;transform:translateY(-50%);font-size:16px;color:var(--text3);font-weight:400}
+.ov-sec[open] > summary::after{content:'-'}
+.ov-body{padding:0 14px 14px}
 .section-title{font-size:var(--t-md);font-weight:700;color:var(--teal-d);text-transform:uppercase;letter-spacing:.05em;margin:20px 0 10px}
 .section-title:first-child{margin-top:0}
 
@@ -373,7 +403,7 @@ tr.row-click:hover td{background:var(--bg3)}
         </div>
         <div class="sync-sub" onclick="doLogout()">Sign out</div>
         <div class="version-row">
-          <span>v1.63</span>
+          <span>v1.64</span>
           <span id="buildDate"></span>
         </div>
       </div>
@@ -418,16 +448,16 @@ const STATUS_PILL = {
 };
 
 const NAV = [
-  { id:'dashboard', label:'Dashboard' },
-  { id:'board', label:'Board' },
-  { id:'applications', label:'Applications', badge: function(){ return S.applications.filter(function(a){ return a.has_unread; }).length; } },
-  { id:'logreview', label:'Log Review', badge: function(){ return S.pendingLogs.length; } },
-  { id:'lookup', label:'Lookup' },
-  { id:'reports', label:'Reports' },
-  { id:'library', label:'Platform Library' },
-  { id:'logguides', label:'Logging Guides' },
-  { id:'ecuref', label:'ECU Reference' },
-  { id:'templates', label:'Templates' }
+  { id:'dashboard', label:'Dashboard', group:'Work' },
+  { id:'board', label:'Board', group:'Work' },
+  { id:'applications', label:'Applications', group:'Work', badge: function(){ return S.applications.filter(function(a){ return a.has_unread; }).length; } },
+  { id:'logreview', label:'Log Review', group:'Work', badge: function(){ return S.pendingLogs.length; } },
+  { id:'lookup', label:'Lookup', group:'Tools' },
+  { id:'reports', label:'Reports', group:'Tools' },
+  { id:'library', label:'Platform Library', group:'Library' },
+  { id:'logguides', label:'Logging Guides', group:'Library' },
+  { id:'ecuref', label:'ECU Reference', group:'Library' },
+  { id:'templates', label:'Templates', group:'Library' }
 ];
 
 const S = { user:null, page:'dashboard', applications:[], openAppId:null, messages:{}, files:{}, activity:{}, recentActivity:[], templates:[], activeTab:'overview', filter:'active', search:'',
@@ -902,7 +932,7 @@ function subscribeGlobalRealtime(){
       const jobs = [loadUnpaidInvoices()];
       if(appId && S.invoices[appId]) jobs.push(loadInvoices(appId));
       Promise.all(jobs).then(function(){
-        if(appId && S.openAppId === appId && S.activeTab === 'overview') renderPanelBody();
+        if(appId && S.openAppId === appId) renderPanelBody();
         renderPage();
       });
     })
@@ -1016,9 +1046,12 @@ async function logActivity(appId, fieldChanged, oldValue, newValue){
 
 /* ================= NAV / PAGES ================= */
 function renderNav(){
+  let lastGroup = null;
   document.getElementById('navList').innerHTML = NAV.map(function(n){
     const badgeCount = n.badge ? n.badge() : 0;
-    return '<button class="nav-item ' + (S.page === n.id ? 'active' : '') + '" onclick="goPage(\'' + n.id + '\')">'
+    const head = n.group !== lastGroup ? '<div class="nav-group">' + escapeHtml(n.group) + '</div>' : '';
+    lastGroup = n.group;
+    return head + '<button class="nav-item ' + (S.page === n.id ? 'active' : '') + '" onclick="goPage(\'' + n.id + '\')">'
       + '<span class="nav-dot"></span><span>' + escapeHtml(n.label) + '</span>'
       + (badgeCount > 0 ? '<span class="nav-badge">' + badgeCount + '</span>' : '')
       + '</button>';
@@ -1072,47 +1105,58 @@ function jumpToApplication(appId, tab){
 window.jumpToApplication = jumpToApplication;
 
 /* ================= DASHBOARD ================= */
+// Dashboard is a triage screen, not a full list: each section shows the
+// top few rows and links to where the full list lives (the Board for
+// applications). Keeps it to roughly one screen.
+const DASH_LIMIT = 5;
+function dashHead(title, sub, linkHtml){
+  return '<div class="dash-head"><div><div class="section-title" style="margin:0">' + title + '</div>'
+    + (sub ? '<div class="file-meta" style="margin-top:2px">' + sub + '</div>' : '') + '</div>'
+    + (linkHtml || '') + '</div>';
+}
+function dashLink(label, onclick){ return '<a class="dash-link" onclick="' + onclick + '">' + label + ' &rarr;</a>'; }
+
 function renderDashboard(){
   const apps = S.applications;
-  const newSubmissions = apps.filter(function(a){ return a.status === 'submitted'; });
-  const revisionRequests = apps.filter(function(a){ return a.status === 'revision_requested'; });
-  const needsAttentionCount = newSubmissions.length + revisionRequests.length;
-  // A revision request means the tuner is actively reworking that car's
-  // tune - it belongs in Active Builds same as anything else in flight,
-  // not just in the separate Revision Requests queue below.
+  // Everything waiting on the tuner: new submissions + revision requests,
+  // revisions first (a customer already has a tune and is unhappy), then
+  // oldest first within each.
+  const attention = apps.filter(function(a){ return a.status === 'submitted' || a.status === 'revision_requested'; })
+    .sort(function(x, y){
+      if(x.status !== y.status) return x.status === 'revision_requested' ? -1 : 1;
+      return stageDays(y) - stageDays(x);
+    });
   const active = apps.filter(function(a){ return ['accepted','active','tune_sent','revision_requested'].indexOf(a.status) !== -1; });
   const completed = apps.filter(function(a){ return a.status === 'completed'; });
+  const unpaidTotal = S.unpaidInvoices.reduce(function(sum, i){ return sum + (Number(i.amount) || 0); }, 0);
 
   let html = '<div class="stat-row">';
-  html += statCard(needsAttentionCount, 'Needs Attention', 'sc-attn');
+  html += statCard(attention.length, 'Needs Attention', 'sc-attn');
   html += statCard(active.length, 'Active Builds', 'sc-teal');
+  html += statCard(S.unpaidInvoices.length ? '$' + unpaidTotal.toFixed(0) : '$0', 'Unpaid Invoices', S.unpaidInvoices.some(isStaleInvoice) ? 'sc-attn' : '');
   html += statCard(completed.length, 'Completed', 'sc-green');
-  html += statCard(apps.length, 'Total Applications', '');
-  const unpaidTotal = S.unpaidInvoices.reduce(function(sum, i){ return sum + (Number(i.amount) || 0); }, 0);
-  html += statCard(S.unpaidInvoices.length ? '$' + unpaidTotal.toFixed(0) : '0', 'Unpaid Invoices', S.unpaidInvoices.some(isStaleInvoice) ? 'sc-attn' : '');
   html += '</div>';
+
+  html += dashHead('Needs Attention', 'New submissions and revision requests', attention.length > DASH_LIMIT ? dashLink('All ' + attention.length + ' on the Board', "goPage('board')") : '');
+  html += '<div class="tbl-wrap">' + (attention.length ? appTable(attention.slice(0, DASH_LIMIT)) : '<div class="empty-state"><div class="big">&#10003;</div>You\'re all caught up.</div>') + '</div>';
 
   if(S.unpaidInvoices.length){
-    html += '<div class="section-title">Unpaid Invoices</div><div class="sub" style="color:var(--text3);font-size:var(--t-sm);margin-bottom:10px">Oldest first - anything ' + STALE_INVOICE_DAYS + '+ days unpaid is flagged red</div>';
-    html += '<div class="tbl-wrap">' + renderUnpaidInvoicesTable() + '</div>';
+    const showAll = S.dashShowAllUnpaid;
+    html += dashHead('Unpaid Invoices', STALE_INVOICE_DAYS + '+ days unpaid is flagged red',
+      S.unpaidInvoices.length > DASH_LIMIT ? dashLink(showAll ? 'Show fewer' : 'Show all ' + S.unpaidInvoices.length, 'toggleDashUnpaid()') : '');
+    html += '<div class="tbl-wrap">' + renderUnpaidInvoicesTable(showAll ? null : DASH_LIMIT) + '</div>';
   }
 
-  html += '<div class="section-title">New Submissions</div><div class="sub" style="color:var(--text3);font-size:var(--t-sm);margin-bottom:10px">Applications waiting on your first review</div>';
-  html += '<div class="tbl-wrap">' + (newSubmissions.length ? appTable(newSubmissions) : '<div class="empty-state"><div class="big">&#10003;</div>Nothing new to review.</div>') + '</div>';
+  html += dashHead('Active Builds', 'Who needs to act next', active.length ? dashLink('Open Board', "goPage('board')") : '');
+  html += '<div class="tbl-wrap">' + (active.length ? activeAppsTable(active, DASH_LIMIT) : '<div class="empty-state"><div class="big">-</div>Nothing in progress right now.</div>') + '</div>';
 
-  html += '<div class="section-title">Revision Requests</div><div class="sub" style="color:var(--text3);font-size:var(--t-sm);margin-bottom:10px">Customers waiting on a revised tune</div>';
-  html += '<div class="tbl-wrap">' + (revisionRequests.length ? appTable(revisionRequests) : '<div class="empty-state"><div class="big">&#10003;</div>No open revision requests.</div>') + '</div>';
-
-  html += '<div class="section-title">Active Applications</div><div class="sub" style="color:var(--text3);font-size:var(--t-sm);margin-bottom:10px">Everything in progress, and who needs to act next</div>';
-  html += '<div class="tbl-wrap">' + (active.length ? activeAppsTable(active) : '<div class="empty-state"><div class="big">-</div>Nothing in progress right now.</div>') + '</div>';
-
-  html += '<div class="card"><h2>Recent Activity</h2><div class="sub" style="color:var(--text3);font-size:var(--t-sm);margin-bottom:12px">Latest status changes, messages and files across every application</div>';
-  html += renderRecentActivity();
-  html += '<div style="margin-top:10px"><a onclick="openActivityPage()" style="cursor:pointer;font-size:var(--t-sm);font-weight:600;color:var(--teal)">View full activity log &rarr;</a></div>';
-  html += '</div>';
-
+  html += dashHead('Recent Activity', '', dashLink('Full activity log', 'openActivityPage()'));
+  html += '<div class="tbl-wrap" style="padding:4px 0">' + renderRecentActivity() + '</div>';
   return html;
 }
+
+function toggleDashUnpaid(){ S.dashShowAllUnpaid = !S.dashShowAllUnpaid; renderPage(); }
+window.toggleDashUnpaid = toggleDashUnpaid;
 function renderRecentActivity(){
   if(!S.recentActivity.length) return '<div class="empty-state">No activity recorded yet.</div>';
   // Dashboard shows only the most recent 10 at a glance; the scroll
@@ -1310,14 +1354,15 @@ function appTable(rows, selectable){
 // Dashboard's "what's in flight and who needs to act" view - accepted,
 // active, tune_sent, and revision_requested applications, sorted so
 // whatever needs the tuner's attention right now rises to the top.
-function activeAppsTable(rows){
-  const sorted = rows.slice().sort(function(a, b){
+function activeAppsTable(rows, limit){
+  let sorted = rows.slice().sort(function(a, b){
     const ra = waitingOnLabel(a).rank, rb = waitingOnLabel(b).rank;
     if(ra !== rb) return ra - rb;
     const da = daysSince(a.last_message_at || a.updated_at) || 0;
     const db = daysSince(b.last_message_at || b.updated_at) || 0;
     return db - da; // longest-waiting first within the same urgency
   });
+  if(limit) sorted = sorted.slice(0, limit);
   let html = '<table><thead><tr><th>#</th><th>Customer</th><th>Car</th><th>Status</th><th>Waiting On</th><th>Last Activity</th></tr></thead><tbody>';
   sorted.forEach(function(a){
     const w = waitingOnLabel(a);
@@ -1411,8 +1456,10 @@ function renderPanelShell(app){
     + '<div class="panel-body" id="panelBody"></div>';
 }
 function tabButtons(){
-  return ['overview','messages','files','activity'].map(function(t){
-    return '<div class="panel-tab ' + (S.activeTab===t?'active':'') + '" onclick="switchTab(\'' + t + '\')">' + t.charAt(0).toUpperCase()+t.slice(1) + '</div>';
+  const unpaid = S.unpaidInvoices.filter(function(i){ return i.application_id === S.openAppId; }).length;
+  return ['overview','messages','files','invoices','activity'].map(function(t){
+    const badge = t === 'invoices' && unpaid ? ' <span class="tab-badge">' + unpaid + '</span>' : '';
+    return '<div class="panel-tab ' + (S.activeTab===t?'active':'') + '" onclick="switchTab(\'' + t + '\')">' + t.charAt(0).toUpperCase()+t.slice(1) + badge + '</div>';
   }).join('');
 }
 function switchTab(t){
@@ -1600,7 +1647,11 @@ function renderPanelBody(){
   if(S.activeTab === 'overview') el.innerHTML = renderOverview(app);
   else if(S.activeTab === 'messages') el.innerHTML = renderMessagesTab(app);
   else if(S.activeTab === 'files') el.innerHTML = renderFilesTab(app);
+  else if(S.activeTab === 'invoices') el.innerHTML = renderInvoicesSection(app);
   else if(S.activeTab === 'activity') el.innerHTML = renderActivityTab(app);
+  // Keep the tab badges (unpaid invoice count) in step with every re-render.
+  const tabs = document.getElementById('panelTabs');
+  if(tabs) tabs.innerHTML = tabButtons();
 }
 
 function openModal(html){
@@ -1690,8 +1741,9 @@ function invoiceChip(a){
     + 'Unpaid $' + total.toFixed(2) + (stale ? ' - ' + oldest + 'd' : '') + '</span>';
 }
 
-function renderUnpaidInvoicesTable(){
-  const rows = S.unpaidInvoices.slice().sort(function(x, y){ return invoiceAgeDays(y) - invoiceAgeDays(x); });
+function renderUnpaidInvoicesTable(limit){
+  let rows = S.unpaidInvoices.slice().sort(function(x, y){ return invoiceAgeDays(y) - invoiceAgeDays(x); });
+  if(limit) rows = rows.slice(0, limit);
   let html = '<table><thead><tr><th>#</th><th>Customer</th><th>Amount</th><th>Sent</th><th>Reminders</th><th></th></tr></thead><tbody>';
   rows.forEach(function(inv){
     const a = S.applications.find(function(x){ return x.id === inv.application_id; });
@@ -1763,50 +1815,85 @@ function invoiceStatusPillClass(s){
 // second round of work all just become another entry here), each with its
 // own status and its own actions, plus a "Send New Invoice" button that's
 // always available - sending never touches an earlier invoice.
+// Invoices tab. Each invoice is one compact row (status, number, total,
+// date) that expands for line items. Only one primary action is shown on
+// the row; everything else lives in its "More" menu, so the list stays
+// scannable even with several invoices.
 function renderInvoicesSection(a){
-  if(!canManageInvoice(a)) return '';
+  if(!canManageInvoice(a)){
+    return '<div class="empty-state" style="padding:24px 0">Invoicing opens once this application is accepted.</div>';
+  }
   const invoices = S.invoices[a.id] || [];
+  // Numbered oldest-first so "Invoice 1" stays Invoice 1 as more are added.
+  const numberOf = {};
+  invoices.slice().sort(function(x, y){ return new Date(x.created_at) - new Date(y.created_at); })
+    .forEach(function(inv, i){ numberOf[inv.id] = i + 1; });
+  const owed = invoices.filter(function(i){ return i.status === 'sent'; }).reduce(function(t, i){ return t + (Number(i.amount) || 0); }, 0);
+  const paid = invoices.filter(function(i){ return i.status === 'paid'; }).reduce(function(t, i){ return t + (Number(i.amount) || 0); }, 0);
 
-  const invoicesHtml = invoices.length ? invoices.map(function(inv){
+  let html = '<div class="inv-head">'
+    + '<div class="file-meta">Outstanding <strong style="color:' + (owed ? 'var(--orange)' : 'var(--text)') + '">$' + owed.toFixed(2) + '</strong> &middot; Paid <strong>$' + paid.toFixed(2) + '</strong></div>'
+    + '<button class="btn btn-sm btn-primary" onclick="openSendInvoiceModal(\'' + a.id + '\')">+ New Invoice</button>'
+    + '</div>';
+
+  if(!invoices.length) return html + '<div class="empty-state" style="padding:24px 0">No invoices sent yet.</div>';
+
+  html += invoices.map(function(inv){
     const lines = Array.isArray(inv.line_items) ? inv.line_items : [];
+    const when = inv.status === 'paid' ? 'Paid ' + fmtDate(inv.paid_at)
+      : (inv.status === 'cancelled' ? 'Cancelled ' + fmtDate(inv.cancelled_at) : 'Sent ' + fmtDate(inv.sent_at) + ' &middot; ' + (daysSince(inv.sent_at) || 0) + 'd');
+    const stale = inv.status === 'sent' && (daysSince(inv.sent_at) || 0) >= STALE_INVOICE_DAYS;
+
+    let primary = '';
+    let menu = '';
+    if(inv.status === 'sent'){
+      primary = '<button class="btn btn-sm" id="panelRemindBtn-' + inv.id + '" onclick="sendInvoiceReminder(\'' + a.id + '\',\'' + inv.id + '\')">Send Reminder</button>';
+      menu = '<div class="more-wrap"><button class="btn btn-sm more-btn" onclick="toggleMoreMenu(this)">More &#9662;</button>'
+        + '<div class="more-menu">'
+        + '<a onclick="openEditInvoiceModal(\'' + a.id + '\',\'' + inv.id + '\')">Edit &amp; resend</a>'
+        + '<a id="refreshInvoiceBtn-' + inv.id + '" onclick="refreshInvoiceStatus(\'' + a.id + '\',\'' + inv.id + '\')">Check payment in Shopify</a>'
+        + (inv.invoice_url ? '<a onclick="copyInvoiceLink(\'' + escapeHtml(inv.invoice_url) + '\')">Copy payment link</a><a href="' + escapeHtml(inv.invoice_url) + '" target="_blank" rel="noopener">Open payment page</a>' : '')
+        + '<a id="cancelInvoiceBtn-' + inv.id + '" class="danger" onclick="cancelInvoice(\'' + a.id + '\',\'' + inv.id + '\')">Cancel invoice</a>'
+        + '</div></div>';
+    }
+
     const linesHtml = lines.length ? lines.map(function(l){
       return '<div class="invoice-line"><div class="invoice-line-desc">' + (l.quantity > 1 ? l.quantity + '&times; ' : '') + escapeHtml(l.title) + (l.type === 'custom' ? ' <span class="pill pill-muted">custom</span>' : '') + '</div>'
         + '<div class="invoice-line-amt"><span>$' + (Number(l.price) * Number(l.quantity||1)).toFixed(2) + '</span></div></div>';
-    }).join('') : '<div class="invoice-empty">No line items on record for this invoice.</div>';
+    }).join('') : '<div class="invoice-empty">No line items on record.</div>';
 
-    let meta = '';
-    if(inv.status === 'sent') meta = 'Sent ' + fmtDate(inv.sent_at) + (inv.sent_by ? ' by ' + inv.sent_by : '')
-      + (inv.reminder_count ? ' - reminded ' + inv.reminder_count + 'x, last ' + fmtDate(inv.last_reminded_at) : '');
-    else if(inv.status === 'paid') meta = 'Paid ' + fmtDate(inv.paid_at) + (inv.paid_by ? ' by ' + inv.paid_by : '') + ' - sent ' + fmtDate(inv.sent_at);
-    else if(inv.status === 'cancelled') meta = 'Cancelled ' + fmtDate(inv.cancelled_at) + (inv.cancelled_by ? ' by ' + inv.cancelled_by : '');
-
-    let actions = '';
-    if(inv.status === 'sent'){
-      actions = '<div style="display:flex;gap:8px;align-items:center;margin-top:10px">'
-        + '<button class="btn btn-sm" onclick="openEditInvoiceModal(\'' + a.id + '\',\'' + inv.id + '\')">Resend / Edit</button>'
-        + ' <button class="btn btn-sm btn-teal" id="refreshInvoiceBtn-' + inv.id + '" onclick="refreshInvoiceStatus(\'' + a.id + '\',\'' + inv.id + '\')">Refresh from Shopify</button>'
-        + ' <button class="btn btn-sm" id="panelRemindBtn-' + inv.id + '" onclick="sendInvoiceReminder(\'' + a.id + '\',\'' + inv.id + '\')">Send Reminder</button>'
-        + ' <button class="btn btn-sm" id="cancelInvoiceBtn-' + inv.id + '" onclick="cancelInvoice(\'' + a.id + '\',\'' + inv.id + '\')" style="color:var(--red)">Cancel Invoice</button>'
-        + '</div>';
-    }
-
-    return '<div class="invoice-box" style="margin-bottom:12px">'
-      + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px">'
-        + '<span class="pill ' + invoiceStatusPillClass(inv.status) + '">' + invoiceStatusLabel(inv.status) + '</span>'
-        + '<span class="file-meta">' + meta + '</span>'
+    return '<div class="inv-row' + (inv.status === 'cancelled' ? ' cancelled' : '') + '">'
+      + '<div class="inv-sum" onclick="this.parentNode.classList.toggle(\'open\')">'
+        + '<span class="pill ' + (stale ? 'pill-red' : invoiceStatusPillClass(inv.status)) + '">' + invoiceStatusLabel(inv.status) + '</span>'
+        + '<span class="inv-title">Invoice ' + numberOf[inv.id] + '<span class="file-meta"> &middot; ' + when + (inv.reminder_count ? ' &middot; reminded ' + inv.reminder_count + 'x' : '') + '</span></span>'
+        + '<span class="inv-amt">$' + Number(inv.amount || 0).toFixed(2) + '</span>'
+        + '<span class="inv-actions" onclick="event.stopPropagation()">' + primary + menu + '</span>'
       + '</div>'
-      + linesHtml
-      + '<div class="invoice-total"><span>Total</span><span class="amt">$' + (inv.amount != null ? Number(inv.amount).toFixed(2) : '0.00') + '</span></div>'
-      + (inv.notes ? '<div class="file-meta" style="margin-top:8px;font-style:italic">' + escapeHtml(inv.notes) + '</div>' : '')
-      + (inv.invoice_url && inv.status !== 'cancelled' ? '<div style="margin-top:8px"><a href="' + escapeHtml(inv.invoice_url) + '" target="_blank" rel="noopener" style="font-size:var(--t-sm)">Payment link</a></div>' : '')
-      + actions
+      + '<div class="inv-detail">' + linesHtml
+        + (inv.notes ? '<div class="file-meta" style="margin-top:8px;font-style:italic">' + escapeHtml(inv.notes) + '</div>' : '')
+      + '</div>'
       + '</div>';
-  }).join('') : '<div class="empty-state" style="padding:14px 0">No invoices sent yet.</div>';
-
-  return '<div class="section-title">Invoices</div>'
-    + invoicesHtml
-    + '<div style="margin:0 0 20px"><button class="btn btn-sm btn-primary" onclick="openSendInvoiceModal(\'' + a.id + '\')">Send New Invoice</button></div>';
+  }).join('');
+  return html;
 }
+
+function toggleMoreMenu(btn){
+  const menu = btn.nextElementSibling;
+  const wasOpen = menu.classList.contains('open');
+  closeMoreMenus();
+  if(!wasOpen) menu.classList.add('open');
+}
+window.toggleMoreMenu = toggleMoreMenu;
+function closeMoreMenus(){ document.querySelectorAll('.more-menu.open').forEach(function(m){ m.classList.remove('open'); }); }
+document.addEventListener('click', function(ev){ if(!ev.target.closest || !ev.target.closest('.more-btn')) closeMoreMenus(); });
+
+function copyInvoiceLink(url){
+  closeMoreMenus();
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(url).then(function(){ toast('Payment link copied'); }, function(){ prompt('Copy this payment link:', url); });
+  } else prompt('Copy this payment link:', url);
+}
+window.copyInvoiceLink = copyInvoiceLink;
 
 async function loadInvoiceCatalog(){
   if(S.invoiceCatalog || S.invoiceCatalogLoading) return S.invoiceCatalog;
@@ -2093,7 +2180,7 @@ async function cancelInvoice(appId, invoiceId, quiet, skipUndo){
     }
   }catch(e){
     toast('Failed to cancel invoice: ' + e.message, true);
-    if(btn){ btn.disabled = false; btn.textContent = 'Cancel Invoice'; }
+    if(btn){ btn.disabled = false; btn.textContent = 'Cancel invoice'; }
   }
 }
 window.cancelInvoice = cancelInvoice;
@@ -2118,10 +2205,36 @@ async function refreshInvoiceStatus(appId, invoiceId){
   }catch(e){
     toast('Shopify check failed: ' + e.message, true);
   }
-  if(btn){ btn.disabled = false; btn.textContent = 'Refresh from Shopify'; }
+  if(btn){ btn.disabled = false; btn.textContent = 'Check payment in Shopify'; }
 }
 window.refreshInvoiceStatus = refreshInvoiceStatus;
 
+
+// Collapsible Overview section. Only Car Information is open by default -
+// the rest of the intake is reference material, not something to scroll
+// past every time an application is opened.
+function ovSection(title, open, body){
+  return '<details class="ov-sec"' + (open ? ' open' : '') + '><summary>' + title + '</summary><div class="ov-body">' + body + '</div></details>';
+}
+
+// At-a-glance strip at the top of Overview: the handful of facts a tuner
+// actually needs before reading anything else.
+function renderOverviewSummary(a){
+  const unpaid = S.unpaidInvoices.filter(function(i){ return i.application_id === a.id; });
+  const owed = unpaid.reduce(function(sum, i){ return sum + (Number(i.amount) || 0); }, 0);
+  const days = stageDays(a);
+  const items = [
+    ['Car', escapeHtml([a.car_year, a.car_make, a.car_model].filter(Boolean).join(' ') || '-')],
+    ['Mileage', escapeHtml(String(a.car_mileage || '-'))],
+    ['DS1', a.has_ds1 ? 'Has one' : (a.purchasing_ds1_through_us ? 'Buying through us' : 'No')],
+    ['Ethanol', yn(a.plan_ethanol)],
+    ['In this stage', days + ' day' + (days === 1 ? '' : 's')],
+    ['Unpaid', unpaid.length ? '<a onclick="switchTab(\'invoices\')" style="cursor:pointer;color:var(--orange);font-weight:700">$' + owed.toFixed(2) + '</a>' : 'None']
+  ];
+  return '<div class="ov-summary">' + items.map(function(it){
+    return '<div><div class="dl-label">' + it[0] + '</div><div class="ov-val">' + it[1] + '</div></div>';
+  }).join('') + '</div>';
+}
 
 function renderOverview(a){
   let html = '';
@@ -2145,21 +2258,19 @@ function renderOverview(a){
     html += '<div class="notice-banner red"><strong>Flagged:</strong> ' + flags.map(escapeHtml).join(', ') + '</div>';
   }
 
+  html += renderOverviewSummary(a);
   html += renderReviewSection(a);
-  html += renderLogGuideSection(a);
-  html += renderInvoicesSection(a);
 
-  html += '<div class="section-title">Owner</div><div class="dl-grid">'
+  html += ovSection('Car Information', true, '<div class="dl-grid">'
+    + dl('Year', a.car_year) + dl('Make', a.car_make) + dl('Model', a.car_model) + dl('Mileage', a.car_mileage)
+    + '</div>');
+
+  html += ovSection('Owner', false, '<div class="dl-grid">'
     + dlFull('Already a TGK customer?', a.existing_customer)
     + dlFull('Why seeking custom tuning', a.tuning_reason)
-    + '</div>';
+    + '</div>');
 
-
-  html += '<div class="section-title">Car Information</div><div class="dl-grid">'
-    + dl('Year', a.car_year) + dl('Make', a.car_make) + dl('Model', a.car_model) + dl('Mileage', a.car_mileage)
-    + '</div>';
-
-  html += '<div class="section-title">Modifications</div><div class="dl-grid">'
+  html += ovSection('Modifications', false, '<div class="dl-grid">'
     + dl('Intake', a.mod_intake) + dl('Turbos', a.mod_turbos)
     + dl('Cooling', a.mod_cooling) + dl('Wastegates', a.mod_wastegates)
     + dl('Map Sensors', a.mod_map_sensors) + dl('Downpipes/Exhaust', a.mod_downpipes_exhaust)
@@ -2167,9 +2278,9 @@ function renderOverview(a){
     + dl('Water Methanol', yn(a.has_water_meth)) + dl('Plan to Run Ethanol', yn(a.plan_ethanol))
     + dl('Has Dyno Spectrum DS1', yn(a.has_ds1)) + dl('Purchasing DS1 Through Us', yn(a.purchasing_ds1_through_us))
     + dlFull('Other Modifications', a.other_mods)
-    + '</div>';
+    + '</div>');
 
-  html += '<div class="section-title">Maintenance</div><div class="dl-grid">'
+  html += ovSection('Maintenance', false, '<div class="dl-grid">'
     + dl('Spark Plug Date', a.spark_plug_date) + dl('Spark Plug Mileage', a.spark_plug_mileage)
     + dl('Spark Plug Brand', a.spark_plug_brand) + dl('Spark Plug Gap', a.spark_plug_gap)
     + dl('Oil Change Date', a.oil_change_date) + dl('Oil Change Mileage', a.oil_change_mileage)
@@ -2178,16 +2289,16 @@ function renderOverview(a){
     + dl('Air Filter Date', a.air_filter_date) + dl('Air Filter Mileage', a.air_filter_mileage)
     + dl('Self Performed', yn(a.maintenance_self_performed))
     + dl('Shop Name', a.maintenance_shop_name)
-    + '</div>';
+    + '</div>');
 
-  html += '<div class="section-title">Contact &amp; Legal</div><div class="dl-grid">'
+  html += ovSection('Contact &amp; Legal', false, '<div class="dl-grid">'
     + dl('Country', a.customer_country)
     + dl('Legal Policy Agreed', yn(a.legal_agree))
     + dlFull('Policy Agreement Signature', a.policy_agreement_signature)
     + dlFull('Legal Signature', a.legal_signature)
     + dl('Submitted', fmtDate(a.created_at))
     + dl('Last Updated', fmtDate(a.updated_at))
-    + '</div>';
+    + '</div>');
 
   if(a.decision_notes || a.declined_reason){
     html += '<div class="section-title">Internal Notes</div><div class="dl-grid">'
@@ -2317,7 +2428,8 @@ function nextRevisionNumber(appId){
 function renderFilesTab(a){
   const files = S.files[a.id] || [];
   const fuelOpts = TUNE_FUELS.map(function(f){ return '<option>' + f + '</option>'; }).join('');
-  let html = '<div style="margin-bottom:16px">';
+  let html = renderLogGuideSection(a);
+  html += '<div style="margin-bottom:16px">';
   html += '<label class="form-label">Upload a Tune File or Log</label>';
   html += '<input type="file" id="fileInput" style="margin-top:6px">';
   html += '<div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">';
