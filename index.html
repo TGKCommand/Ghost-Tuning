@@ -176,6 +176,37 @@ tr.row-click:hover td{background:var(--bg3)}
 .ic-trash{-webkit-mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 6h18 M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2 M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6'/%3E%3C/svg%3E");mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 6h18 M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2 M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6'/%3E%3C/svg%3E")}
 .ic-x{-webkit-mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M18 6 6 18M6 6l12 12'/%3E%3C/svg%3E");mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M18 6 6 18M6 6l12 12'/%3E%3C/svg%3E")}
 .panel-tabs{display:flex;gap:2px;padding:0 20px;border-bottom:1px solid var(--border);flex-shrink:0}
+.log-modal{max-width:1100px !important;max-height:92vh;overflow-y:auto}
+.log-flags{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:12px 0 8px}
+.log-flag{background:var(--red-dim);color:var(--red);border:1px solid rgba(220,38,38,.25);border-radius:6px;padding:3px 9px;font-size:var(--t-xs);font-weight:700;cursor:pointer}
+.log-readout{font-size:var(--t-xs);color:var(--text2);background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-md);padding:6px 10px;margin-bottom:8px;min-height:16px;font-variant-numeric:tabular-nums}
+.log-chart{border:1px solid var(--border);border-radius:var(--r-md);padding:8px 10px 6px;margin-bottom:8px;background:var(--bg);position:relative}
+.log-chart-head{display:flex;gap:10px;align-items:baseline;font-size:var(--t-sm);margin-bottom:4px;flex-wrap:wrap}
+.log-chart-head .log-x{margin-left:auto}
+.log-x{cursor:pointer;color:var(--text3);font-size:18px;line-height:1;padding:0 4px;text-decoration:none}
+.log-x:hover{color:var(--red)}
+.log-svg{width:100%;height:130px;display:block;cursor:crosshair}
+.log-line{fill:none;stroke:var(--teal);stroke-width:1.5;vector-effect:non-scaling-stroke}
+.log-hitline{stroke:rgba(220,38,38,.35);stroke-width:1;vector-effect:non-scaling-stroke}
+.log-threshold{stroke:var(--red);stroke-width:1;stroke-dasharray:6 4;vector-effect:non-scaling-stroke}
+.log-cursor{stroke:var(--orange);stroke-width:1;vector-effect:non-scaling-stroke}
+.log-axis{position:absolute;left:12px;top:30px;bottom:8px;display:flex;flex-direction:column;justify-content:space-between;font-size:10px;color:var(--text3);pointer-events:none}
+.log-channels{display:flex;flex-wrap:wrap;gap:4px 14px;max-height:180px;overflow-y:auto}
+.log-ch{display:flex;align-items:center;gap:5px;font-size:var(--t-sm);cursor:pointer;min-width:180px}
+.log-ch.on{font-weight:700;color:var(--teal-d)}
+.log-rule{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px dashed var(--border);font-size:var(--t-sm)}
+.log-rule-form{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.log-rule-form select.form-input{width:auto;max-width:220px}
+.product-form{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r-lg);padding:16px;margin:0 0 14px}
+.pf-variant{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:8px}
+.report-box{padding:14px 16px}
+.bar-row{display:flex;align-items:center;gap:10px;margin-bottom:8px;font-size:var(--t-sm)}
+.bar-row:last-child{margin-bottom:0}
+.bar-label{width:190px;flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bar-track{flex:1;background:var(--bg4);border-radius:var(--r-sm);overflow:hidden;height:14px;min-width:40px}
+.bar-fill{height:100%;background:linear-gradient(90deg,var(--teal),var(--orange))}
+.bar-val{flex-shrink:0;min-width:70px;text-align:right;font-weight:600;font-variant-numeric:tabular-nums}
+@media(max-width:720px){.bar-label{width:110px}.bar-val{min-width:56px}}
 .dash-head{display:flex;justify-content:space-between;align-items:flex-end;gap:10px;margin:20px 0 10px}
 .dash-link{cursor:pointer;font-size:var(--t-sm);font-weight:600;color:var(--teal);white-space:nowrap}
 .inv-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:2px 0 12px;flex-wrap:wrap}
@@ -403,7 +434,7 @@ tr.row-click:hover td{background:var(--bg3)}
         </div>
         <div class="sync-sub" onclick="doLogout()">Sign out</div>
         <div class="version-row">
-          <span>v1.64</span>
+          <span>v1.66</span>
           <span id="buildDate"></span>
         </div>
       </div>
@@ -454,6 +485,7 @@ const NAV = [
   { id:'logreview', label:'Log Review', group:'Work', badge: function(){ return S.pendingLogs.length; } },
   { id:'lookup', label:'Lookup', group:'Tools' },
   { id:'reports', label:'Reports', group:'Tools' },
+  { id:'products', label:'Products', group:'Tools' },
   { id:'library', label:'Platform Library', group:'Library' },
   { id:'logguides', label:'Logging Guides', group:'Library' },
   { id:'ecuref', label:'ECU Reference', group:'Library' },
@@ -1071,6 +1103,8 @@ window.closeMobileNav = closeMobileNav;
 
 function goPage(id){
   S.page = id;
+  if(id === 'reports') S.reportData = null;
+  if(id === 'products'){ S.products = null; S.productFormOpen = false; S.editingProductId = null; }
   renderNav();
   document.getElementById('pageTitle').textContent = (NAV.find(function(n){ return n.id===id; }) || {}).label || 'Dashboard';
   renderPage();
@@ -1083,6 +1117,7 @@ function renderPage(){
   if(S.page === 'dashboard') el.innerHTML = renderDashboard();
   else if(S.page === 'applications') el.innerHTML = renderApplications();
   else if(S.page === 'board') el.innerHTML = renderBoard();
+  else if(S.page === 'products') el.innerHTML = renderProducts();
   else if(S.page === 'activity') el.innerHTML = renderActivityPage();
   else if(S.page === 'logreview') el.innerHTML = renderLogReview();
   else if(S.page === 'lookup') el.innerHTML = renderLookup();
@@ -2465,6 +2500,7 @@ function renderFilesTab(a){
       + '</div>'
       + '<div style="display:flex;gap:6px;flex-shrink:0">'
       + (isTune && !f.is_current ? '<button class="btn btn-sm" onclick="setCurrentTune(\'' + a.id + '\',\'' + f.id + '\')">Mark current</button>' : '')
+      + (isLogFile(f) ? '<button class="btn btn-sm btn-teal" onclick="openLogViewer(\'' + f.id + '\',\'' + f.file_path + '\')">View</button>' : '')
       + '<button class="btn btn-sm" onclick="downloadFile(\'' + f.id + '\',\'' + f.file_path + '\')">Download</button>'
       + '</div>'
       + '</div>';
@@ -2555,6 +2591,410 @@ async function uploadFile(appId){
 }
 window.uploadFile = uploadFile;
 
+/* ================= DATALOG VIEWER ================= */
+// Generic CSV log viewer: finds the header row itself (logs often carry
+// preamble lines), detects the delimiter, and lets the tuner pick which
+// columns to chart. Nothing here assumes DS1's column names - flag rules
+// are tuner-defined against the real headers (tuning_log_rules).
+const LOG_MAX_CHARTS = 6;
+
+function splitLogLine(line, delim){
+  if(line.indexOf('"') === -1) return line.split(delim).map(function(c){ return c.trim(); });
+  const out = []; let cur = '', q = false;
+  for(let i = 0; i < line.length; i++){
+    const ch = line[i];
+    if(ch === '"'){ if(q && line[i+1] === '"'){ cur += '"'; i++; } else q = !q; }
+    else if(ch === delim && !q){ out.push(cur.trim()); cur = ''; }
+    else cur += ch;
+  }
+  out.push(cur.trim());
+  return out;
+}
+
+function toNum(v, commaDecimal){
+  if(v === '' || v == null) return NaN;
+  return Number(commaDecimal ? String(v).replace(',', '.') : v);
+}
+
+function parseLog(text){
+  const lines = text.split(/\r?\n/).filter(function(l){ return l.trim() !== ''; });
+  if(lines.length < 3) throw new Error('This file does not look like a datalog (too few lines).');
+  // Delimiter: whichever of , ; tab appears most consistently in the first lines.
+  const sample = lines.slice(0, 60);
+  let delim = ',', best = 0;
+  [',', ';', '\t'].forEach(function(d){
+    const counts = sample.map(function(l){ return l.split(d).length - 1; }).filter(function(c){ return c > 0; });
+    if(counts.length > best){ best = counts.length; delim = d; }
+  });
+  const commaDecimal = delim !== ',';
+  const numRatio = function(cells){
+    const n = cells.filter(function(c){ return c !== '' && !isNaN(toNum(c, commaDecimal)); }).length;
+    return cells.length ? n / cells.length : 0;
+  };
+  // Filled-cell numeric ratio: DS1 writes a near-empty marker row ("0,,,,")
+  // right under the header, so empty cells must not count against a row.
+  const filledRatio = function(cells){
+    const filled = cells.filter(function(c){ return c !== ''; });
+    return filled.length / Math.max(1, cells.length);
+  };
+  // Header = a mostly-text row followed (within a few rows, skipping
+  // near-empty ones) by a mostly-numeric row of equal width.
+  let headerIdx = -1;
+  for(let i = 0; i < Math.min(80, lines.length - 1) && headerIdx === -1; i++){
+    const a = splitLogLine(lines[i], delim);
+    if(a.length < 2 || numRatio(a) >= 0.5) continue;
+    for(let j = i + 1; j < Math.min(i + 6, lines.length); j++){
+      const b = splitLogLine(lines[j], delim);
+      if(b.length !== a.length) break;
+      if(filledRatio(b) < 0.5) continue;
+      if(numRatio(b) >= 0.6) headerIdx = i;
+      break;
+    }
+  }
+  if(headerIdx === -1) throw new Error('Could not find a header row in this file.');
+  const headers = splitLogLine(lines[headerIdx], delim).map(function(h, i){ return h || ('Column ' + (i + 1)); });
+  const cols = headers.map(function(){ return []; });
+  for(let r = headerIdx + 1; r < lines.length; r++){
+    const cells = splitLogLine(lines[r], delim);
+    if(cells.length !== headers.length) continue;
+    if(filledRatio(cells) < 0.5) continue; // marker / padding rows
+    for(let c = 0; c < headers.length; c++) cols[c].push(toNum(cells[c], commaDecimal));
+  }
+  const rowCount = cols[0].length;
+  if(!rowCount) throw new Error('No data rows found under the header.');
+  const numeric = headers.map(function(h, c){
+    const ok = cols[c].filter(function(v){ return !isNaN(v); }).length;
+    return ok / rowCount >= 0.8;
+  });
+  // Time axis: a time-like header that mostly increases; otherwise sample index.
+  let timeIdx = -1;
+  headers.forEach(function(h, c){
+    if(timeIdx !== -1 || !numeric[c] || !/time|sec|stamp/i.test(h)) return;
+    let up = 0;
+    for(let i = 1; i < rowCount; i++) if(cols[c][i] >= cols[c][i - 1]) up++;
+    if(up / Math.max(1, rowCount - 1) > 0.95) timeIdx = c;
+  });
+  // Show time relative to the first sample, and in seconds when the log
+  // records milliseconds (DS1: "Timestamp [ms]").
+  let timeScale = 1, timeUnit = '';
+  if(timeIdx !== -1){
+    const h = headers[timeIdx];
+    if(/\[\s*ms\s*\]|\bms\b/i.test(h)){ timeScale = 1000; timeUnit = 's'; }
+    else if(/\[\s*s(ec)?\s*\]/i.test(h)) timeUnit = 's';
+  }
+  return { headers: headers, cols: cols, numeric: numeric, timeIdx: timeIdx, rows: rowCount, delim: delim,
+    t0: timeIdx !== -1 ? cols[timeIdx][0] : 0, timeScale: timeScale, timeUnit: timeUnit };
+}
+
+function logSignature(headers){ return 'tgk-logview:' + headers.join('|').slice(0, 400); }
+function normCol(x){ return String(x || '').toLowerCase().replace(/[^a-z0-9]/g, ''); }
+
+async function loadLogRules(){
+  try{
+    const { data, error } = await sb.from('tuning_log_rules').select('*').order('created_at', { ascending:true });
+    if(error) throw error;
+    S.logRules = data || [];
+  }catch(e){ S.logRules = []; }
+}
+
+// Rule -> columns. An exact header match wins; otherwise every header that
+// contains the rule's name matches. That's what lets one rule on
+// "IKCtl_agKnkInt_as8" check all six per-cylinder DS1 columns [0]..[5].
+function ruleColumns(rule, log){
+  const want = normCol(rule.column_name);
+  if(!want) return [];
+  const exact = [], partial = [];
+  log.headers.forEach(function(h, i){
+    if(!log.numeric[i] || i === log.timeIdx) return;
+    const n = normCol(h);
+    if(n === want) exact.push(i);
+    else if(n.indexOf(want) !== -1) partial.push(i);
+  });
+  return exact.length ? exact : partial;
+}
+
+// Per rule: which columns tripped, how many separate events (runs of
+// consecutive samples), and the worst value. hitsByCol drives the red
+// markers on each chart.
+function evaluateRules(log){
+  return (S.logRules || []).map(function(rule){
+    const cols = ruleColumns(rule, log);
+    const th = Number(rule.threshold);
+    const out = { rule: rule, cols: cols, hitsByCol: {}, events: 0, worst: null, worstCol: -1, trippedCols: [], total: 0 };
+    cols.forEach(function(c){
+      const data = log.cols[c], hits = [];
+      for(let i = 0; i < data.length; i++){
+        const v = data[i];
+        if(isNaN(v)) continue;
+        if(rule.operator === '>' ? v > th : v < th){
+          hits.push(i);
+          if(out.worst === null || (rule.operator === '>' ? v > out.worst : v < out.worst)){ out.worst = v; out.worstCol = c; }
+        }
+      }
+      if(!hits.length) return;
+      out.hitsByCol[c] = hits;
+      out.trippedCols.push(c);
+      out.total += hits.length;
+      for(let k = 0; k < hits.length; k++) if(k === 0 || hits[k] - hits[k - 1] > 1) out.events++;
+    });
+    return out;
+  });
+}
+
+function xValue(log, i){ return log.timeIdx !== -1 ? (log.cols[log.timeIdx][i] - log.t0) / log.timeScale : i; }
+function timeLabel(log){ return log.timeIdx === -1 ? 'Sample' : (log.timeUnit ? 'Time (' + log.timeUnit + ')' : log.headers[log.timeIdx]); }
+function fmtNum(v){ if(v === null || isNaN(v)) return '-'; const a = Math.abs(v); return a >= 1000 ? v.toFixed(0) : (a >= 10 ? v.toFixed(1) : v.toFixed(2)); }
+
+async function openLogViewer(fileId, path){
+  // Name is looked up rather than passed through onclick, so file names
+  // with quotes can't break the handler.
+  let fileName = 'Datalog';
+  Object.keys(S.files).forEach(function(k){ (S.files[k] || []).forEach(function(f){ if(f.id === fileId) fileName = f.file_name; }); });
+  (S.pendingLogs || []).forEach(function(f){ if(f.id === fileId) fileName = f.file_name; });
+  openModal('<div class="modal log-modal"><div class="modal-title">Loading ' + escapeHtml(fileName || 'log') + '&hellip;</div></div>');
+  try{
+    const { data, error } = await sb.storage.from('tuning-files').createSignedUrl(path, 600);
+    if(error) throw error;
+    const resp = await fetch(data.signedUrl);
+    if(!resp.ok) throw new Error('Download failed (' + resp.status + ')');
+    const text = await resp.text();
+    const log = parseLog(text);
+    if(!S.logRules) await loadLogRules();
+    let selected = [];
+    try{ selected = JSON.parse(localStorage.getItem(logSignature(log.headers)) || '[]'); }catch(e){ selected = []; }
+    selected = selected.filter(function(c){ return c < log.headers.length && log.numeric[c] && c !== log.timeIdx; });
+    if(!selected.length){
+      log.headers.forEach(function(h, c){ if(selected.length < 3 && log.numeric[c] && c !== log.timeIdx) selected.push(c); });
+    }
+    S.logView = { fileId: fileId, path: path, fileName: fileName, log: log, selected: selected, filter: '', hover: null };
+    renderLogViewer();
+  }catch(e){
+    openModal('<div class="modal"><div class="modal-title">Could not open log</div><p class="file-meta">' + escapeHtml(e.message) + '</p>'
+      + '<div class="modal-footer"><button class="btn btn-sm" onclick="downloadFile(\'' + fileId + '\',\'' + path + '\')">Download instead</button><button class="btn btn-sm" onclick="closeModal()">Close</button></div></div>');
+  }
+}
+window.openLogViewer = openLogViewer;
+
+// Downsample to ~W buckets keeping each bucket's min and max, so short
+// spikes (a knock event, a boost overshoot) survive on a long log.
+function chartPath(log, c, W, H, pad){
+  const data = log.cols[c], n = data.length;
+  let min = Infinity, max = -Infinity;
+  for(let i = 0; i < n; i++){ const v = data[i]; if(!isNaN(v)){ if(v < min) min = v; if(v > max) max = v; } }
+  if(min === Infinity){ return { d:'', min:NaN, max:NaN }; }
+  if(min === max){ min -= 1; max += 1; }
+  const y = function(v){ return pad + (H - 2 * pad) * (1 - (v - min) / (max - min)); };
+  const buckets = Math.min(n, W);
+  let d = '';
+  for(let b = 0; b < buckets; b++){
+    const from = Math.floor(b * n / buckets), to = Math.max(from + 1, Math.floor((b + 1) * n / buckets));
+    let lo = Infinity, hi = -Infinity;
+    for(let i = from; i < to; i++){ const v = data[i]; if(!isNaN(v)){ if(v < lo) lo = v; if(v > hi) hi = v; } }
+    if(lo === Infinity) continue;
+    const x = (b / Math.max(1, buckets - 1)) * W;
+    d += (d ? 'L' : 'M') + x.toFixed(1) + ' ' + y(lo).toFixed(1);
+    if(hi !== lo) d += 'L' + x.toFixed(1) + ' ' + y(hi).toFixed(1);
+  }
+  return { d: d, min: min, max: max };
+}
+
+function renderLogViewer(){
+  const V = S.logView; if(!V) return;
+  const log = V.log;
+  const results = evaluateRules(log);
+  const W = 1000, H = 130, pad = 8;
+  const colsStats = function(c){
+    let min = Infinity, max = -Infinity, sum = 0, n = 0;
+    log.cols[c].forEach(function(v){ if(!isNaN(v)){ if(v < min) min = v; if(v > max) max = v; sum += v; n++; } });
+    return { min: n ? min : NaN, max: n ? max : NaN, avg: n ? sum / n : NaN };
+  };
+  const span = log.rows > 1 ? xValue(log, log.rows - 1) - xValue(log, 0) : 0;
+
+  let html = '<div class="modal log-modal">';
+  html += '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">'
+    + '<div><div class="modal-title" style="margin-bottom:2px">' + escapeHtml(V.fileName || 'Datalog') + '</div>'
+    + '<div class="file-meta">' + log.rows.toLocaleString() + ' samples &middot; ' + log.headers.length + ' columns'
+    + (log.timeIdx !== -1 ? ' &middot; ' + fmtNum(span) + (log.timeUnit ? ' ' + log.timeUnit : ' (' + escapeHtml(log.headers[log.timeIdx]) + ')') + ' long' : ' &middot; no time column found, x-axis is sample number') + '</div></div>'
+    + '<div style="display:flex;gap:6px"><button class="btn btn-sm" onclick="downloadFile(\'' + V.fileId + '\',\'' + V.path + '\')">Download</button><button class="btn btn-sm" onclick="closeModal();S.logView=null">Close</button></div></div>';
+
+  // Flags
+  const fired = results.filter(function(r){ return r.total; });
+  const missing = results.filter(function(r){ return !r.cols.length; });
+  html += '<div class="log-flags">';
+  if(!(S.logRules || []).length) html += '<span class="file-meta">No flag rules yet - add one below to auto-check logs.</span>';
+  else if(!fired.length) html += '<span class="pill pill-green">No flags</span> <span class="file-meta">' + (S.logRules.length - missing.length) + ' rule' + ((S.logRules.length - missing.length) === 1 ? '' : 's') + ' checked</span>';
+  fired.forEach(function(r){
+    const where = r.cols.length > 1 ? ' on ' + r.trippedCols.length + ' of ' + r.cols.length + ' columns' : '';
+    html += '<span class="log-flag" onclick="logFocusColumn(' + r.worstCol + ')" title="' + escapeHtml(r.trippedCols.map(function(c){ return log.headers[c]; }).join(', ')) + '">'
+      + escapeHtml(r.rule.label) + ': ' + r.events + ' event' + (r.events === 1 ? '' : 's') + where + ', worst ' + fmtNum(r.worst) + '</span>';
+  });
+  if(missing.length) html += '<span class="file-meta">' + missing.length + ' rule' + (missing.length === 1 ? '' : 's') + ' skipped (column not in this log)</span>';
+  html += '</div>';
+
+  // Hover readout + charts
+  html += '<div class="log-readout" id="logReadout">Hover a chart to read values.</div>';
+  html += '<div id="logCharts">';
+  if(!V.selected.length) html += '<div class="empty-state">Pick channels below to chart them.</div>';
+  V.selected.forEach(function(c){
+    const pth = chartPath(log, c, W, H, pad);
+    const st = colsStats(c);
+    const ruleHits = results.filter(function(r){ return r.hitsByCol[c]; });
+    let marks = '';
+    ruleHits.forEach(function(r){
+      const hits = r.hitsByCol[c];
+      const step = Math.max(1, Math.floor(hits.length / 300));
+      for(let k = 0; k < hits.length; k += step){
+        const x = (hits[k] / Math.max(1, log.rows - 1)) * W;
+        marks += '<line x1="' + x.toFixed(1) + '" x2="' + x.toFixed(1) + '" y1="0" y2="' + H + '" class="log-hitline"/>';
+      }
+      const ty = pad + (H - 2 * pad) * (1 - (Number(r.rule.threshold) - pth.min) / (pth.max - pth.min));
+      if(ty >= 0 && ty <= H) marks += '<line x1="0" x2="' + W + '" y1="' + ty.toFixed(1) + '" y2="' + ty.toFixed(1) + '" class="log-threshold"/>';
+    });
+    html += '<div class="log-chart">'
+      + '<div class="log-chart-head"><strong>' + escapeHtml(log.headers[c]) + '</strong>'
+      + '<span class="file-meta">min ' + fmtNum(st.min) + ' &middot; avg ' + fmtNum(st.avg) + ' &middot; max ' + fmtNum(st.max) + '</span>'
+      + '<a class="log-x" onclick="logToggleColumn(' + c + ')" title="Remove">&times;</a></div>'
+      + '<svg viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none" class="log-svg" onmousemove="logHover(event,this)" onmouseleave="logHoverEnd()">'
+      + marks
+      + '<path d="' + pth.d + '" class="log-line"/>'
+      + '<line class="log-cursor" x1="-10" x2="-10" y1="0" y2="' + H + '"/>'
+      + '</svg>'
+      + '<div class="log-axis"><span>' + fmtNum(pth.max) + '</span><span>' + fmtNum(pth.min) + '</span></div>'
+      + '</div>';
+  });
+  html += '</div>';
+
+  // Channel picker
+  const filt = V.filter.toLowerCase();
+  html += '<details class="ov-sec" open style="margin-top:12px"><summary>Channels (' + V.selected.length + '/' + LOG_MAX_CHARTS + ' shown)</summary><div class="ov-body">'
+    + '<input class="form-input" placeholder="Filter channels..." value="' + escapeHtml(V.filter) + '" oninput="logFilter(this.value)" style="margin-bottom:8px" id="logFilterInput">'
+    + '<div class="log-channels" id="logChannels">' + renderLogChannelList(filt) + '</div></div></details>';
+
+  // Rules
+  const numericCols = log.headers.map(function(h, i){ return i; }).filter(function(i){ return log.numeric[i] && i !== log.timeIdx; });
+  html += '<details class="ov-sec"><summary>Flag rules (' + (S.logRules || []).length + ', shared by all tuners)</summary><div class="ov-body">';
+  (S.logRules || []).forEach(function(r){
+    const res = results.find(function(x){ return x.rule.id === r.id; });
+    const cover = !res || !res.cols.length ? ' &middot; not in this log' : (res.cols.length > 1 ? ' &middot; checks ' + res.cols.length + ' columns' : '');
+    html += '<div class="log-rule"><span><strong>' + escapeHtml(r.label) + '</strong> <span class="file-meta">' + escapeHtml(r.column_name) + ' ' + r.operator + ' ' + r.threshold + cover + '</span></span>'
+      + '<a class="log-x" onclick="deleteLogRule(\'' + r.id + '\')" title="Delete rule">&times;</a></div>';
+  });
+  html += '<div class="log-rule-form">'
+    + '<select class="form-input" id="lrCol">' + numericCols.map(function(i){ return '<option value="' + escapeHtml(log.headers[i]) + '">' + escapeHtml(log.headers[i]) + '</option>'; }).join('') + '</select>'
+    + '<select class="form-input" id="lrOp" style="width:70px"><option value="&gt;">&gt;</option><option value="&lt;">&lt;</option></select>'
+    + '<input class="form-input" id="lrTh" type="number" step="any" placeholder="Threshold" style="width:110px">'
+    + '<input class="form-input" id="lrLabel" placeholder="Label, e.g. Timing pulled" style="flex:1;min-width:140px">'
+    + '<label class="check-row" style="font-size:var(--t-sm)"><input type="checkbox" id="lrAllCyl" checked> All cylinders</label>'
+    + '<button class="btn btn-sm btn-primary" onclick="addLogRule()">Add rule</button></div>'
+    + '<div class="file-meta" style="margin-top:6px">Rules match any log with a column containing that name, so one rule covers every DS1 log with that channel.</div>';
+  html += '</div></details>';
+
+  html += '</div>';
+  openModal(html);
+  const fi = document.getElementById('logFilterInput');
+  if(fi && V.focusFilter){ fi.focus(); fi.setSelectionRange(fi.value.length, fi.value.length); V.focusFilter = false; }
+}
+
+function renderLogChannelList(filt){
+  const V = S.logView, log = V.log;
+  return log.headers.map(function(h, i){
+    if(!log.numeric[i] || i === log.timeIdx) return '';
+    if(filt && h.toLowerCase().indexOf(filt) === -1) return '';
+    const on = V.selected.indexOf(i) !== -1;
+    return '<label class="log-ch' + (on ? ' on' : '') + '"><input type="checkbox" ' + (on ? 'checked' : '') + ' onchange="logToggleColumn(' + i + ')"> ' + escapeHtml(h) + '</label>';
+  }).join('') || '<span class="file-meta">No matching numeric channels.</span>';
+}
+
+function logSaveSelection(){
+  try{ localStorage.setItem(logSignature(S.logView.log.headers), JSON.stringify(S.logView.selected)); }catch(e){ /* storage unavailable */ }
+}
+function logToggleColumn(c){
+  const V = S.logView; if(!V) return;
+  const i = V.selected.indexOf(c);
+  if(i !== -1) V.selected.splice(i, 1);
+  else {
+    if(V.selected.length >= LOG_MAX_CHARTS){ toast('Up to ' + LOG_MAX_CHARTS + ' channels at once - remove one first', true); renderLogViewer(); return; }
+    V.selected.push(c);
+  }
+  logSaveSelection();
+  renderLogViewer();
+}
+window.logToggleColumn = logToggleColumn;
+function logFocusColumn(c){
+  const V = S.logView; if(!V) return;
+  if(V.selected.indexOf(c) === -1){
+    if(V.selected.length >= LOG_MAX_CHARTS) V.selected.pop();
+    V.selected.unshift(c); logSaveSelection();
+  }
+  renderLogViewer();
+}
+window.logFocusColumn = logFocusColumn;
+function logFilter(v){
+  S.logView.filter = v;
+  const el = document.getElementById('logChannels');
+  if(el) el.innerHTML = renderLogChannelList(v.toLowerCase());
+}
+window.logFilter = logFilter;
+
+// Crosshair across every chart, with a readout of every charted channel
+// at that sample.
+function logHover(ev, svg){
+  const V = S.logView; if(!V) return;
+  const rect = svg.getBoundingClientRect();
+  const frac = Math.min(1, Math.max(0, (ev.clientX - rect.left) / rect.width));
+  const idx = Math.round(frac * (V.log.rows - 1));
+  const x = (frac * 1000).toFixed(1);
+  document.querySelectorAll('#logCharts .log-cursor').forEach(function(l){ l.setAttribute('x1', x); l.setAttribute('x2', x); });
+  const log = V.log;
+  const parts = [escapeHtml(timeLabel(log)) + ' <strong>' + fmtNum(xValue(log, idx)) + '</strong>'];
+  V.selected.forEach(function(c){ parts.push(escapeHtml(log.headers[c]) + ' <strong>' + fmtNum(log.cols[c][idx]) + '</strong>'); });
+  const ro = document.getElementById('logReadout');
+  if(ro) ro.innerHTML = parts.join(' &middot; ');
+}
+window.logHover = logHover;
+function logHoverEnd(){
+  document.querySelectorAll('#logCharts .log-cursor').forEach(function(l){ l.setAttribute('x1', -10); l.setAttribute('x2', -10); });
+}
+window.logHoverEnd = logHoverEnd;
+
+async function addLogRule(){
+  let col = document.getElementById('lrCol').value;
+  // Per-cylinder DS1 channel like "IKCtl_agKnkInt_as8[2] [Grad KW]": with
+  // "All cylinders" on, store the base name so the rule covers [0]..[n].
+  const allCyl = document.getElementById('lrAllCyl');
+  if(allCyl && allCyl.checked && /\[\d+\]/.test(col)){
+    col = col.replace(/\[\d+\]/, '').replace(/\s*\[[^\]]*\]\s*$/, '').trim();
+  }
+  const op = document.getElementById('lrOp').value;
+  const th = parseFloat(document.getElementById('lrTh').value);
+  const label = document.getElementById('lrLabel').value.trim();
+  if(!col){ toast('Pick a column', true); return; }
+  if(isNaN(th)){ toast('Enter a threshold', true); return; }
+  if(!label){ toast('Give the rule a label', true); return; }
+  try{
+    const { data, error } = await sb.from('tuning_log_rules').insert({ column_name: col, operator: op, threshold: th, label: label, created_by: S.user.email }).select().single();
+    if(error) throw error;
+    S.logRules.push(data);
+    toast('Rule added');
+    renderLogViewer();
+  }catch(e){ toast('Failed to add rule: ' + e.message, true); }
+}
+window.addLogRule = addLogRule;
+
+async function deleteLogRule(id){
+  const r = (S.logRules || []).find(function(x){ return x.id === id; });
+  if(!confirm('Delete the "' + (r ? r.label : 'rule') + '" rule? It applies to every log.')) return;
+  try{
+    const { error } = await sb.from('tuning_log_rules').delete().eq('id', id);
+    if(error) throw error;
+    S.logRules = S.logRules.filter(function(x){ return x.id !== id; });
+    renderLogViewer();
+  }catch(e){ toast('Failed to delete: ' + e.message, true); }
+}
+window.deleteLogRule = deleteLogRule;
+
+function isLogFile(f){ return f.file_type === 'log' || /\.(csv|txt|log)$/i.test(f.file_name || ''); }
+
 async function downloadFile(fileId, path){
   try{
     const { data, error } = await sb.storage.from('tuning-files').createSignedUrl(path, 3600);
@@ -2639,7 +3079,7 @@ function renderLogReview(){
         + '<td>' + escapeHtml(carLine) + '</td>'
         + '<td>' + escapeHtml(f.file_name) + '</td>'
         + '<td>' + fmtDate(f.created_at) + '</td>'
-        + '<td><button class="btn btn-sm" onclick="markLogReviewed(\'' + f.id + '\')">Mark Reviewed</button></td>'
+        + '<td style="white-space:nowrap"><button class="btn btn-sm btn-teal" onclick="openLogViewer(\'' + f.id + '\',\'' + f.file_path + '\')">View</button> <button class="btn btn-sm" onclick="markLogReviewed(\'' + f.id + '\')">Mark Reviewed</button></td>'
         + '</tr>';
     });
     html += '</tbody></table>';
@@ -2717,80 +3157,312 @@ function performLookup(v){
 }
 window.performLookup = performLookup;
 
-/* ================= REPORTS ================= */
-function renderReports(){
-  const apps = S.applications;
-  const total = apps.length;
+/* ================= PRODUCTS (Shopify, vendor Ghostronics) ================= */
+// Live view of the Ghostronics products in Shopify - add, edit price/SKU/
+// description, or delete. Changes go straight to Shopify through the
+// tuning-invoice edge function, and the invoice product picker refreshes.
+async function productsCall(body){
+  const { data: sess } = await sb.auth.getSession();
+  const token = sess && sess.session && sess.session.access_token;
+  if(!token) throw new Error('Not signed in');
+  const resp = await fetch(SUPABASE_URL + '/functions/v1/tuning-invoice', {
+    method: 'POST',
+    headers: { 'Content-Type':'application/json', 'Authorization':'Bearer ' + token, 'apikey': SUPABASE_ANON_KEY },
+    body: JSON.stringify(body)
+  });
+  const result = await resp.json();
+  if(!result.success) throw new Error(result.error || 'Request failed');
+  return result;
+}
 
+async function loadProducts(){
+  S.productsLoading = true;
+  try{
+    const r = await productsCall({ action:'product_list' });
+    S.products = r.products || [];
+  }catch(e){
+    toast('Failed to load products: ' + e.message, true);
+    S.products = [];
+  }
+  S.productsLoading = false;
+  if(S.page === 'products') renderPage();
+}
+
+// SKUs used by more than one variant - these make the invoice picker
+// ambiguous, so they're flagged.
+function duplicateSkus(){
+  const seen = {}, dup = {};
+  (S.products || []).forEach(function(p){ p.variants.forEach(function(v){
+    const k = (v.sku || '').trim().toLowerCase();
+    if(!k) return;
+    if(seen[k]) dup[k] = v.sku.trim(); else seen[k] = true;
+  }); });
+  return dup;
+}
+
+function renderProducts(){
+  if(!S.products){
+    if(!S.productsLoading) loadProducts();
+    return '<div class="empty-state">Loading products from Shopify&hellip;</div>';
+  }
+  const dup = duplicateSkus();
+  let html = '<div class="dash-head" style="margin-top:0"><div><div class="section-title" style="margin:0">Ghost Tuning Products</div>'
+    + '<div class="file-meta" style="margin-top:2px">Live from Shopify (vendor Ghostronics). These are what the invoice product picker offers.</div></div>'
+    + '<button class="btn btn-sm btn-primary" onclick="openProductForm(null)">+ Add Product</button></div>';
+  if(Object.keys(dup).length){
+    html += '<div class="notice-banner red"><strong>Duplicate SKUs:</strong> ' + Object.keys(dup).map(function(k){ return escapeHtml(dup[k]); }).join(', ') + ' - more than one product uses the same SKU, which makes invoices ambiguous.</div>';
+  }
+  if(S.productFormOpen && !S.editingProductId) html += renderProductForm(null);
+  if(!S.products.length && !S.productFormOpen) return html + '<div class="empty-state">No Ghostronics products found in Shopify.</div>';
+
+  html += '<div class="tbl-wrap"><table><thead><tr><th>Product</th><th>SKU</th><th style="text-align:right">Price</th><th></th></tr></thead><tbody>';
+  S.products.forEach(function(p){
+    if(S.productFormOpen && S.editingProductId === p.id){
+      html += '<tr><td colspan="4" style="padding:0">' + renderProductForm(p) + '</td></tr>';
+      return;
+    }
+    p.variants.forEach(function(v, i){
+      const isDup = v.sku && dup[v.sku.trim().toLowerCase()];
+      html += '<tr>'
+        + '<td>' + (i === 0 ? '<strong>' + escapeHtml(p.title) + '</strong>' : '') + (v.title && v.title !== 'Default Title' ? '<div class="file-meta">' + escapeHtml(v.title) + '</div>' : '') + '</td>'
+        + '<td>' + (v.sku ? escapeHtml(v.sku) : '<span class="file-meta">-</span>') + (isDup ? ' <span class="flag-chip">Duplicate</span>' : '') + '</td>'
+        + '<td style="text-align:right;font-variant-numeric:tabular-nums">' + money(v.price) + '</td>'
+        + '<td style="text-align:right;white-space:nowrap">' + (i === 0
+            ? '<button class="btn btn-sm" onclick="openProductForm(\'' + p.id + '\')">Edit</button> <button class="btn btn-sm" style="color:var(--red)" onclick="deleteProduct(\'' + p.id + '\')">Delete</button>'
+            : '') + '</td>'
+        + '</tr>';
+    });
+  });
+  html += '</tbody></table></div>';
+  return html;
+}
+
+function renderProductForm(p){
+  const isEdit = !!p;
+  const variants = isEdit ? p.variants : [{ id:null, title:'', sku:'', price:'' }];
+  const plain = isEdit ? String(p.description || '').replace(/<br\s*\/?>/gi, '\n').replace(/<[^>]+>/g, '').trim() : '';
+  let html = '<div class="product-form">';
+  html += '<div class="form-group"><label class="form-label">Title</label><input class="form-input" id="pfTitle" value="' + escapeHtml(isEdit ? p.title : '') + '" placeholder="e.g. Ghost Tuning Audi 4.0T Custom Tuning"></div>';
+  html += '<div class="form-group"><label class="form-label">Description (optional)</label><textarea class="form-input" id="pfDesc" style="min-height:60px">' + escapeHtml(plain) + '</textarea></div>';
+  variants.forEach(function(v, i){
+    html += '<div class="pf-variant">'
+      + (variants.length > 1 ? '<div class="file-meta" style="flex-basis:100%">' + escapeHtml(v.title) + '</div>' : '')
+      + '<div class="form-group" style="flex:1;margin:0"><label class="form-label">SKU</label><input class="form-input pf-sku" data-vid="' + (v.id || '') + '" value="' + escapeHtml(v.sku || '') + '" placeholder="e.g. GHOST-06"></div>'
+      + '<div class="form-group" style="width:140px;margin:0"><label class="form-label">Price (USD)</label><input class="form-input pf-price" type="number" step="0.01" min="0" value="' + (v.price === '' ? '' : Number(v.price).toFixed(2)) + '"></div>'
+      + '</div>';
+  });
+  html += '<div style="display:flex;gap:8px;margin-top:12px"><button class="btn btn-primary" id="pfSaveBtn" onclick="saveProduct(\'' + (isEdit ? p.id : '') + '\')">' + (isEdit ? 'Save to Shopify' : 'Create in Shopify') + '</button>'
+    + '<button class="btn" onclick="closeProductForm()">Cancel</button></div>';
+  if(!isEdit) html += '<div class="file-meta" style="margin-top:8px">Created under vendor Ghostronics, not published to your storefront. Set status or category in Shopify if needed.</div>';
+  html += '</div>';
+  return html;
+}
+
+function openProductForm(id){ S.productFormOpen = true; S.editingProductId = id; renderPage(); }
+window.openProductForm = openProductForm;
+function closeProductForm(){ S.productFormOpen = false; S.editingProductId = null; renderPage(); }
+window.closeProductForm = closeProductForm;
+
+async function saveProduct(productId){
+  const title = document.getElementById('pfTitle').value.trim();
+  if(!title){ toast('Title is required', true); return; }
+  const skus = document.querySelectorAll('.pf-sku');
+  const prices = document.querySelectorAll('.pf-price');
+  const variants = [];
+  for(let i = 0; i < skus.length; i++){
+    const price = parseFloat(prices[i].value);
+    if(isNaN(price) || price < 0){ toast('Enter a valid price', true); return; }
+    variants.push({ id: skus[i].getAttribute('data-vid') || null, sku: skus[i].value.trim(), price: price });
+  }
+  const desc = document.getElementById('pfDesc').value.trim();
+  const descHtml = desc ? escapeHtml(desc).replace(/\n/g, '<br>') : '';
+  const btn = document.getElementById('pfSaveBtn');
+  if(btn){ btn.disabled = true; btn.textContent = 'Saving...'; }
+  try{
+    await productsCall({ action:'product_save', product_id: productId || null, title: title, description: descHtml, variants: variants });
+    S.invoiceCatalog = null; // invoice picker refetches with the change
+    S.productFormOpen = false; S.editingProductId = null;
+    toast(productId ? 'Product updated in Shopify' : 'Product created in Shopify');
+    await loadProducts();
+  }catch(e){
+    toast('Save failed: ' + e.message, true);
+    if(btn){ btn.disabled = false; btn.textContent = productId ? 'Save to Shopify' : 'Create in Shopify'; }
+  }
+}
+window.saveProduct = saveProduct;
+
+async function deleteProduct(productId){
+  const p = (S.products || []).find(function(x){ return x.id === productId; });
+  if(!confirm('Delete "' + (p ? p.title : 'this product') + '" from Shopify?\n\nThis cannot be undone. Invoices already sent keep their line items, but an unpaid invoice that includes it can no longer be edited.')) return;
+  try{
+    await productsCall({ action:'product_delete', product_id: productId });
+    S.invoiceCatalog = null;
+    toast('Product deleted from Shopify');
+    await loadProducts();
+  }catch(e){ toast('Delete failed: ' + e.message, true); }
+}
+window.deleteProduct = deleteProduct;
+
+/* ================= REPORTS ================= */
+// Revenue and per-stage turnaround need data the app doesn't otherwise
+// keep in memory (every invoice, every status change), so it's fetched
+// fresh each time the Reports page is opened.
+async function loadReportData(){
+  S.reportLoading = true;
+  try{
+    const [inv, logs] = await Promise.all([
+      sb.from('tuning_invoices').select('application_id,status,amount,line_items,sent_at,paid_at').range(0, 9999),
+      sb.from('tuning_activity_log').select('application_id,old_value,new_value,created_at')
+        .eq('field_changed', 'status').order('created_at', { ascending:true }).range(0, 9999)
+    ]);
+    if(inv.error) throw inv.error;
+    if(logs.error) throw logs.error;
+    S.reportData = { invoices: inv.data || [], statusLogs: logs.data || [] };
+  }catch(e){
+    toast('Failed to load report data: ' + e.message, true);
+    S.reportData = { invoices: [], statusLogs: [] };
+  }
+  S.reportLoading = false;
+  if(S.page === 'reports') renderPage();
+}
+
+function monthKey(iso){
+  const d = new Date(iso);
+  return { key: d.getFullYear() * 100 + (d.getMonth() + 1), label: d.toLocaleDateString(undefined, { month:'short', year:'numeric' }) };
+}
+
+// Horizontal bar list: rows of [label, value, displayText].
+function barList(rows){
+  if(!rows.length) return '<div class="empty-state">No data yet.</div>';
+  const max = Math.max.apply(null, rows.map(function(r){ return r[1]; })) || 1;
+  return rows.map(function(r){
+    const pct = Math.max(2, Math.round((r[1] / max) * 100));
+    return '<div class="bar-row"><div class="bar-label">' + escapeHtml(r[0]) + '</div>'
+      + '<div class="bar-track"><div class="bar-fill" style="width:' + pct + '%"></div></div>'
+      + '<div class="bar-val">' + r[2] + '</div></div>';
+  }).join('');
+}
+
+// Average days spent in each stage, reconstructed from the status-change
+// history: each change closes out the stage being left. The stage an
+// application is currently in isn't counted until it leaves it.
+function computeStageDurations(){
+  const byApp = {};
+  S.reportData.statusLogs.forEach(function(l){ (byApp[l.application_id] = byApp[l.application_id] || []).push(l); });
+  const totals = {}, counts = {};
+  let firstTuneDays = [];
+  S.applications.forEach(function(a){
+    const logs = byApp[a.id] || [];
+    let enteredAt = new Date(a.created_at);
+    let firstTuneSeen = false;
+    logs.forEach(function(l){
+      const t = new Date(l.created_at);
+      const stage = l.old_value;
+      if(stage){
+        totals[stage] = (totals[stage] || 0) + (t - enteredAt) / 86400000;
+        counts[stage] = (counts[stage] || 0) + 1;
+      }
+      if(l.new_value === 'tune_sent' && !firstTuneSeen){
+        firstTuneSeen = true;
+        firstTuneDays.push((t - new Date(a.created_at)) / 86400000);
+      }
+      enteredAt = t;
+    });
+  });
+  const avgFirstTune = firstTuneDays.length ? firstTuneDays.reduce(function(x, y){ return x + y; }, 0) / firstTuneDays.length : null;
+  return { totals: totals, counts: counts, avgFirstTune: avgFirstTune, firstTuneCount: firstTuneDays.length };
+}
+
+function money(n){ return '$' + Number(n || 0).toLocaleString(undefined, { minimumFractionDigits:2, maximumFractionDigits:2 }); }
+
+function renderReports(){
+  if(!S.reportData){
+    if(!S.reportLoading) loadReportData();
+    return '<div class="empty-state">Loading reports&hellip;</div>';
+  }
+  const apps = S.applications;
+  const invoices = S.reportData.invoices;
+  const paid = invoices.filter(function(i){ return i.status === 'paid'; });
+  const open = invoices.filter(function(i){ return i.status === 'sent'; });
+  const collected = paid.reduce(function(t, i){ return t + (Number(i.amount) || 0); }, 0);
+  const outstanding = open.reduce(function(t, i){ return t + (Number(i.amount) || 0); }, 0);
+  const payDays = paid.filter(function(i){ return i.sent_at && i.paid_at; }).map(function(i){ return (new Date(i.paid_at) - new Date(i.sent_at)) / 86400000; });
+  const avgPayDays = payDays.length ? payDays.reduce(function(x, y){ return x + y; }, 0) / payDays.length : null;
+  const reviewed = apps.filter(function(a){ return a.review_rating; });
+  const avgRating = reviewed.length ? reviewed.reduce(function(t, a){ return t + a.review_rating; }, 0) / reviewed.length : null;
+  const stages = computeStageDurations();
+
+  let html = '<div class="stat-row">';
+  html += statCard(money(collected), 'Revenue Collected', 'sc-green');
+  html += statCard(money(outstanding), 'Outstanding', outstanding ? 'sc-attn' : '');
+  html += statCard(stages.avgFirstTune !== null ? stages.avgFirstTune.toFixed(1) + 'd' : '-', 'Submit to First Tune', 'sc-teal');
+  html += statCard(avgRating !== null ? avgRating.toFixed(1) + ' / 5' : '-', 'Avg Review (' + reviewed.length + ')', '');
+  html += '</div>';
+
+  // Revenue by month (by payment date)
+  const rev = {};
+  paid.forEach(function(i){
+    if(!i.paid_at) return;
+    const m = monthKey(i.paid_at);
+    if(!rev[m.key]) rev[m.key] = { label: m.label, total: 0 };
+    rev[m.key].total += Number(i.amount) || 0;
+  });
+  html += dashHead('Revenue by Month', paid.length + ' paid invoice' + (paid.length === 1 ? '' : 's')
+    + (avgPayDays !== null ? ' &middot; paid on average ' + avgPayDays.toFixed(1) + ' days after sending' : ''));
+  html += '<div class="tbl-wrap report-box">' + barList(Object.keys(rev).sort().map(function(k){ return [rev[k].label, rev[k].total, money(rev[k].total)]; })) + '</div>';
+
+  // Time in each stage
+  const stageRows = BOARD_COLUMNS.filter(function(st){ return stages.counts[st]; }).map(function(st){
+    const avg = stages.totals[st] / stages.counts[st];
+    return [STATUS_LABEL[st] || st, avg, avg.toFixed(1) + 'd'];
+  });
+  html += dashHead('Average Time in Each Stage', 'Where builds actually spend their time - completed stages only');
+  html += '<div class="tbl-wrap report-box">' + barList(stageRows) + '</div>';
+
+  // Top products by paid revenue
+  const prod = {};
+  paid.forEach(function(i){
+    (Array.isArray(i.line_items) ? i.line_items : []).forEach(function(l){
+      const k = l.title || 'Untitled';
+      if(!prod[k]) prod[k] = { qty: 0, total: 0 };
+      const q = Number(l.quantity) || 1;
+      prod[k].qty += q;
+      prod[k].total += (Number(l.price) || 0) * q;
+    });
+  });
+  const prodRows = Object.keys(prod).sort(function(x, y){ return prod[y].total - prod[x].total; }).slice(0, 8)
+    .map(function(k){ return [k, prod[k].total, money(prod[k].total) + ' &middot; ' + prod[k].qty + ' sold']; });
+  html += dashHead('Top Products', 'By paid revenue');
+  html += '<div class="tbl-wrap report-box">' + barList(prodRows) + '</div>';
+
+  // Everything below is reference detail - collapsed by default.
   const statusCounts = {};
   apps.forEach(function(a){ statusCounts[a.status] = (statusCounts[a.status]||0) + 1; });
-
-  const monthBuckets = {};
+  const vol = {};
   apps.forEach(function(a){
-    const d = new Date(a.created_at);
-    const sortKey = d.getFullYear() * 100 + (d.getMonth()+1);
-    const label = d.toLocaleDateString(undefined, { month:'short', year:'numeric' });
-    if(!monthBuckets[sortKey]) monthBuckets[sortKey] = { label:label, count:0 };
-    monthBuckets[sortKey].count++;
+    const m = monthKey(a.created_at);
+    if(!vol[m.key]) vol[m.key] = { label: m.label, count: 0 };
+    vol[m.key].count++;
   });
-  const sortedMonths = Object.keys(monthBuckets).sort().map(function(k){ return monthBuckets[k]; });
-
   const declineCounts = {};
   apps.filter(function(a){ return a.status === 'declined' && a.declined_reason; }).forEach(function(a){
     const key = a.declined_reason.trim();
     declineCounts[key] = (declineCounts[key]||0) + 1;
   });
-
-  const finished = apps.filter(function(a){ return a.status === 'completed' || a.status === 'tune_sent'; });
-  let avgDays = null;
-  if(finished.length){
-    const totalDays = finished.reduce(function(sum, a){ return sum + (new Date(a.updated_at) - new Date(a.created_at)) / 86400000; }, 0);
-    avgDays = (totalDays / finished.length).toFixed(1);
-  }
-  const revisionRate = total ? Math.round((S.revisionCount / total) * 100) : 0;
-
-  let html = '<div class="stat-row">';
-  html += statCard(total, 'Total Applications', '');
-  html += statCard(avgDays !== null ? avgDays + 'd' : '-', 'Avg Turnaround', 'sc-teal');
-  html += statCard(revisionRate + '%', 'Revision Rate', 'sc-attn');
-  html += statCard(statusCounts.completed || 0, 'Completed', 'sc-green');
-  html += '</div>';
-
-  html += '<div class="card"><h2>Volume by Month</h2>';
-  if(!sortedMonths.length) html += '<div class="empty-state">No data yet.</div>';
-  else {
-    const max = Math.max.apply(null, sortedMonths.map(function(m){ return m.count; }));
-    html += '<div>';
-    sortedMonths.forEach(function(m){
-      const pct = max ? Math.round((m.count / max) * 100) : 0;
-      html += '<div style="display:grid;grid-template-columns:90px 1fr 30px;gap:10px;align-items:center;margin-bottom:8px;font-size:var(--t-sm)">'
-        + '<div>' + escapeHtml(m.label) + '</div>'
-        + '<div style="background:var(--bg4);border-radius:var(--r-sm);overflow:hidden;height:16px"><div style="width:' + pct + '%;height:100%;background:linear-gradient(90deg,var(--teal),var(--orange))"></div></div>'
-        + '<div style="text-align:right;font-weight:600">' + m.count + '</div>'
-        + '</div>';
-    });
-    html += '</div>';
-  }
-  html += '</div>';
-
-  html += '<div class="card"><h2>Status Breakdown</h2><div class="dl-grid">';
-  Object.keys(STATUS_LABEL).forEach(function(s){
-    html += dl(STATUS_LABEL[s], String(statusCounts[s] || 0));
+  const ratingRows = [5,4,3,2,1].map(function(n){
+    const c = reviewed.filter(function(a){ return a.review_rating === n; }).length;
+    return [n + ' star', c, String(c)];
   });
-  html += '</div></div>';
+  const revisionRate = apps.length ? Math.round((S.revisionCount / apps.length) * 100) : 0;
 
-  html += '<div class="card"><h2>Decline Reasons</h2>';
-  const declineKeys = Object.keys(declineCounts);
-  if(!declineKeys.length) html += '<div class="empty-state">No declines recorded.</div>';
-  else {
-    html += '<table><thead><tr><th>Reason</th><th>Count</th></tr></thead><tbody>';
-    declineKeys.sort(function(x,y){ return declineCounts[y]-declineCounts[x]; }).forEach(function(k){
-      html += '<tr><td>' + escapeHtml(k) + '</td><td>' + declineCounts[k] + '</td></tr>';
-    });
-    html += '</tbody></table>';
-  }
+  html += '<div style="margin-top:20px">';
+  html += ovSection('Applications by Month (' + apps.length + ' total, ' + revisionRate + '% revision rate)', false,
+    barList(Object.keys(vol).sort().map(function(k){ return [vol[k].label, vol[k].count, String(vol[k].count)]; })));
+  html += ovSection('Status Breakdown', false, '<div class="dl-grid">' + Object.keys(STATUS_LABEL).map(function(st){ return dl(STATUS_LABEL[st], String(statusCounts[st] || 0)); }).join('') + '</div>');
+  html += ovSection('Review Scores', false, reviewed.length ? barList(ratingRows) : '<div class="empty-state">No reviews yet.</div>');
+  const dk = Object.keys(declineCounts).sort(function(x, y){ return declineCounts[y] - declineCounts[x]; });
+  html += ovSection('Decline Reasons', false, dk.length ? barList(dk.map(function(k){ return [k, declineCounts[k], String(declineCounts[k])]; })) : '<div class="empty-state">No declines recorded.</div>');
   html += '</div>';
-
   return html;
 }
 
