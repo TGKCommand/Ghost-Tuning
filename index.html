@@ -51,6 +51,28 @@ textarea.form-input{resize:vertical;min-height:70px}
 .live-ind .live-dot{width:7px;height:7px;border-radius:50%;background:var(--text3);display:inline-block}
 .live-ind .live-dot.ok{background:#16a34a;box-shadow:0 0 0 3px rgba(22,163,74,.15)}
 .live-ind .live-dot.bad{background:#dc2626}
+.nav-item.nav-alert .nav-badge{background:var(--red);color:#fff;border-color:var(--red)}
+.hl-banner{display:flex;align-items:center;gap:12px;flex-wrap:wrap;border-radius:var(--r-md);padding:12px 16px;margin-bottom:14px;border:1px solid}
+.hl-banner span{color:var(--text2);font-size:var(--t-sm)}
+.hl-banner .btn{margin-left:auto}
+.hl-banner.hl-ok{background:rgba(22,163,74,.08);border-color:rgba(22,163,74,.3)}
+.hl-banner.hl-ok strong{color:#15803d}
+.hl-banner.hl-warn{background:rgba(234,179,8,.1);border-color:rgba(234,179,8,.35)}
+.hl-banner.hl-warn strong{color:#a16207}
+.hl-banner.hl-bad{background:var(--red-dim);border-color:rgba(220,38,38,.3)}
+.hl-banner.hl-bad strong{color:var(--red)}
+.hl-checks{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:6px}
+.hl-check{flex:1 1 300px;display:flex;gap:10px;align-items:flex-start;background:var(--bg);border:1px solid var(--border);border-radius:var(--r-md);padding:10px 12px}
+.hl-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;margin-top:4px}
+.hl-dot.hl-ok{background:#16a34a}
+.hl-dot.hl-warn{background:#eab308}
+.hl-dot.hl-bad{background:var(--red)}
+.hl-body{min-width:0}
+.hl-title{font-weight:700;font-size:var(--t-md);color:var(--text)}
+.hl-detail{font-size:var(--t-sm);color:var(--text2);margin-top:1px;overflow-wrap:anywhere}
+.hl-fix{font-size:var(--t-xs);color:var(--teal-d);font-weight:600;margin-top:3px}
+.hl-detail-box{margin-top:4px;font-size:var(--t-xs);color:var(--text2);overflow-wrap:anywhere}
+.hl-k{display:inline-block;min-width:64px;font-weight:700;color:var(--text3);text-transform:capitalize}
 .nav-group{font-size:var(--t-xs);font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);padding:14px 22px 4px}
 .nav-group:first-child{padding-top:10px}
 .nav-dot{width:5px;height:5px;border-radius:50%;background:var(--text3);flex-shrink:0}
@@ -347,6 +369,41 @@ tr.row-click:hover td{background:var(--bg3)}
   .lg-x{padding:6px 8px;font-size:18px}
   .lc-add{min-height:32px;font-size:13px}
 }
+.fm-info{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-md);padding:8px 10px;margin-bottom:6px}
+.fm-kv{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:var(--t-xs);color:var(--text2);max-height:120px;overflow-y:auto}
+.fm-kv b{color:var(--text3);font-weight:700}
+.fm-roles{display:flex;flex-wrap:wrap;gap:6px 14px;max-height:320px;overflow-y:auto;padding-right:4px}
+.fm-role{display:flex;align-items:center;gap:8px;flex:1 1 300px;min-width:0}
+.fm-col{flex:0 0 42%;min-width:0;font-family:var(--mono);font-size:var(--t-xs);color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fm-role select.form-input{flex:1;min-width:0;padding-top:4px;padding-bottom:4px;font-size:var(--t-sm)}
+.an-panel{border:1px solid var(--border);border-radius:var(--r-md);background:var(--bg2);padding:10px 12px;margin:10px 0 8px}
+.an-head{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:6px}
+.an-title{font-weight:800;font-size:var(--t-md);color:var(--text)}
+.an-th-link{margin-left:auto;font-size:var(--t-xs);font-weight:700;color:var(--teal-d);cursor:pointer}
+.an-pull{background:var(--bg);border:1px solid var(--border);border-radius:var(--r-md);padding:10px 12px;margin-top:8px}
+.an-pull-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.an-pull-head .lv-chip{margin-left:auto}
+.an-findings{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+.an-f{font-size:var(--t-xs);font-weight:700;border-radius:6px;padding:3px 9px;border:1px solid transparent}
+.an-bad{background:var(--red-dim);color:var(--red);border-color:rgba(220,38,38,.25)}
+.an-warn{background:rgba(234,179,8,.12);color:#a16207;border-color:rgba(234,179,8,.3)}
+.an-ok{background:rgba(22,163,74,.1);color:#15803d;border-color:rgba(22,163,74,.25)}
+.an-muted{background:var(--bg3);color:var(--text3);border-color:var(--border)}
+.an-grid{display:flex;flex-wrap:wrap;gap:8px 18px}
+.an-cell{min-width:150px;flex:1 1 150px}
+.an-label{font-size:var(--t-xs);font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--text3);margin-bottom:2px}
+.an-val{font-size:var(--t-md);font-weight:600;color:var(--text);font-variant-numeric:tabular-nums}
+.an-sub{font-size:var(--t-xs);font-weight:500;color:var(--text3)}
+.an-vs{display:block;font-size:var(--t-xs);font-weight:600;color:var(--orange-d)}
+.an-cyls{display:flex;flex-wrap:wrap;gap:4px}
+.an-cyl{font-family:var(--mono);font-size:var(--t-xs);font-weight:600;background:var(--bg3);border-radius:4px;padding:2px 6px;color:var(--text2)}
+.an-cyl.warn{background:rgba(234,179,8,.15);color:#a16207}
+.an-cyl.bad{background:var(--red-dim);color:var(--red)}
+.an-th{background:var(--bg);border:1px solid var(--border);border-radius:var(--r-md);padding:10px 12px;margin:6px 0 4px;display:flex;flex-wrap:wrap;gap:8px 16px}
+.an-th-row{display:flex;flex-direction:column;gap:4px;flex:1 1 200px;font-size:var(--t-xs);color:var(--text2);font-weight:600}
+.an-th-row .form-input{max-width:140px}
+.an-th-actions{flex-basis:100%;display:flex;gap:8px;align-items:center;justify-content:flex-end}
+.an-th-actions .file-meta{margin-right:auto}
 .log-line-b{fill:none;stroke:var(--orange);stroke-width:1.5;stroke-dasharray:5 3;vector-effect:non-scaling-stroke;opacity:.9}
 .log-toolbar{display:flex;flex-wrap:wrap;gap:8px 18px;align-items:center;margin:12px 0 4px;font-size:var(--t-sm)}
 .log-tool{display:flex;align-items:center;gap:6px;color:var(--text2)}
@@ -673,7 +730,7 @@ tr.row-click:hover td{background:var(--bg3)}
         </div>
         <div class="sync-sub" onclick="doLogout()">Sign out</div>
         <div class="version-row">
-          <span>v1.76</span>
+          <span>v1.79</span>
           <span id="buildDate"></span>
         </div>
       </div>
@@ -729,7 +786,8 @@ const NAV = [
   { id:'logguides', label:'Logging Guides', group:'Library' },
   { id:'ecuref', label:'ECU Reference', group:'Library' },
   { id:'templates', label:'Templates', group:'Library' },
-  { id:'team', label:'Team', group:'Admin' }
+  { id:'team', label:'Team', group:'Admin' },
+  { id:'health', label:'System Health', group:'Admin', badge: function(){ return S.healthErrors || 0; } }
 ];
 
 const S = { user:null, page:'dashboard', applications:[], openAppId:null, messages:{}, files:{}, activity:{}, recentActivity:[], templates:[], activeTab:'overview', filter:'active', search:'',
@@ -998,6 +1056,8 @@ async function afterLogin(user){
   await loadTuners();
   await loadUnpaidInvoices();
   await loadSettings();
+  loadHealthBadge();
+  setInterval(loadHealthBadge, 300000);
   subscribeGlobalRealtime();
   renderNav();
   goPage('dashboard');
@@ -1430,7 +1490,7 @@ function renderNav(){
     const badgeCount = n.badge ? n.badge() : 0;
     const head = n.group !== lastGroup ? '<div class="nav-group">' + escapeHtml(n.group) + '</div>' : '';
     lastGroup = n.group;
-    return head + '<button class="nav-item ' + (S.page === n.id ? 'active' : '') + '" onclick="goPage(\'' + n.id + '\')">'
+    return head + '<button class="nav-item ' + (S.page === n.id ? 'active' : '') + (n.id === 'health' && badgeCount > 0 ? ' nav-alert' : '') + '" onclick="goPage(\'' + n.id + '\')">'
       + '<span class="nav-dot"></span><span>' + escapeHtml(n.label) + '</span>'
       + (badgeCount > 0 ? '<span class="nav-badge">' + badgeCount + '</span>' : '')
       + '</button>';
@@ -1452,6 +1512,7 @@ function goPage(id){
   S.page = id;
   if(id === 'reports') S.reportData = null;
   if(id === 'team') S.team = null;
+  if(id === 'health'){ S.health = null; loadHealthBadge(); }
   if(id === 'products'){ S.products = null; S.productFormOpen = false; S.editingProductId = null; }
   renderNav();
   document.getElementById('pageTitle').textContent = (NAV.find(function(n){ return n.id===id; }) || {}).label || 'Dashboard';
@@ -1467,6 +1528,7 @@ function renderPage(){
   else if(S.page === 'board') el.innerHTML = renderBoard();
   else if(S.page === 'products') el.innerHTML = renderProducts();
   else if(S.page === 'team') el.innerHTML = renderTeam();
+  else if(S.page === 'health') el.innerHTML = renderHealth();
   else if(S.page === 'activity') el.innerHTML = renderActivityPage();
   else if(S.page === 'logreview') el.innerHTML = renderLogReview();
   else if(S.page === 'lookup') el.innerHTML = renderLookup();
@@ -3194,21 +3256,33 @@ function parseLog(text){
     const filled = cells.filter(function(c){ return c !== ''; });
     return filled.length / Math.max(1, cells.length);
   };
-  // Header = a mostly-text row followed (within a few rows, skipping
-  // near-empty ones) by a mostly-numeric row of equal width.
-  let headerIdx = -1;
-  for(let i = 0; i < Math.min(80, lines.length - 1) && headerIdx === -1; i++){
+  // Header = the text row followed by the LONGEST run of equal-width,
+  // mostly-numeric rows. Taking the first candidate isn't enough: loggers
+  // like JB4 start with settings blocks (a name row + a value row) that
+  // look like a tiny table, and the real data only starts after them.
+  let headerIdx = -1, bestRun = 0;
+  for(let i = 0; i < Math.min(200, lines.length - 1); i++){
     const a = splitLogLine(lines[i], delim);
     if(a.length < 2 || numRatio(a) >= 0.5) continue;
-    for(let j = i + 1; j < Math.min(i + 6, lines.length); j++){
+    let run = 0;
+    for(let j = i + 1; j < lines.length && run < 500; j++){
       const b = splitLogLine(lines[j], delim);
       if(b.length !== a.length) break;
       if(filledRatio(b) < 0.5) continue;
-      if(numRatio(b) >= 0.6) headerIdx = i;
-      break;
+      if(numRatio(b) >= 0.6) run++; else break;
     }
+    if(run > bestRun){ bestRun = run; headerIdx = i; }
   }
   if(headerIdx === -1) throw new Error('Could not find a header row in this file.');
+  // Anything above the header is kept as log info: pairs of a name row and
+  // a value row of the same width (JB4: firmware, VIN, map settings...).
+  const preamble = [];
+  for(let r = 0; r + 1 < headerIdx; r++){
+    const kr = splitLogLine(lines[r], delim), vr = splitLogLine(lines[r + 1], delim);
+    if(kr.length < 2 || kr.length !== vr.length || numRatio(kr) >= 0.5) continue;
+    kr.forEach(function(k, x){ if(k && vr[x] !== '' && vr[x] !== undefined) preamble.push({ k: k, v: vr[x] }); });
+    r++;
+  }
   const headers = splitLogLine(lines[headerIdx], delim).map(function(h, i){ return h || ('Column ' + (i + 1)); });
   const cols = headers.map(function(){ return []; });
   for(let r = headerIdx + 1; r < lines.length; r++){
@@ -3236,11 +3310,11 @@ function parseLog(text){
   let timeScale = 1, timeUnit = '';
   if(timeIdx !== -1){
     const h = headers[timeIdx];
-    if(/\[\s*ms\s*\]|\bms\b/i.test(h)){ timeScale = 1000; timeUnit = 's'; }
-    else if(/\[\s*s(ec)?\s*\]/i.test(h)) timeUnit = 's';
+    if(/[\[(]\s*ms\s*[\])]|\bms\b/i.test(h)){ timeScale = 1000; timeUnit = 's'; }
+    else if(/[\[(]\s*s(ec(onds?)?)?\s*[\])]/i.test(h)) timeUnit = 's';
   }
-  return { headers: headers, cols: cols, numeric: numeric, timeIdx: timeIdx, rows: rowCount, delim: delim,
-    t0: timeIdx !== -1 ? cols[timeIdx][0] : 0, timeScale: timeScale, timeUnit: timeUnit };
+  return applyLogProfile({ headers: headers, cols: cols, numeric: numeric, timeIdx: timeIdx, rows: rowCount, delim: delim,
+    t0: timeIdx !== -1 ? cols[timeIdx][0] : 0, timeScale: timeScale, timeUnit: timeUnit, preamble: preamble });
 }
 
 function logSignature(headers){ return 'tgk-logview:' + headers.join('|').slice(0, 400); }
@@ -3308,14 +3382,30 @@ function xValue(log, i){ return log.timeIdx !== -1 ? (log.cols[log.timeIdx][i] -
 // on every lambda chart and are ignored by flag rules - otherwise a lean
 // rule fires every time the driver lifts.
 const FUEL_CUT_LAMBDA = 2.0;
-function isLambdaCol(log, c){ return /^lam|lambda/i.test(log.headers[c] || ''); }
+function mixtureKind(log, c){
+  const m = log.meta && log.meta[c];
+  if(m && (m.role === 'lambda' || m.role === 'lambda_target')) return 'lambda';
+  if(m && (m.role === 'afr' || m.role === 'afr2')) return 'afr';
+  if(!m && /^lam|lambda/i.test(log.headers[c] || '')) return 'lambda';
+  return null;
+}
+function isLambdaCol(log, c){ return mixtureKind(log, c) !== null; }
+// Fuel cut / overrun. Lambda: any lambda channel >= 2 (no combustion runs
+// that lean). AFR loggers (e.g. JB4) peg their wideband near 20 on lift-off,
+// so AFR >= 19.9 counts only while the pedal is closed.
 function fuelCutMask(log){
   if(log._fcMask) return log._fcMask;
-  const cols = [];
-  log.headers.forEach(function(h, c){ if(log.numeric[c] && isLambdaCol(log, c)) cols.push(c); });
+  const lam = [], afr = [];
+  log.headers.forEach(function(h, c){ if(!log.numeric[c]) return; const k = mixtureKind(log, c); if(k === 'lambda') lam.push(c); else if(k === 'afr') afr.push(c); });
+  const ped = roleCols(log, 'pedal')[0];
   const mask = new Array(log.rows).fill(false);
-  if(cols.length){
-    for(let i = 0; i < log.rows; i++) mask[i] = cols.some(function(c){ return log.cols[c][i] >= FUEL_CUT_LAMBDA; });
+  for(let i = 0; i < log.rows; i++){
+    if(lam.some(function(c){ return log.cols[c][i] >= FUEL_CUT_LAMBDA; })){ mask[i] = true; continue; }
+    if(afr.length){
+      const closed = ped === undefined ? false : !(log.cols[ped][i] >= 5);
+      if(closed && afr.some(function(c){ return log.cols[c][i] >= 19.9; })) mask[i] = true;
+      else if(ped === undefined && afr.some(function(c){ return log.cols[c][i] >= FUEL_CUT_LAMBDA * 14.7; })) mask[i] = true;
+    }
   }
   log._fcMask = mask;
   return mask;
@@ -3388,6 +3478,7 @@ async function openLogViewer(fileId, path){
     }
     S.logView.charts = charts;
     renderLogViewer();
+    saveLogAnalysis(fileId, analyzeLog(log));
   }catch(e){
     openModal('<div class="modal"><div class="modal-title">Could not open log</div><p class="file-meta">' + escapeHtml(e.message) + '</p>'
       + '<div class="modal-footer"><button class="btn btn-sm" onclick="downloadFile(\'' + fileId + '\',\'' + path + '\')">Download instead</button><button class="btn btn-sm" onclick="closeModal()">Close</button></div></div>');
@@ -3415,40 +3506,160 @@ window.openLogViewer = openLogViewer;
 
 // Downsample to ~W buckets keeping each bucket's min and max, so short
 // spikes (a knock event, a boost overshoot) survive on a long log.
-/* ---------- channel names, units, groups ---------- */
-// Readable names only for channels whose meaning is verified - the boost
-// pair was confirmed from the data itself (pvds jumps to target the moment
-// the pedal goes down, pvdr follows with turbo lag). Anything not listed
-// keeps its raw DS1 name, and the raw name is always shown alongside.
-const LOG_FRIENDLY = [
-  [/^nmot_w$/i, 'Engine speed'],
-  [/^AccP_r_VW$/i, 'Accelerator pedal'],
-  [/^wdk_w/i, 'Throttle angle'],
-  [/^CHdT_vVehloc$/i, 'Vehicle speed'],
-  [/^CoEng_nrActGearHem$/i, 'Gear'],
-  [/^rl_w$/i, 'Relative load'],
-  [/^tans/i, 'Intake air temp'],
-  [/^tmot/i, 'Coolant temp'],
-  [/^SLmpCtl_tOilSwmp/i, 'Oil temp (sump)'],
-  [/^IKCtl_agKnkInt/i, 'Knock retard'],
-  [/^zwoutzyl/i, 'Ignition timing'],
-  [/^InjSys_tiInjSum$/i, 'Injection time'],
-  [/^FuelP_pAct$/i, 'Low-pressure fuel'],
-  [/^prist_w/i, 'Rail pressure (actual)'],
-  [/^prsoll_w/i, 'Rail pressure (setpoint)'],
-  [/^pvdr_w/i, 'Boost pressure (actual)'],
-  [/^pvds_w/i, 'Boost pressure (setpoint)']
+/* ---------- LOG FORMAT PROFILES ---------- */
+// parseLog finds the data table (STRUCTURE); this layer decides what each
+// column MEANS. A profile recognizes one logger's files and maps columns
+// to roles (rpm, boost, per-cylinder knock, ...) with units. Everything
+// downstream - names, layouts, WOT zoom, fuel-cut handling, analysis -
+// asks for roles, never raw column names. Adding a logger = adding one
+// profile. Unknown formats get the GENERIC best guess, and a tuner can
+// reassign any column in the viewer; that correction is saved per format.
+const LOG_ROLES = {
+  rpm:{label:'Engine speed'}, pedal:{label:'Accelerator pedal'}, throttle:{label:'Throttle angle'},
+  speed:{label:'Vehicle speed'}, gear:{label:'Gear'}, load:{label:'Load'},
+  boost:{label:'Boost pressure (actual)'}, boost_target:{label:'Boost pressure (target)'}, boost2:{label:'Boost pressure (bank 2)'},
+  boost_ecu:{label:'ECU boost'}, boost_target_ecu:{label:'ECU boost target'}, wgdc:{label:'Wastegate duty'},
+  timing:{label:'Ignition timing'}, ign_cyl:{label:'Ignition timing', group:true},
+  knock_cyl:{label:'Knock retard', group:true},
+  lambda:{label:'Lambda'}, lambda_target:{label:'Lambda target'}, afr:{label:'AFR'}, afr2:{label:'AFR (bank 2)'},
+  hpfp:{label:'Rail pressure (actual)'}, hpfp_target:{label:'Rail pressure (setpoint)'}, lpfp:{label:'Low-pressure fuel'},
+  inj_time:{label:'Injection time'}, fuel_trim:{label:'Fuel trim'}, ethanol:{label:'Ethanol content'},
+  iat:{label:'Intake air temp'}, coolant:{label:'Coolant temp'}, oil_temp:{label:'Oil temp'}, trans_temp:{label:'Trans temp'},
+  maf:{label:'Mass airflow'}
+};
+
+// map entries: [role, regex on the column name (unit stripped), options]
+// options: unit (when the file doesn't say), sign for knock (-1 = values are
+// negative retard like DS1, +1 = positive degrees pulled like JB4, 0 = infer).
+const LOG_PROFILES = [
+  { id:'ds1', name:'DS1',
+    detect: function(h){ return h.some(function(x){ return /^(nmot_w|IKCtl_agKnkInt|pvdr_w|zwoutzyl)/i.test(chBase(x)); }); },
+    map: [ ['rpm',/^nmot_w$/i], ['pedal',/^AccP_r_VW$/i], ['throttle',/^wdk_w/i], ['speed',/^CHdT_vVehloc$/i],
+      ['gear',/^CoEng_nrActGearHem$/i], ['load',/^rl_w$/i], ['iat',/^tans/i], ['coolant',/^tmot/i],
+      ['oil_temp',/^SLmpCtl_tOilSwmp/i], ['knock_cyl',/^IKCtl_agKnkInt/i,{sign:-1}], ['ign_cyl',/^zwoutzyl/i],
+      ['inj_time',/^InjSys_tiInjSum$/i], ['lpfp',/^FuelP_pAct$/i], ['hpfp',/^prist_w/i], ['hpfp_target',/^prsoll_w/i],
+      ['boost',/^pvdr_w/i], ['boost_target',/^pvds_w/i], ['lambda',/^lam/i] ] },
+  { id:'jb4', name:'JB4', timeUnit:'s',
+    detect: function(h, pre){ return pre.some(function(p){ return /JB4_MAC_Address/i.test(p.k); }) || (h.indexOf('WGDC_FF') !== -1 && h.indexOf('ECU Boost') !== -1); },
+    note: 'JB4 files carry no units or channel descriptions. Ign_2 to Ign_8 are treated as per-cylinder timing corrections (degrees pulled) because that is how they behave in the logs checked. "Target" is not treated as boost target because it does not track boost. Reassign anything under Channel roles if needed.',
+    map: [ ['rpm',/^RPM$/i], ['pedal',/^Pedal$/i], ['throttle',/^Throttle$/i], ['speed',/^Speed$/i,{unit:'mph'}], ['gear',/^GEAR$/i],
+      ['boost',/^Boost$/i,{unit:'psi'}], ['boost2',/^Boost2$/i,{unit:'psi'}], ['boost_ecu',/^ECU Boost$/i,{unit:'psi'}],
+      ['boost_target_ecu',/^ECU Target$/i,{unit:'psi'}], ['wgdc',/^WGDC$/i,{unit:'%'}], ['timing',/^Timing$/i,{unit:'deg'}],
+      ['knock_cyl',/^Ign_(\d+)$/i,{sign:1, unit:'deg'}], ['afr',/^AFR$/i], ['afr2',/^AFR2$/i], ['hpfp',/^FuelP High$/i],
+      ['lpfp',/^FuelP Low$/i], ['fuel_trim',/^Fuel Trims$/i], ['ethanol',/^E85$/i,{unit:'%'}], ['iat',/^IAT$/i,{unit:'deg F'}],
+      ['coolant',/^Water Temp$/i,{unit:'deg F'}], ['oil_temp',/^Oil Temp$/i,{unit:'deg F'}], ['trans_temp',/^Trans Temp$/i,{unit:'deg F'}],
+      ['maf',/^MAF$/i] ] },
+  { id:'generic', name:'Unrecognized format (best guess)',
+    detect: function(){ return true; },
+    note: 'This logger is not recognized, so channels were matched by common names. Check Channel roles and correct anything wrong - the correction is remembered for every log from this logger.',
+    map: [ ['rpm',/^(rpm|engine ?(speed|rpm)|eng ?spd)/i], ['pedal',/(accel|pedal)/i], ['throttle',/(throttle|tps)/i],
+      ['gear',/^(gear|current ?gear)/i], ['speed',/(vehicle ?speed|^speed$|^vss|^mph|km\/?h)/i],
+      ['boost_target',/(boost|map).*(target|request|set|desired|cmd)|(target|requested|desired).*(boost|pressure)/i],
+      ['boost',/^(boost|boost ?pressure|map|manifold ?(abs|pressure)?)/i],
+      ['knock_cyl',/(knock|kr|kc|timing ?corr|ign\w* ?corr)\D*(\d)/i,{sign:0}],
+      ['ign_cyl',/(ign\w*|timing|spark)\D*cyl\D*(\d)|^(ign|timing)[ _-]?(\d)$/i],
+      ['timing',/^(ign(ition)?( ?timing| ?advance)?|timing( ?advance)?|spark ?adv\w*)$/i],
+      ['lambda_target',/lambda.*(target|req|set|cmd)|(target|commanded).*lambda/i], ['lambda',/lambda/i],
+      ['afr',/(^afr|air ?fuel)/i], ['hpfp',/(rail|hpfp|high.*fuel|fuel.*high)/i], ['lpfp',/(lpfp|low.*fuel|fuel.*low)/i],
+      ['iat',/(^iat|intake ?air|charge ?air)/i], ['coolant',/(coolant|water ?temp|^ect)/i], ['oil_temp',/oil ?temp/i],
+      ['ethanol',/(ethanol|^e85|flex)/i], ['wgdc',/(wgdc|wastegate)/i], ['load',/load/i], ['maf',/^maf/i] ] }
 ];
+
+const HEADER_META = {};   // column name -> { role, idx, unit, sign } for name/unit lookups
+function chMeta(h){ return HEADER_META[h] || null; }
+
+function roleOverrides(){
+  try{ return JSON.parse((S.settings && S.settings.log_role_maps) || '{}') || {}; }catch(e){ return {}; }
+}
+function logFingerprint(log){
+  let hsh = 0; const str = log.headers.join('|');
+  for(let i = 0; i < str.length; i++){ hsh = ((hsh << 5) - hsh + str.charCodeAt(i)) | 0; }
+  return (log.profile ? log.profile.id : 'x') + ':' + (hsh >>> 0).toString(36);
+}
+function colIsFlat(log, c){
+  const d = log.cols[c]; let mn = Infinity, mx = -Infinity;
+  for(let i = 0; i < d.length; i++){ const v = d[i]; if(!isNaN(v)){ if(v < mn) mn = v; if(v > mx) mx = v; } }
+  return mn === Infinity || mn === mx;
+}
+function groupIdxFromName(name){ const m = chBase(name).match(/\[(\d+)\]/) || chBase(name).match(/(\d+)\D*$/); return m ? m[1] : null; }
+
+function applyLogProfile(log){
+  const prof = LOG_PROFILES.find(function(p){ return p.detect(log.headers, log.preamble || []); });
+  log.profile = prof;
+  if(prof.timeUnit && log.timeIdx !== -1 && !log.timeUnit) log.timeUnit = prof.timeUnit;
+  log.meta = {};
+  const usedSingle = {};
+  log.headers.forEach(function(h, c){
+    // Constant or empty columns (JB4 logs many) get no role - except in a
+    // per-cylinder group, where a flat column is a cylinder that never
+    // knocked, which is worth showing.
+    if(!log.numeric[c] || c === log.timeIdx) return;
+    const flat = colIsFlat(log, c);
+    for(let k = 0; k < prof.map.length; k++){
+      const m = prof.map[k];
+      if(!m[1].test(chBase(h))) continue;
+      const role = m[0], def = LOG_ROLES[role] || {}, opt = m[2] || {};
+      if(flat && !def.group) break;
+      if(!def.group && usedSingle[role]) continue;   // singles: first match wins
+      log.meta[c] = { role: role, idx: def.group ? groupIdxFromName(h) : null, unit: opt.unit || '', sign: opt.sign };
+      usedSingle[role] = true;
+      break;
+    }
+  });
+  // Tuner corrections for this format win over the profile.
+  log.fingerprint = logFingerprint(log);
+  const ov = roleOverrides()[log.fingerprint] || {};
+  Object.keys(ov).forEach(function(name){
+    const c = log.headers.indexOf(name); if(c === -1) return;
+    const r = ov[name];
+    if(r === 'none'){ delete log.meta[c]; return; }
+    const def = LOG_ROLES[r]; if(!def) return;
+    const prev = log.meta[c] || {};
+    log.meta[c] = { role: r, idx: def.group ? groupIdxFromName(name) : null, unit: prev.unit || '', sign: r === 'knock_cyl' ? (prev.sign !== undefined ? prev.sign : 0) : undefined };
+  });
+  log.roles = {};
+  Object.keys(log.meta).forEach(function(k){ const m = log.meta[k]; (log.roles[m.role] = log.roles[m.role] || []).push(Number(k)); });
+  Object.keys(log.roles).forEach(function(r){
+    if(LOG_ROLES[r] && LOG_ROLES[r].group) log.roles[r].sort(function(a, b){ return (Number(log.meta[a].idx) || 0) - (Number(log.meta[b].idx) || 0); });
+  });
+  log.headers.forEach(function(h, c){ if(log.meta[c]) HEADER_META[h] = log.meta[c]; else delete HEADER_META[h]; });
+  log._fc = null; log._fcMask = null; log._disp = null;
+  return log;
+}
+function roleCols(log, role){ return (log.roles && log.roles[role]) ? log.roles[role].slice() : []; }
+
+// Existing code asks for DS1 patterns (e.g. /^pvdr_w/i); each maps to a
+// role, so those calls resolve to the right column in ANY format.
+const RE_ROLE = {};
+LOG_PROFILES[0].map.forEach(function(m){ RE_ROLE[m[1].source] = m[0]; });
+
+// Knock sign: -1 when values are negative retard, +1 when positive degrees
+// pulled. Unknown (generic) is inferred from the data.
+function knockSign(log, cols){
+  const m = log.meta && cols.length ? log.meta[cols[0]] : null;
+  if(m && (m.sign === 1 || m.sign === -1)) return m.sign;
+  let pos = 0, neg = 0;
+  cols.forEach(function(c){ log.cols[c].forEach(function(v){ if(v > 0) pos++; else if(v < 0) neg++; }); });
+  return pos > neg ? 1 : -1;
+}
+function unitOf(log, c){ return c === undefined ? '' : chConv(log.headers[c]).unit; }
+// Pressure differences to hPa, so thresholds work whatever unit a log uses.
+function hpaFactor(unit){
+  const u = String(unit || '').toLowerCase();
+  return u === 'psi' ? 68.9476 : (u === 'kpa' ? 10 : (u === 'bar' ? 1000 : (u === 'mpa' ? 10000 : 1)));
+}
+function chGroupRaw(h){ return chBase(h).replace(/\[\d+\]/, '').replace(/[ _-]?\d+$/, '').trim(); }
 const LOG_COLORS = ['#0d9488', '#ea580c', '#2563eb', '#9333ea', '#db2777', '#65a30d', '#0891b2', '#ca8a04'];
 
-function chUnitRaw(h){ const m = String(h).match(/\[([^\]]*)\]\s*$/); return m ? m[1].trim() : ''; }
-function chBase(h){ return String(h).replace(/\s*\[[^\]]*\]\s*$/, '').trim(); }            // strips the unit
-function chGroupKey(h){ return chBase(h).replace(/\[\d+\]/, '').trim(); }                  // strips a [n] index
-function chIndex(h){ const m = chBase(h).match(/\[(\d+)\]/); return m ? m[1] : null; }
+// Units in brackets (DS1: "Boost [hPa]") or parentheses ("Boost (psi)").
+function chUnitRaw(h){ const m = String(h).match(/\[([^\]]*)\]\s*$/) || String(h).match(/\(([^)]*)\)\s*$/); return m ? m[1].trim() : ''; }
+function chBase(h){ return String(h).replace(/\s*\[[^\]]*\]\s*$/, '').replace(/\s*\([^)]*\)\s*$/, '').trim(); }   // strips the unit
+function chGroupKey(h){ const m = chMeta(h); if(m && LOG_ROLES[m.role] && LOG_ROLES[m.role].group) return 'role:' + m.role; return chBase(h).replace(/\[\d+\]/, '').trim(); }
+function chIndex(h){ const mt = chMeta(h); if(mt && mt.idx !== null && mt.idx !== undefined) return String(mt.idx); const m = chBase(h).match(/\[(\d+)\]/); return m ? m[1] : null; }
 function chFriendly(h){
-  const key = chGroupKey(h);
-  for(let i = 0; i < LOG_FRIENDLY.length; i++) if(LOG_FRIENDLY[i][0].test(key)) return LOG_FRIENDLY[i][1];
-  return null;
+  const m = chMeta(h); if(!m) return null;
+  if(m.role === 'knock_cyl' && m.sign === 1) return 'Timing correction';
+  return LOG_ROLES[m.role] ? LOG_ROLES[m.role].label : null;
 }
 function chName(h){
   const f = chFriendly(h), idx = chIndex(h);
@@ -3459,9 +3670,10 @@ function chName(h){
 // psi, temperature to F and speed to mph. Flag rules always evaluate in
 // the log's native units.
 function chConv(h){
-  const u = chUnitRaw(h).toLowerCase();
+  let u = chUnitRaw(h).toLowerCase();
+  if(!u){ const mt = chMeta(h); if(mt && mt.unit) u = mt.unit.toLowerCase(); }
   const us = S.logView && S.logView.units === 'us';
-  const nice = { 'grad kw':'deg CA', 'grad c':'deg C', 'deg c':'deg C', '1/min':'rpm', '-':'', '':'' };
+  const nice = { 'grad kw':'deg CA', 'grad c':'deg C', 'deg c':'deg C', 'deg f':'deg F', '1/min':'rpm', 'psi':'psi', 'mph':'mph', 'deg':'deg', '%':'%', '-':'', '':'' };
   if(us){
     if(u === 'hpa') return { f:function(v){ return v * 0.0145038; }, unit:'psi' };
     if(u === 'kpa') return { f:function(v){ return v * 0.145038; }, unit:'psi' };
@@ -3495,12 +3707,14 @@ function logChannelEntries(log){
   });
   return order.map(function(k){
     const g = groups[k], h = log.headers[g.cols[0]];
-    g.label = g.cols.length > 1 ? (chFriendly(h) || chGroupKey(h)) + ' [' + chIndex(h) + '-' + chIndex(log.headers[g.cols[g.cols.length - 1]]) + ']' : chName(h);
-    g.raw = g.cols.length > 1 ? chGroupKey(h) : chBase(h);
+    g.label = g.cols.length > 1 ? (chFriendly(h) || chGroupRaw(h)) + ' [' + chIndex(h) + '-' + chIndex(log.headers[g.cols[g.cols.length - 1]]) + ']' : chName(h);
+    g.raw = g.cols.length > 1 ? chGroupRaw(h) : chBase(h);
     return g;
   });
 }
 function findCols(log, re){
+  const role = RE_ROLE[re.source];
+  if(role && log.roles) return roleCols(log, role);
   const out = [];
   log.headers.forEach(function(h, c){ if(log.numeric[c] && c !== log.timeIdx && re.test(chGroupKey(h))) out.push(c); });
   return out;
@@ -3508,16 +3722,18 @@ function findCols(log, re){
 
 // One-click layouts built from verified channels; charts with no matching
 // columns in this log are skipped.
+// Layouts by role, so they work for any recognized format. Charts whose
+// roles aren't in a log are skipped.
 const LOG_PRESETS = {
-  Overview: [[/^nmot_w$/i], [/^AccP_r_VW$/i, /^wdk_w/i], [/^rl_w$/i], [/^CHdT_vVehloc$/i]],
-  Boost:    [[/^pvdr_w/i, /^pvds_w/i], [/^nmot_w$/i], [/^rl_w$/i], [/^wdk_w/i]],
-  Ignition: [[/^IKCtl_agKnkInt/i], [/^zwoutzyl/i], [/^nmot_w$/i]],
-  Fueling:  [[/^prist_w/i, /^prsoll_w/i], [/^FuelP_pAct$/i], [/^lam/i], [/^InjSys_tiInjSum$/i]]
+  Overview: [['rpm'], ['pedal', 'throttle'], ['load'], ['speed']],
+  Boost:    [['boost', 'boost_target', 'boost2'], ['rpm'], ['load'], ['throttle'], ['boost_ecu', 'boost_target_ecu'], ['wgdc']],
+  Ignition: [['knock_cyl'], ['ign_cyl', 'timing'], ['rpm']],
+  Fueling:  [['hpfp', 'hpfp_target'], ['lpfp'], ['lambda', 'lambda_target', 'afr', 'afr2'], ['inj_time'], ['fuel_trim']]
 };
 function buildPreset(log, name){
   return (LOG_PRESETS[name] || []).map(function(chart){
     let cols = [];
-    chart.forEach(function(re){ cols = cols.concat(findCols(log, re)); });
+    chart.forEach(function(r){ cols = cols.concat(typeof r === 'string' ? roleCols(log, r) : findCols(log, r)); });
     return cols.slice(0, 8);
   }).filter(function(cols){ return cols.length; });
 }
@@ -3616,7 +3832,7 @@ function renderLogViewer(){
   let html = '<div class="modal log-modal">';
   // Header
   html += '<div class="lv-top"><div><div class="modal-title" style="margin-bottom:2px">' + escapeHtml(V.fileName || 'Datalog') + '</div>'
-    + '<div class="file-meta">' + log.rows.toLocaleString() + ' samples &middot; ' + log.headers.length + ' channels'
+    + '<div class="file-meta">' + escapeHtml(log.profile ? log.profile.name : 'Log') + ' &middot; ' + log.rows.toLocaleString() + ' samples &middot; ' + log.headers.length + ' channels'
     + (log.timeIdx !== -1 ? ' &middot; ' + fmtNum(logSpan(log)) + ' s' : ' &middot; no time column (x-axis is sample number)') + '</div></div>'
     + '<div style="display:flex;gap:6px"><button class="btn btn-sm" onclick="downloadFile(\'' + V.fileId + '\',\'' + V.path + '\')">Download</button><button class="btn btn-sm" onclick="closeModal();S.logView=null">Close</button></div></div>';
 
@@ -3632,7 +3848,7 @@ function renderLogViewer(){
     + '<label class="lv-tool"><span class="lv-lbl">Compare</span><select class="form-input" onchange="setLogCompare(this.value)"><option value="">None</option>'
     + others.map(function(f){ return '<option value="' + f.id + '"' + (V.compare && V.compare.fileId === f.id ? ' selected' : '') + '>' + escapeHtml(f.file_name) + ' (' + fmtDate(f.created_at) + ')</option>'; }).join('')
     + '</select></label>'
-    + (fc ? '<label class="lv-tool"><input type="checkbox" ' + (V.hideFuelCut ? 'checked' : '') + ' onchange="toggleFuelCut(this.checked)"> Hide fuel cut on lambda <span class="file-meta">(' + fc + ')</span></label>' : '')
+    + (fc ? '<label class="lv-tool"><input type="checkbox" ' + (V.hideFuelCut ? 'checked' : '') + ' onchange="toggleFuelCut(this.checked)"> Hide fuel cut on lambda/AFR <span class="file-meta">(' + fc + ')</span></label>' : '')
     + '<span class="lv-zoom">' + (V.range ? 'Zoom ' + fmtNum(r.a) + '-' + fmtNum(r.b) + ' s <a onclick="logResetZoom()">Reset</a>' : (logIsCoarse() ? 'Pinch a chart to zoom' : 'Drag across a chart to zoom')) + '</span>'
     + (logWotRange(log) ? '<button class="lv-chip" onclick="logZoomWot()">Zoom to WOT</button>' : '')
     + '</div>';
@@ -3654,6 +3870,9 @@ function renderLogViewer(){
   html += chips(results, B ? 'This log: ' : '', false);
   if(B) html += chips(resultsB, 'Compared: ', true) || '<span class="pill pill-green">Compared log: no flags</span>';
   html += '</div>';
+
+  // Automatic pull analysis (and the compared log's, for "vs" values)
+  html += renderAnalysisPanel(log, analyzeLog(log), B, B ? analyzeLog(B) : null);
 
   // Time readout
   html += '<div class="lv-readout" id="logReadout"><span class="file-meta">' + logHint() + '</span></div>';
@@ -3707,9 +3926,9 @@ function renderLogViewer(){
     // index - much shorter, especially on a phone.
     const oneGroup = cols.length > 1 && cols.every(function(c){ return chIndex(log.headers[c]) !== null && chGroupKey(log.headers[c]) === chGroupKey(log.headers[cols[0]]); });
     const groupHead = oneGroup
-      ? '<span class="lg-group">' + escapeHtml(chFriendly(log.headers[cols[0]]) || chGroupKey(log.headers[cols[0]]))
+      ? '<span class="lg-group">' + escapeHtml(chFriendly(log.headers[cols[0]]) || chGroupRaw(log.headers[cols[0]]))
         + (chConv(log.headers[cols[0]]).unit ? ' <span class="lg-unit">' + escapeHtml(chConv(log.headers[cols[0]]).unit) + '</span>' : '')
-        + (chFriendly(log.headers[cols[0]]) ? ' <span class="lg-raw">' + escapeHtml(chGroupKey(log.headers[cols[0]])) + '</span>' : '') + '</span>'
+        + (chFriendly(log.headers[cols[0]]) ? ' <span class="lg-raw">' + escapeHtml(chGroupRaw(log.headers[cols[0]])) + '</span>' : '') + '</span>'
       : '';
     const legend = groupHead + cols.map(function(c, i){
       const h = log.headers[c], color = LOG_COLORS[i % LOG_COLORS.length];
@@ -3745,8 +3964,11 @@ function renderLogViewer(){
   }
   html += '</div>';
 
+  // Format, log info and channel roles
+  html += '<div style="margin-top:14px">' + renderFormatSection(log) + '</div>';
+
   // Channel picker
-  html += '<details class="ov-sec" style="margin-top:14px"><summary>Add channels (' + V.charts.length + ' chart' + (V.charts.length === 1 ? '' : 's') + ')</summary><div class="ov-body">'
+  html += '<details class="ov-sec"><summary>Add channels (' + V.charts.length + ' chart' + (V.charts.length === 1 ? '' : 's') + ')</summary><div class="ov-body">'
     + '<input class="form-input" placeholder="Filter channels..." value="' + escapeHtml(V.filter) + '" oninput="logFilter(this.value)" style="margin-bottom:8px" id="logFilterInput">'
     + '<div class="log-channels" id="logChannels">' + renderLogChannelList(V.filter.toLowerCase()) + '</div></div></details>';
 
@@ -4019,13 +4241,452 @@ function logShowCursor(f){
 }
 
 
+/* ================= AUTOMATIC LOG ANALYSIS ================= */
+// Finds full-throttle pulls and summarizes what a tuner checks first. Uses
+// only channels whose meaning is known (see LOG_PROFILES); anything a
+// log doesn't have is simply left out. Thresholds only decide what gets
+// highlighted - the numbers are always shown - and they are tuner-set
+// (tuning_settings.analysis_thresholds), with these as defaults.
+const ANALYSIS_DEFAULTS = {
+  knock_warn: -2.0,          // deg CA of retard on any cylinder
+  boost_short_warn: 150,     // hPa below target, after spool
+  boost_over_warn: 200,      // hPa above target
+  rail_short_warn_pct: 10,   // % below rail pressure setpoint
+  lpfp_drop_warn_pct: 15,    // % drop from pre-pull low-pressure fuel
+  iat_rise_warn: 15          // deg C rise across a pull
+};
+function analysisThresholds(){
+  let t = {};
+  try{ t = JSON.parse((S.settings && S.settings.analysis_thresholds) || '{}') || {}; }catch(e){ t = {}; }
+  const out = {};
+  Object.keys(ANALYSIS_DEFAULTS).forEach(function(k){ out[k] = (typeof t[k] === 'number' && !isNaN(t[k])) ? t[k] : ANALYSIS_DEFAULTS[k]; });
+  return out;
+}
+
+function aCol(log, re){ return findCols(log, re)[0]; }
+function aVals(log, c, i0, i1){
+  const d = colData(log, c), out = [];
+  for(let i = i0; i <= i1; i++){ const v = d[i]; if(!isNaN(v)) out.push(v); }
+  return out;
+}
+function aMin(a){ return a.length ? Math.min.apply(null, a) : null; }
+function aMax(a){ return a.length ? Math.max.apply(null, a) : null; }
+function aAvg(a){ return a.length ? a.reduce(function(x, y){ return x + y; }, 0) / a.length : null; }
+function aMedian(a){ if(!a.length) return null; const s = a.slice().sort(function(x, y){ return x - y; }); const m = s.length >> 1; return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2; }
+
+// Full-throttle pulls: runs of pedal >= 95% (throttle >= 90% if there's no
+// pedal channel), at least 1 s long. Short gaps (<= 2 samples, e.g. a
+// shift) are bridged so one pull isn't split in two.
+function findPulls(log){
+  let c = aCol(log, /^AccP_r_VW$/i), th = 95;
+  if(c === undefined){ c = aCol(log, /^wdk_w/i); th = 90; }
+  if(c === undefined) return [];
+  const d = log.cols[c], runs = [];
+  let start = -1, gap = 0;
+  for(let i = 0; i <= d.length; i++){
+    const on = i < d.length && d[i] >= th;
+    if(on){ if(start === -1) start = i; gap = 0; }
+    else if(start !== -1){
+      gap++;
+      if(gap > 2 || i === d.length){ runs.push([start, i - gap]); start = -1; gap = 0; }
+    }
+  }
+  return runs.filter(function(r){ return xValue(log, r[1]) - xValue(log, r[0]) >= 1.0; });
+}
+
+// Samples around a gear change (and sudden RPM drops, for logs with no
+// gear channel). Boost always dips through a shift - that's normal and
+// mustn't be reported as a boost-control shortfall.
+// Samples around a gear change (or a sudden RPM drop when there's no gear
+// channel). Boost always dips through a shift, which is normal - and the
+// dip starts slightly before the gear channel changes. The window is by
+// TIME (0.6 s before to 0.8 s after), because logging rates differ
+// hugely: DS1 ~16 samples/s, JB4 about 1.
+function shiftMask(log, i0, i1){
+  const mask = {}, gear = aCol(log, /^CoEng_nrActGearHem$/i), rpm = aCol(log, /^nmot_w$/i);
+  const G = gear !== undefined ? log.cols[gear] : null, R = rpm !== undefined ? log.cols[rpm] : null;
+  const mark = function(i){
+    const t = xValue(log, i);
+    mask[i] = true; mask[i - 1] = true;
+    for(let k = i - 1; k >= 0 && t - xValue(log, k) <= 0.6; k--) mask[k] = true;
+    for(let k = i + 1; k < log.rows && xValue(log, k) - t <= 0.8; k++) mask[k] = true;
+  };
+  for(let i = i0 + 1; i <= i1; i++){
+    if(G && !isNaN(G[i]) && !isNaN(G[i - 1]) && G[i] !== G[i - 1]) mark(i);
+    else if(R && !isNaN(R[i]) && !isNaN(R[i - 1]) && R[i - 1] - R[i] > 300) mark(i);
+  }
+  return mask;
+}
+
+function analyzePull(log, r, th){
+  const i0 = r[0], i1 = r[1];
+  const P = { i0:i0, i1:i1, t0:xValue(log, i0), t1:xValue(log, i1), findings:[] };
+  const rpm = aCol(log, /^nmot_w$/i);
+  if(rpm !== undefined){ const v = aVals(log, rpm, i0, i1); P.rpmStart = v[0]; P.rpmEnd = v[v.length - 1]; P.rpmMax = aMax(v); }
+  const gear = aCol(log, /^CoEng_nrActGearHem$/i);
+  if(gear !== undefined){
+    const g = aVals(log, gear, i0, i1).filter(function(x){ return x > 0; });
+    if(g.length){ P.gearFrom = Math.round(aMin(g)); P.gearTo = Math.round(aMax(g)); }
+  }
+
+  // Boost vs target. "After spool" = from the first sample where actual
+  // reaches 90% of target onward, so turbo lag isn't counted as a shortfall.
+  const ba = aCol(log, /^pvdr_w/i), bs = aCol(log, /^pvds_w/i);
+  if(ba !== undefined){
+    const A = colData(log, ba);
+    P.boostPeak = aMax(aVals(log, ba, i0, i1));
+    if(bs !== undefined){
+      const T = colData(log, bs);
+      let spool = -1;
+      for(let i = i0; i <= i1; i++) if(!isNaN(A[i]) && !isNaN(T[i]) && A[i] >= T[i] * 0.9){ spool = i; break; }
+      P.boostTarget = aMedian(aVals(log, bs, i0, i1));
+      const shifting = shiftMask(log, i0, i1);
+      let over = null, short = null;
+      // Overshoot counts everywhere (a spike on a shift is exactly what to
+      // catch); shortfall ignores shift dips, which are normal.
+      let overAtShift = false;
+      for(let i = (spool === -1 ? i1 + 1 : spool); i <= i1; i++){
+        if(isNaN(A[i]) || isNaN(T[i])) continue;
+        const dlt = A[i] - T[i];
+        if(over === null || dlt > over){ over = dlt; overAtShift = !!shifting[i]; }
+        if(!shifting[i] && (short === null || -dlt > short)) short = -dlt;
+      }
+      P.boostOverAtShift = overAtShift;
+      P.boostOver = over !== null ? Math.max(0, over) : null;
+      P.boostShort = short !== null ? Math.max(0, short) : null;
+      P.spoolAt = spool !== -1 ? xValue(log, spool) - P.t0 : null;
+      const bf = hpaFactor(unitOf(log, ba));
+      if(P.boostShort !== null && P.boostShort * bf >= th.boost_short_warn) P.findings.push({ sev:'warn', text:'Boost ' + aFmtDelta(log, /^pvdr_w/i, P.boostShort) + ' under target (outside shifts)' });
+      if(P.boostOver !== null && P.boostOver * bf >= th.boost_over_warn) P.findings.push({ sev:'warn', text:'Boost overshoot ' + aFmtDelta(log, /^pvdr_w/i, P.boostOver) + ' over target' + (P.boostOverAtShift ? ' (on a shift)' : '') });
+      if(spool === -1) P.findings.push({ sev:'warn', text:'Boost never reached 90% of target' });
+    }
+  }
+
+  // Knock per cylinder, normalized to retard (<= 0; more negative = more
+  // pulled) whatever the logger's sign convention: DS1 logs negative retard,
+  // JB4 logs positive degrees pulled.
+  const kc = findCols(log, /^IKCtl_agKnkInt/i);
+  if(kc.length){
+    const sg = knockSign(log, kc);
+    P.knockSign = sg;
+    P.knock = kc.map(function(c){
+      const v = aVals(log, c, i0, i1).map(function(x){ return sg === 1 ? -x : x; });
+      return { idx: chIndex(log.headers[c]), worst: aMin(v), events: v.filter(function(x){ return x <= -1; }).length };
+    });
+    const worst = P.knock.reduce(function(a, b){ return (b.worst !== null && (a === null || b.worst < a.worst)) ? b : a; }, null);
+    P.knockWorst = worst;
+    if(worst && worst.worst !== null && worst.worst <= th.knock_warn){
+      P.findings.push({ sev:'bad', text: (sg === 1 ? 'Timing pulled ' + fmtNum(-worst.worst) : 'Knock retard ' + fmtNum(worst.worst)) + ' deg on cylinder [' + worst.idx + ']' });
+    }
+  }
+
+  let tc = findCols(log, /^zwoutzyl/i);
+  if(!tc.length) tc = roleCols(log, 'timing');
+  if(tc.length){
+    let all = [];
+    tc.forEach(function(c){ all = all.concat(aVals(log, c, i0, i1)); });
+    P.timingMin = aMin(all); P.timingAvg = aAvg(all);
+  }
+
+  const ra = aCol(log, /^prist_w/i), rs = aCol(log, /^prsoll_w/i);
+  if(ra !== undefined && rs !== undefined){
+    const A = colData(log, ra), T = colData(log, rs);
+    let worstPct = 0, worstAbs = 0;
+    for(let i = i0; i <= i1; i++){
+      if(isNaN(A[i]) || isNaN(T[i]) || T[i] <= 0) continue;
+      const sh = T[i] - A[i];
+      if(sh > worstAbs){ worstAbs = sh; worstPct = sh / T[i] * 100; }
+    }
+    P.railShort = worstAbs; P.railShortPct = worstPct;
+    if(worstPct >= th.rail_short_warn_pct) P.findings.push({ sev:'bad', text:'Rail pressure ' + worstPct.toFixed(0) + '% under setpoint' });
+  } else if(ra !== undefined){
+    P.railMin = aMin(aVals(log, ra, i0, i1));   // no setpoint logged - report the low point
+  }
+
+  const lp = aCol(log, /^FuelP_pAct$/i);
+  if(lp !== undefined){
+    const pre = aVals(log, lp, Math.max(0, i0 - 5), Math.max(0, i0 - 1));
+    const base = pre.length ? aMedian(pre) : aVals(log, lp, i0, i0)[0];
+    P.lpfpMin = aMin(aVals(log, lp, i0, i1));
+    if(base && P.lpfpMin !== null){
+      P.lpfpDropPct = Math.max(0, (base - P.lpfpMin) / base * 100);
+      if(P.lpfpDropPct >= th.lpfp_drop_warn_pct) P.findings.push({ sev:'bad', text:'Low-pressure fuel dropped ' + P.lpfpDropPct.toFixed(0) + '%' });
+    }
+  }
+
+  const lam = findCols(log, /^lam/i);
+  if(lam.length){
+    P.lambda = lam.map(function(c){ const v = aVals(log, c, i0, i1); return { name: chBase(log.headers[c]), min: aMin(v), max: aMax(v) }; });
+  }
+  const afrc = roleCols(log, 'afr').concat(roleCols(log, 'afr2'));
+  if(afrc.length){
+    P.afr = afrc.map(function(c){ const v = aVals(log, c, i0, i1); return { name: chBase(log.headers[c]), min: aMin(v), max: aMax(v) }; });
+  }
+
+  const iat = aCol(log, /^tans/i);
+  if(iat !== undefined){
+    const v = aVals(log, iat, i0, i1);
+    P.iatStart = v[0]; P.iatMax = aMax(v);
+    const iu = unitOf(log, iat), rise = P.iatMax - P.iatStart;
+    const riseC = /f$/i.test(iu) ? rise * 5 / 9 : rise;       // threshold is in deg C
+    if(v.length && riseC >= th.iat_rise_warn) P.findings.push({ sev:'warn', text:'Intake temp rose ' + fmtNum(rise) + ' ' + (iu || 'deg') });
+  }
+  return P;
+}
+
+function analyzeLog(log){
+  const th = analysisThresholds();
+  const pulls = findPulls(log).map(function(r){ return analyzePull(log, r, th); });
+  const out = { pulls: pulls, thresholds: th };
+  const ct = aCol(log, /^tmot/i);
+  if(ct !== undefined) out.coolantMax = aMax(aVals(log, ct, 0, log.rows - 1));
+  const ot = aCol(log, /^SLmpCtl_tOilSwmp/i);
+  if(ot !== undefined) out.oilMax = aMax(aVals(log, ot, 0, log.rows - 1));
+  out.worst = pulls.reduce(function(n, p){ return n + p.findings.filter(function(f){ return f.sev === 'bad'; }).length; }, 0);
+  out.warns = pulls.reduce(function(n, p){ return n + p.findings.filter(function(f){ return f.sev === 'warn'; }).length; }, 0);
+  return out;
+}
+
+// ---- Analysis panel in the viewer
+function aFmt(log, re, v, withUnit){
+  if(v === null || v === undefined || isNaN(v)) return '-';
+  const c = aCol(log, re);
+  const conv = c !== undefined ? chConv(log.headers[c]) : { f:null, unit:'' };
+  const val = conv.f ? conv.f(v) : v;
+  return fmtNum(val) + (withUnit && conv.unit ? ' ' + conv.unit : '');
+}
+// Differences (e.g. a boost shortfall) convert by scale only - no offset.
+function aFmtDelta(log, re, v){
+  if(v === null || v === undefined || isNaN(v)) return '-';
+  const c = aCol(log, re);
+  const conv = c !== undefined ? chConv(log.headers[c]) : { f:null, unit:'' };
+  const val = conv.f ? conv.f(v) - conv.f(0) : v;
+  return fmtNum(val) + (conv.unit ? ' ' + conv.unit : '');
+}
+
+function renderAnalysisPanel(log, A, B, AB){
+  const th = A.thresholds;
+  if(!A.pulls.length){
+    return '<div class="an-panel"><div class="an-head"><span class="an-title">Pull analysis</span></div>'
+      + '<div class="file-meta">No full-throttle pull found in this log (needs 1 s or more at 95%+ pedal).</div>'
+      + renderThresholdEditor(th) + '</div>';
+  }
+  const issues = A.worst + A.warns;
+  let html = '<div class="an-panel"><div class="an-head"><span class="an-title">Pull analysis</span>'
+    + '<span class="file-meta">' + A.pulls.length + ' full-throttle pull' + (A.pulls.length === 1 ? '' : 's')
+    + ' &middot; ' + (issues ? issues + ' to review' : 'nothing flagged') + '</span>'
+    + '<a class="an-th-link" onclick="toggleThresholdEditor()">Thresholds</a></div>';
+  if(S.showThresholds) html += renderThresholdEditor(th);
+
+  A.pulls.forEach(function(p, n){
+    const q = B && AB && AB.pulls[n] ? AB.pulls[n] : null;   // same-numbered pull in the compared log
+    const cmp = function(v){ return q ? '<span class="an-vs">vs ' + v + '</span>' : ''; };
+    html += '<div class="an-pull">';
+    html += '<div class="an-pull-head"><strong>Pull ' + (n + 1) + '</strong>'
+      + '<span class="file-meta">' + fmtNum(p.t0) + '-' + fmtNum(p.t1) + ' s'
+      + (p.gearFrom ? ' &middot; gear ' + p.gearFrom + (p.gearTo !== p.gearFrom ? '-' + p.gearTo : '') : '')
+      + (p.rpmStart !== undefined ? ' &middot; ' + fmtNum(p.rpmStart) + ' to ' + fmtNum(p.rpmMax) + ' rpm' : '') + '</span>'
+      + '<button class="lv-chip" onclick="logZoomPull(' + n + ')">Zoom</button></div>';
+    html += '<div class="an-findings">' + (p.findings.length
+      ? p.findings.map(function(f){ return '<span class="an-f an-' + f.sev + '">' + escapeHtml(f.text) + '</span>'; }).join('')
+      : '<span class="an-f an-ok">Nothing flagged</span>') + '</div>';
+
+    const cells = [];
+    if(p.boostPeak !== undefined){
+      cells.push(['Boost', aFmt(log, /^pvdr_w/i, p.boostPeak, true) + (p.boostTarget !== undefined ? ' <span class="an-sub">target ' + aFmt(log, /^pvds_w/i, p.boostTarget) + '</span>' : '')
+        + (p.boostOver !== undefined && p.boostOver !== null ? '<div class="an-sub">over ' + aFmtDelta(log, /^pvdr_w/i, p.boostOver) + (p.boostOverAtShift ? ' (shift)' : '') + ' &middot; under ' + aFmtDelta(log, /^pvdr_w/i, p.boostShort) + '</div>' : '')
+        + cmp(q && q.boostPeak !== undefined ? aFmt(B, /^pvdr_w/i, q.boostPeak) : '-')]);
+    }
+    if(p.knock){
+      const k = p.knock.map(function(c){
+        const lvl = c.worst === null ? '' : (c.worst <= th.knock_warn ? ' bad' : (c.worst <= -1 ? ' warn' : ''));
+        return '<span class="an-cyl' + lvl + '" title="' + c.events + ' samples at 1 deg or more">[' + c.idx + '] ' + fmtNum(p.knockSign === 1 ? -c.worst : c.worst) + '</span>';
+      }).join('');
+      cells.push([p.knockSign === 1 ? 'Timing pulled (deg)' : 'Knock retard (deg)', '<div class="an-cyls">' + k + '</div>'
+        + cmp(q && q.knockWorst ? fmtNum(q.knockSign === 1 ? -q.knockWorst.worst : q.knockWorst.worst) + ' on [' + q.knockWorst.idx + ']' : '-')]);
+    }
+    if(p.timingMin !== undefined) cells.push(['Ignition timing', 'min ' + fmtNum(p.timingMin) + ' &middot; avg ' + fmtNum(p.timingAvg) + ' <span class="an-sub">deg</span>' + cmp(q && q.timingAvg !== undefined ? 'avg ' + fmtNum(q.timingAvg) : '-')]);
+    if(p.railMin !== undefined && p.railShortPct === undefined) cells.push(['Rail pressure', 'min ' + aFmt(log, /^prist_w/i, p.railMin, true) + ' <span class="an-sub">no setpoint logged</span>']);
+    if(p.railShortPct !== undefined) cells.push(['Rail pressure', (p.railShortPct >= 0.5 ? p.railShortPct.toFixed(1) + '% under setpoint' : 'on setpoint') + cmp(q && q.railShortPct !== undefined ? q.railShortPct.toFixed(1) + '%' : '-')]);
+    if(p.lpfpMin !== undefined) cells.push(['Low-pressure fuel', 'min ' + aFmt(log, /^FuelP_pAct$/i, p.lpfpMin, true) + (p.lpfpDropPct >= 0.05 ? ' <span class="an-sub">-' + p.lpfpDropPct.toFixed(1) + '%</span>' : '') + cmp(q && q.lpfpMin !== undefined ? aFmt(B, /^FuelP_pAct$/i, q.lpfpMin) : '-')]);
+    if(p.lambda) cells.push(['Lambda (under load)', p.lambda.map(function(l){ return '<div><span class="lg-raw">' + escapeHtml(l.name) + '</span> ' + fmtNum(l.min) + '-' + fmtNum(l.max) + '</div>'; }).join('')]);
+    if(p.afr) cells.push(['AFR (under load)', p.afr.map(function(l){ return '<div><span class="lg-raw">' + escapeHtml(l.name) + '</span> ' + fmtNum(l.min) + '-' + fmtNum(l.max) + '</div>'; }).join('')]);
+    if(p.iatStart !== undefined) cells.push(['Intake air temp', aFmt(log, /^tans/i, p.iatStart) + ' to ' + aFmt(log, /^tans/i, p.iatMax, true) + cmp(q && q.iatMax !== undefined ? aFmt(B, /^tans/i, q.iatMax) : '-')]);
+    html += '<div class="an-grid">' + cells.map(function(c){ return '<div class="an-cell"><div class="an-label">' + c[0] + '</div><div class="an-val">' + c[1] + '</div></div>'; }).join('') + '</div>';
+    html += '</div>';
+  });
+  const extra = [];
+  if(A.coolantMax !== undefined) extra.push('Coolant max ' + aFmt(log, /^tmot/i, A.coolantMax, true));
+  if(A.oilMax !== undefined) extra.push('Oil max ' + aFmt(log, /^SLmpCtl_tOilSwmp/i, A.oilMax, true));
+  if(extra.length) html += '<div class="file-meta" style="margin-top:6px">Whole log: ' + extra.join(' &middot; ') + '</div>';
+  if(B) html += '<div class="file-meta" style="margin-top:4px">"vs" values are the same-numbered pull in ' + escapeHtml(S.logView.compare.fileName) + '.</div>';
+  html += '</div>';
+  return html;
+}
+
+function logZoomPull(n){
+  const V = S.logView; if(!V) return;
+  const p = analyzeLog(V.log).pulls[n]; if(!p) return;
+  const pad = (p.t1 - p.t0) * 0.1;
+  V.range = [Math.max(0, p.t0 - pad), Math.min(logSpan(V.log), p.t1 + pad)];
+  renderLogViewer();
+}
+window.logZoomPull = logZoomPull;
+
+// ---- Thresholds (shared, stored in tuning_settings)
+const THRESHOLD_LABELS = [
+  ['knock_warn', 'Knock retard at or below (deg)'],
+  ['boost_short_warn', 'Boost under target by (hPa)'],
+  ['boost_over_warn', 'Boost over target by (hPa)'],
+  ['rail_short_warn_pct', 'Rail pressure under setpoint (%)'],
+  ['lpfp_drop_warn_pct', 'Low-pressure fuel drop (%)'],
+  ['iat_rise_warn', 'Intake temp rise (deg C)']
+];
+function toggleThresholdEditor(){ S.showThresholds = !S.showThresholds; renderLogViewer(); }
+window.toggleThresholdEditor = toggleThresholdEditor;
+function renderThresholdEditor(th){
+  return '<div class="an-th">' + THRESHOLD_LABELS.map(function(t){
+      return '<label class="an-th-row"><span>' + t[1] + '</span><input class="form-input" type="number" step="any" id="th-' + t[0] + '" value="' + th[t[0]] + '"></label>';
+    }).join('')
+    + '<div class="an-th-actions"><span class="file-meta">Shared by all tuners. Only changes what gets highlighted.</span>'
+    + '<button class="btn btn-sm" onclick="resetThresholds()">Defaults</button><button class="btn btn-sm btn-primary" onclick="saveThresholds()">Save</button></div></div>';
+}
+async function saveThresholds(){
+  const t = {};
+  THRESHOLD_LABELS.forEach(function(x){ const v = parseFloat(document.getElementById('th-' + x[0]).value); if(!isNaN(v)) t[x[0]] = v; });
+  try{
+    const { error } = await sb.from('tuning_settings').upsert({ key:'analysis_thresholds', value: JSON.stringify(t), updated_by: S.user.email, updated_at: new Date().toISOString() });
+    if(error) throw error;
+    S.settings.analysis_thresholds = JSON.stringify(t);
+    S.showThresholds = false;
+    toast('Thresholds saved');
+    renderLogViewer();
+  }catch(e){ toast('Could not save thresholds: ' + e.message, true); }
+}
+window.saveThresholds = saveThresholds;
+function resetThresholds(){
+  THRESHOLD_LABELS.forEach(function(x){ const el = document.getElementById('th-' + x[0]); if(el) el.value = ANALYSIS_DEFAULTS[x[0]]; });
+}
+window.resetThresholds = resetThresholds;
+
+// ---- Saved per-log verdict (drives the Log Review list)
+function analysisHeadline(A){
+  const all = [];
+  A.pulls.forEach(function(p){ p.findings.forEach(function(f){ all.push(f); }); });
+  return { pulls: A.pulls.length, bad: A.worst, warn: A.warns,
+    findings: all.slice(0, 4).map(function(f){ return { sev: f.sev, text: f.text }; }) };
+}
+async function saveLogAnalysis(fileId, A){
+  const summary = analysisHeadline(A);
+  try{
+    const { error } = await sb.from('tuning_files').update({ analysis: summary, analyzed_at: new Date().toISOString() }).eq('id', fileId);
+    if(error) throw error;
+    const lists = [S.pendingLogs || []].concat(Object.keys(S.files).map(function(k){ return S.files[k] || []; }));
+    lists.forEach(function(list){ list.forEach(function(f){ if(f.id === fileId) f.analysis = summary; }); });
+  }catch(e){ /* column missing until Phase 20 runs - viewer still works */ }
+}
+
+// Log Review: analyze pending logs that don't have a verdict yet, one at a
+// time in the background, so the list shows results without opening each.
+let AUTO_ANALYZE_RUNNING = false;
+async function autoAnalyzePending(){
+  if(AUTO_ANALYZE_RUNNING) return;
+  AUTO_ANALYZE_RUNNING = true;
+  try{
+    if(!S.logRules) await loadLogRules();
+    const todo = (S.pendingLogs || []).filter(function(f){ return !f.analysis && isLogFile(f); });
+    for(let i = 0; i < todo.length; i++){
+      const f = todo[i];
+      try{
+        const log = await fetchLog(f.file_path);
+        const prev = S.logView; S.logView = { hideFuelCut: true };  // analysis uses the fuel-cut filter
+        const A = analyzeLog(log);
+        S.logView = prev;
+        await saveLogAnalysis(f.id, A);
+        f.analysis = analysisHeadline(A);
+      }catch(e){ f.analysis = { error: true }; }
+      if(S.page === 'logreview') renderPage();
+    }
+  }finally{ AUTO_ANALYZE_RUNNING = false; }
+}
+
+function analysisChips(a){
+  if(!a) return '<span class="file-meta">Analyzing&hellip;</span>';
+  if(a.error) return '<span class="file-meta">Could not read this log</span>';
+  if(!a.pulls) return '<span class="an-f an-muted">No full-throttle pull</span>';
+  if(!a.findings || !a.findings.length) return '<span class="an-f an-ok">' + a.pulls + ' pull' + (a.pulls === 1 ? '' : 's') + ' &middot; nothing flagged</span>';
+  return a.findings.map(function(f){ return '<span class="an-f an-' + f.sev + '">' + escapeHtml(f.text) + '</span>'; }).join('');
+}
+
+
+// ---- Format, log info and channel roles (viewer)
+function renderFormatSection(log){
+  const flat = log.headers.filter(function(h, c){ return log.numeric[c] && c !== log.timeIdx && colIsFlat(log, c); }).length;
+  const cols = log.headers.map(function(h, c){ return c; }).filter(function(c){ return log.numeric[c] && c !== log.timeIdx && !colIsFlat(log, c); });
+  const roleOpts = Object.keys(LOG_ROLES).sort(function(a, b){ return LOG_ROLES[a].label.localeCompare(LOG_ROLES[b].label); });
+  const hasOverride = !!roleOverrides()[log.fingerprint];
+  let html = '<details class="ov-sec"><summary>Format: ' + escapeHtml(log.profile.name) + ' &middot; channel roles'
+    + (log.profile.id === 'generic' ? ' <span class="pill pill-orange" style="text-transform:none;letter-spacing:0">check</span>' : '') + '</summary><div class="ov-body">';
+  if(log.profile.note) html += '<div class="file-meta" style="margin-bottom:10px">' + escapeHtml(log.profile.note) + '</div>';
+  if(log.preamble && log.preamble.length){
+    const show = log.preamble.slice(0, 40);
+    html += '<div class="fm-info"><div class="an-label">Log info</div><div class="fm-kv">' + show.map(function(p){
+      return '<span><b>' + escapeHtml(p.k) + '</b> ' + escapeHtml(p.v) + '</span>';
+    }).join('') + (log.preamble.length > show.length ? '<span class="file-meta">+' + (log.preamble.length - show.length) + ' more</span>' : '') + '</div></div>';
+  }
+  html += '<div class="an-label" style="margin-top:10px">Channel roles</div>'
+    + '<div class="file-meta" style="margin-bottom:6px">What each column means drives the names, layouts, fuel-cut handling and pull analysis. Changes apply to every log from this logger and are shared by all tuners.'
+    + (flat ? ' ' + flat + ' empty or constant column' + (flat === 1 ? ' is' : 's are') + ' hidden.' : '') + '</div>';
+  html += '<div class="fm-roles">' + cols.map(function(c){
+    const cur = log.meta[c] ? log.meta[c].role : 'none';
+    return '<label class="fm-role"><span class="fm-col">' + escapeHtml(log.headers[c]) + '</span><select class="form-input" data-col="' + escapeHtml(log.headers[c]) + '">'
+      + '<option value="none"' + (cur === 'none' ? ' selected' : '') + '>- not used -</option>'
+      + roleOpts.map(function(r){ return '<option value="' + r + '"' + (cur === r ? ' selected' : '') + '>' + escapeHtml(r === 'knock_cyl' ? 'Knock retard / timing pulled' : LOG_ROLES[r].label) + (LOG_ROLES[r].group ? ' (per cylinder)' : '') + '</option>'; }).join('')
+      + '</select></label>';
+  }).join('') + '</div>';
+  html += '<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:10px">'
+    + (hasOverride ? '<button class="btn btn-sm" onclick="resetRoleMap()">Reset to detected</button>' : '')
+    + '<button class="btn btn-sm btn-primary" onclick="saveRoleMap()">Save roles</button></div>';
+  html += '</div></details>';
+  return html;
+}
+
+async function saveRoleMap(){
+  const V = S.logView; if(!V) return;
+  const log = V.log, map = {};
+  document.querySelectorAll('.fm-roles select').forEach(function(sel){ map[sel.getAttribute('data-col')] = sel.value; });
+  const all = roleOverrides();
+  all[log.fingerprint] = map;
+  await storeRoleMaps(all, 'Channel roles saved for this format');
+}
+window.saveRoleMap = saveRoleMap;
+async function resetRoleMap(){
+  const V = S.logView; if(!V) return;
+  const all = roleOverrides();
+  delete all[V.log.fingerprint];
+  await storeRoleMaps(all, 'Channel roles reset to the detected format');
+}
+window.resetRoleMap = resetRoleMap;
+async function storeRoleMaps(all, msg){
+  try{
+    const { error } = await sb.from('tuning_settings').upsert({ key:'log_role_maps', value: JSON.stringify(all), updated_by: S.user.email, updated_at: new Date().toISOString() });
+    if(error) throw error;
+    S.settings.log_role_maps = JSON.stringify(all);
+    const V = S.logView;
+    applyLogProfile(V.log);
+    if(V.compare) applyLogProfile(V.compare.log);
+    toast(msg);
+    renderLogViewer();
+  }catch(e){ toast('Could not save roles: ' + e.message, true); }
+}
+
 async function addLogRule(){
   let col = document.getElementById('lrCol').value;
   // Per-cylinder DS1 channel like "IKCtl_agKnkInt_as8[2] [Grad KW]": with
   // "All cylinders" on, store the base name so the rule covers [0]..[n].
   const allCyl = document.getElementById('lrAllCyl');
-  if(allCyl && allCyl.checked && /\[\d+\]/.test(col)){
-    col = col.replace(/\[\d+\]/, '').replace(/\s*\[[^\]]*\]\s*$/, '').trim();
+  if(allCyl && allCyl.checked && chIndex(col) !== null){
+    col = chGroupRaw(col);
   }
   const op = document.getElementById('lrOp').value;
   const th = parseFloat(document.getElementById('lrTh').value);
@@ -4134,7 +4795,8 @@ function renderLogReview(){
   if(!S.pendingLogs.length){
     html += '<div class="empty-state">Nothing waiting on review.</div>';
   } else {
-    html += '<table><thead><tr><th>Application</th><th>Vehicle</th><th>File</th><th>Uploaded</th><th></th></tr></thead><tbody>';
+    html += '<table><thead><tr><th>Application</th><th>Vehicle</th><th>File</th><th>Analysis</th><th>Uploaded</th><th></th></tr></thead><tbody>';
+    setTimeout(autoAnalyzePending, 0);
     S.pendingLogs.forEach(function(f){
       const app = f.tuning_applications;
       const carLine = app ? [app.car_year, app.car_make, app.car_model].filter(Boolean).join(' ') : '-';
@@ -4142,6 +4804,7 @@ function renderLogReview(){
         + '<td><a href="#" onclick="event.preventDefault();jumpToApplication(\'' + f.application_id + '\',\'files\')">#' + (app ? app.application_number : '?') + ' - ' + escapeHtml(app ? app.customer_name : '') + '</a></td>'
         + '<td>' + escapeHtml(carLine) + '</td>'
         + '<td>' + escapeHtml(f.file_name) + '</td>'
+        + '<td><div class="an-findings" style="margin:0">' + analysisChips(f.analysis) + '</div></td>'
         + '<td>' + fmtDate(f.created_at) + '</td>'
         + '<td style="white-space:nowrap"><button class="btn btn-sm btn-teal" onclick="openLogViewer(\'' + f.id + '\',\'' + f.file_path + '\')">View</button> <button class="btn btn-sm" onclick="markLogReviewed(\'' + f.id + '\')">Mark Reviewed</button></td>'
         + '</tr>';
@@ -4220,6 +4883,152 @@ function performLookup(v){
   document.getElementById('lookupResults').innerHTML = renderLookupResults();
 }
 window.performLookup = performLookup;
+
+/* ================= SYSTEM HEALTH ================= */
+// One page that answers "is everything actually working?" - live
+// connection status, database self-checks (tuning_health()), the Shopify
+// webhook, email delivery, and recent errors recorded by the edge functions.
+const RT_EXPECTED_TABLES = ['tuning_activity_log','tuning_applications','tuning_files','tuning_invoices','tuning_messages'];
+
+async function loadHealthBadge(){
+  try{
+    const since = new Date(Date.now() - 86400000).toISOString();
+    const { count, error } = await sb.from('tuning_system_events').select('id', { count:'exact', head:true }).eq('level', 'error').gte('created_at', since);
+    if(error) throw error;
+    S.healthErrors = count || 0;
+  }catch(e){ S.healthErrors = 0; }
+  renderNav();
+}
+
+async function loadHealth(){
+  S.healthLoading = true;
+  try{
+    const [h, ev] = await Promise.all([
+      sb.rpc('tuning_health'),
+      sb.from('tuning_system_events').select('*').order('created_at', { ascending:false }).limit(100)
+    ]);
+    if(h.error) throw h.error;
+    S.health = h.data || {};
+    S.healthEvents = (ev && !ev.error && ev.data) || [];
+  }catch(e){
+    S.health = { _error: e.message || String(e) };
+    S.healthEvents = [];
+  }
+  S.healthLoading = false;
+  if(S.page === 'health') renderPage();
+}
+
+function hAgo(iso){
+  if(!iso) return 'never';
+  const m = Math.round((Date.now() - new Date(iso).getTime()) / 60000);
+  if(m < 1) return 'just now';
+  if(m < 60) return m + ' min ago';
+  if(m < 1440) return Math.round(m / 60) + ' h ago';
+  return Math.round(m / 1440) + ' d ago';
+}
+
+function healthChecks(){
+  const h = S.health || {}, t = h.triggers || {};
+  const checks = [];
+  const add = function(level, title, detail, fix){ checks.push({ level:level, title:title, detail:detail, fix:fix || '' }); };
+
+  const rtVals = Object.keys(RT_STATUS).map(function(k){ return RT_STATUS[k]; });
+  const rtBad = Object.keys(RT_STATUS).filter(function(k){ return RT_STATUS[k] !== 'SUBSCRIBED'; });
+  if(!rtVals.length) add('warn', 'Live updates', 'Not connected yet.');
+  else if(!rtBad.length) add('ok', 'Live updates', 'All ' + rtVals.length + ' live channels connected.');
+  else add('bad', 'Live updates', 'Not connected: ' + rtBad.join(', ') + '. Changes still arrive via the 45 s backup check.', 'Usually a table missing from the realtime publication (see below).');
+
+  const pub = h.realtime_tables || [];
+  const missing = RT_EXPECTED_TABLES.filter(function(x){ return pub.indexOf(x) === -1; });
+  add(missing.length ? 'bad' : 'ok', 'Realtime publication', missing.length ? 'Missing: ' + missing.join(', ') : 'All ' + RT_EXPECTED_TABLES.length + ' tables are streamed.', missing.length ? 'Run the Phase 16 migration.' : '');
+
+  add(t.log_review_flag ? 'ok' : 'bad', 'Log Review flagging', t.log_review_flag ? 'Customer logs are flagged for review automatically.' : 'The trigger that flags customer logs is missing.', t.log_review_flag ? '' : 'Run the Phase 17 migration.');
+  add(t.intake_defaults ? 'ok' : 'bad', 'New application defaults', t.intake_defaults ? 'New applications get status, portal link and default tuner.' : 'The intake trigger is missing.', t.intake_defaults ? '' : 'Run the Phase 18 migration.');
+  add(t.stage_timer ? 'ok' : 'warn', 'Stage timers', t.stage_timer ? 'Board aging timers are tracked.' : 'Stage-change tracking trigger is missing - Board ages may be wrong.', t.stage_timer ? '' : 'Run the Phase 13 migration.');
+  add(t.new_user_profile ? 'ok' : 'warn', 'New staff accounts', t.new_user_profile ? 'New sign-ups get a staff profile automatically.' : 'New sign-ups will not appear on the Team page.', t.new_user_profile ? '' : 'Run the Phase 10 migration.');
+
+  if(!h.default_tuner) add('warn', 'Default tuner', 'No default tuner set - new applications arrive unassigned.', 'Set one on the Team page.');
+  else add(h.default_tuner_has_access ? 'ok' : 'bad', 'Default tuner', h.default_tuner + (h.default_tuner_has_access ? '' : ' does not have Ghost Tuning access'), h.default_tuner_has_access ? '' : 'Turn on their access on the Team page.');
+
+  const wh = h.last_webhook;
+  if(wh) add('ok', 'Shopify payment webhook', 'Last delivery ' + hAgo(wh) + '.');
+  else add(h.unpaid_invoices ? 'warn' : 'ok', 'Shopify payment webhook', h.unpaid_invoices ? 'No delivery recorded yet, with ' + h.unpaid_invoices + ' unpaid invoice' + (h.unpaid_invoices === 1 ? '' : 's') + '. Paid invoices will only update via "Check payment in Shopify".' : 'No delivery recorded yet (normal until an invoice is paid).', h.unpaid_invoices ? 'Confirm the Draft order update webhook in Shopify points at tuning-invoice-webhook.' : '');
+
+  add(h.failed_emails_7d ? 'bad' : 'ok', 'Email delivery', h.failed_emails_7d ? h.failed_emails_7d + ' email' + (h.failed_emails_7d === 1 ? '' : 's') + ' failed in the last 7 days.' : 'No failed emails in the last 7 days.', h.failed_emails_7d ? 'See the events below - usually the Resend key or sending domain.' : '');
+
+  add(h.unflagged_customer_logs ? 'warn' : 'ok', 'Unflagged customer logs', h.unflagged_customer_logs ? h.unflagged_customer_logs + ' customer log' + (h.unflagged_customer_logs === 1 ? '' : 's') + ' never reached Log Review.' : 'Every customer log reached Log Review.', h.unflagged_customer_logs ? 'Run the Phase 17 migration (its backfill fixes these).' : '');
+
+  const oldest = h.oldest_pending_log ? (Date.now() - new Date(h.oldest_pending_log).getTime()) / 86400000 : 0;
+  add(!h.pending_logs ? 'ok' : (oldest > 3 ? 'warn' : 'ok'), 'Log Review backlog', h.pending_logs ? h.pending_logs + ' waiting, oldest ' + hAgo(h.oldest_pending_log) + '.' : 'Nothing waiting.');
+  add(h.unassigned_open_apps ? 'warn' : 'ok', 'Unassigned applications', h.unassigned_open_apps ? h.unassigned_open_apps + ' open application' + (h.unassigned_open_apps === 1 ? '' : 's') + ' with no tuner.' : 'Every open application has a tuner.');
+  return checks;
+}
+
+function renderHealth(){
+  if(!S.health){
+    if(!S.healthLoading) loadHealth();
+    return '<div class="empty-state">Running checks&hellip;</div>';
+  }
+  if(S.health._error){
+    return '<div class="notice-banner red"><strong>Health checks unavailable:</strong> ' + escapeHtml(S.health._error) + '<br>Run the Phase 21 migration, which adds the checks and the events table.</div>';
+  }
+  const checks = healthChecks();
+  const bad = checks.filter(function(c){ return c.level === 'bad'; }).length;
+  const warn = checks.filter(function(c){ return c.level === 'warn'; }).length;
+  const h = S.health;
+  let html = '<div class="hl-banner hl-' + (bad ? 'bad' : (warn ? 'warn' : 'ok')) + '">'
+    + '<strong>' + (bad ? (bad === 1 ? '1 problem needs attention' : bad + ' problems need attention') : (warn ? (warn === 1 ? '1 thing to look at' : warn + ' things to look at') : 'All systems normal')) + '</strong>'
+    + '<span>' + (h.errors_24h || 0) + ' error' + (h.errors_24h === 1 ? '' : 's') + ' in the last 24 h</span>'
+    + '<button class="btn btn-sm" onclick="S.health=null;renderPage()">Re-check</button></div>';
+
+  html += '<div class="hl-checks">' + checks.map(function(c){
+    return '<div class="hl-check"><span class="hl-dot hl-' + c.level + '"></span><div class="hl-body">'
+      + '<div class="hl-title">' + escapeHtml(c.title) + '</div><div class="hl-detail">' + escapeHtml(c.detail) + '</div>'
+      + (c.fix ? '<div class="hl-fix">' + escapeHtml(c.fix) + '</div>' : '') + '</div></div>';
+  }).join('') + '</div>';
+
+  const filt = S.healthFilter || 'problems';
+  const events = (S.healthEvents || []).filter(function(e){ return filt === 'all' || e.level !== 'info'; });
+  html += '<div class="dash-head"><div><div class="section-title" style="margin:0">Recent events</div>'
+    + '<div class="file-meta" style="margin-top:2px">Recorded by the edge functions - errors, failed emails and Shopify webhook deliveries</div></div>'
+    + '<div style="display:flex;gap:6px;align-items:center"><div class="fx-seg"><button class="' + (filt === 'problems' ? 'on' : '') + '" onclick="S.healthFilter=\'problems\';renderPage()">Problems</button><button class="' + (filt === 'all' ? 'on' : '') + '" onclick="S.healthFilter=\'all\';renderPage()">All</button></div>'
+    + ((S.healthEvents || []).length ? '<button class="btn btn-sm" onclick="clearHealthEvents()">Clear</button>' : '') + '</div></div>';
+  if(!events.length) html += '<div class="tbl-wrap"><div class="empty-state">' + (filt === 'all' ? 'No events recorded yet.' : 'No problems recorded.') + '</div></div>';
+  else {
+    html += '<div class="tbl-wrap"><table><thead><tr><th>When</th><th>Source</th><th>Level</th><th>What happened</th></tr></thead><tbody>'
+      + events.map(function(e){
+          return '<tr><td style="white-space:nowrap">' + fmtDate(e.created_at) + '</td><td style="white-space:nowrap"><span class="lg-raw">' + escapeHtml(e.source) + '</span></td>'
+            + '<td><span class="pill ' + (e.level === 'error' ? 'pill-red' : (e.level === 'warn' ? 'pill-yellow' : 'pill-muted')) + '">' + escapeHtml(e.level) + '</span></td>'
+            + '<td>' + escapeHtml(e.message) + hlDetail(e.detail) + '</td></tr>';
+        }).join('') + '</tbody></table></div>';
+  }
+  return html;
+}
+
+// Event detail as readable "label: value" lines. A provider response that
+// is itself JSON (e.g. Resend's {"message": ...}) is reduced to its message.
+function hlDetail(d){
+  if(!d || typeof d !== 'object') return '';
+  const rows = Object.keys(d).map(function(k){
+    let v = d[k];
+    if(typeof v === 'string' && v.charAt(0) === '{'){ try{ const j = JSON.parse(v); v = j.message || j.error || v; }catch(e){ /* keep raw */ } }
+    if(v && typeof v === 'object') v = JSON.stringify(v);
+    return '<div><span class="hl-k">' + escapeHtml(k.replace(/_/g, ' ')) + '</span> ' + escapeHtml(String(v)).slice(0, 240) + '</div>';
+  }).join('');
+  return '<div class="hl-detail-box">' + rows + '</div>';
+}
+
+async function clearHealthEvents(){
+  if(!confirm('Clear all recorded events? The checks above are not affected.')) return;
+  try{
+    const { error } = await sb.from('tuning_system_events').delete().gte('id', 0);
+    if(error) throw error;
+    S.healthEvents = []; S.healthErrors = 0; S.health = null;
+    renderNav(); renderPage();
+    toast('Events cleared');
+  }catch(e){ toast('Could not clear: ' + e.message, true); }
+}
+window.clearHealthEvents = clearHealthEvents;
 
 /* ================= SETTINGS + TEAM ================= */
 async function loadSettings(){
