@@ -152,7 +152,47 @@ body{background-image:url('data:image/webp;base64,UklGRqIrAABXRUJQVlA4WAoAAAAQAA
 .paid-row.open .chev{transform:rotate(180deg)}
 .paid-detail{display:none;padding:0 12px 10px;border-top:1px dashed var(--border)}
 .paid-row.open .paid-detail{display:block}
-.upload-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.upload-head{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+.upload-title{font-size:13px;font-weight:700;color:var(--text2)}
+.seg{display:inline-flex;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:2px}
+.seg-btn{background:transparent;border:none;border-radius:6px;padding:5px 12px;font-size:12.5px;font-weight:600;color:var(--text3);cursor:pointer;font-family:inherit;line-height:1.4}
+.seg-btn.on{background:var(--bg);color:var(--text);box-shadow:0 1px 2px rgba(17,24,39,.12)}
+.dropzone{display:flex;align-items:center;justify-content:center;min-height:58px;border:1.5px dashed var(--border2);border-radius:var(--r-lg);background:var(--bg);padding:10px 14px;cursor:pointer;transition:border-color .15s,background .15s;position:relative;font-size:13px;color:var(--text3);text-align:center}
+.dropzone:hover,.dropzone.drag{border-color:var(--teal);background:rgba(45,212,191,.05)}
+.dz-input{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden;pointer-events:none}
+.dz-strong{color:var(--text2);font-weight:600}
+.dz-link{color:var(--teal-d);font-weight:600;text-decoration:underline;text-underline-offset:2px}
+.dz-file{display:none;align-items:center;gap:10px;width:100%;text-align:left}
+.dropzone.has-file{border-style:solid;border-color:var(--border2);justify-content:flex-start}
+.dropzone.has-file .dz-empty{display:none}
+.dropzone.has-file .dz-file{display:flex}
+.dz-name{flex:1;min-width:0;color:var(--text);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dz-size{color:var(--text3);font-size:12px;flex-shrink:0}
+.dz-clear{background:none;border:none;color:var(--text3);font-size:18px;line-height:1;cursor:pointer;padding:0 2px;flex-shrink:0}
+.dz-clear:hover{color:var(--red)}
+.dropzone.dark{background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.25);color:#9CA6AF;margin-bottom:12px}
+.dropzone.dark:hover,.dropzone.dark.drag{border-color:var(--teal);background:rgba(45,212,191,.08)}
+.dropzone.dark .dz-strong,.dropzone.dark .dz-name{color:#E4E9EC}
+.dropzone.dark .dz-link{color:#5ce6cc}
+.upload-actions{display:flex;justify-content:flex-end;margin-top:10px}
+.btn:disabled{opacity:.45;cursor:not-allowed;box-shadow:none}
+.prefs{margin:0 0 14px;border:1px solid var(--border);border-radius:var(--r-lg);background:rgba(255,255,255,.66)}
+.prefs > summary{list-style:none;cursor:pointer;padding:12px 18px;font-size:13px;font-weight:700;color:var(--text2);position:relative}
+.prefs > summary::-webkit-details-marker{display:none}
+.prefs > summary::after{content:'+';position:absolute;right:18px;top:50%;transform:translateY(-50%);color:var(--text3);font-weight:400;font-size:16px}
+.prefs[open] > summary::after{content:'\2212'}
+.prefs-body{padding:0 18px 12px}
+.pref-row{display:flex;justify-content:space-between;align-items:center;gap:14px;padding:10px 0;border-top:1px solid var(--border);cursor:pointer}
+.pref-label{display:block;font-size:13.5px;font-weight:600;color:var(--text)}
+.pref-hint{display:block;font-size:12px;color:var(--text3);margin-top:1px}
+.pref-note{font-size:12px;color:var(--text3);padding-top:8px;border-top:1px solid var(--border)}
+.switch{position:relative;width:36px;height:20px;flex-shrink:0}
+.switch input{position:absolute;opacity:0;width:0;height:0}
+.slider{position:absolute;top:0;left:0;right:0;bottom:0;background:var(--border2);border-radius:20px;transition:background .15s}
+.slider::before{content:'';position:absolute;width:16px;height:16px;left:2px;top:2px;background:#fff;border-radius:50%;box-shadow:0 1px 2px rgba(0,0,0,.2);transition:transform .15s}
+.switch input:checked + .slider{background:var(--teal-d)}
+.switch input:checked + .slider::before{transform:translateX(16px)}
+.switch input:disabled + .slider{opacity:.6}
 @media(max-width:480px){.ptab-body{padding:16px 14px}.ptab{padding:12px 9px 10px;font-size:13px}}
 .queue-line{margin-top:10px;font-size:13px;color:#D6DBE0;text-shadow:0 1px 3px rgba(0,0,0,.6)}
 .queue-num{font-weight:800;color:#5ce6cc;font-size:15px}
@@ -357,12 +397,13 @@ function showRevisionForm(){
     + '<div class="rev-label">Anything else?</div>'
     + '<textarea class="form-input rev-input" id="revisionNotes" placeholder="Describe what you\'re feeling..." style="margin-bottom:10px;min-height:60px"></textarea>'
     + '<div class="rev-label">Datalog (required)</div>'
-    + '<input type="file" id="revLogFile" style="margin-bottom:12px;color:#D6DBE0;font-size:13px">'
+    + fileDropHtml('revLogFile', true, null)
     + '<div style="display:flex;gap:8px;flex-wrap:wrap">'
     + '<button class="btn btn-sm" onclick="submitRevisionRequest()" id="revisionSubmitBtn">Submit Revision Request</button>'
     + '<button class="btn btn-ghost-light btn-sm" onclick="renderPortal()">Cancel</button>'
     + '</div>'
     + '<div class="status-msg" id="revisionErr"></div>';
+  wireDropzones();
 }
 window.showRevisionForm = showRevisionForm;
 
@@ -417,6 +458,89 @@ function toastLike(msg){
   setTimeout(function(){ el.remove(); }, 3200);
 }
 
+// A styled file picker: the real <input type="file"> is visually hidden
+// inside a drop zone, so the page never shows the browser's native
+// "Browse..." button. Supports drag-and-drop; shows the chosen file with
+// its size and a remove control.
+function fileDropHtml(id, dark, enableBtnId){
+  return '<label class="dropzone' + (dark ? ' dark' : '') + '" id="dz-' + id + '" data-input="' + id + '"' + (enableBtnId ? ' data-btn="' + enableBtnId + '"' : '') + '>'
+    + '<input type="file" id="' + id + '" class="dz-input" onchange="dzChanged(\'' + id + '\')">'
+    + '<span class="dz-empty"><span class="dz-strong">Drop a file here</span> or <span class="dz-link">browse</span></span>'
+    + '<span class="dz-file"><span class="dz-name"></span><span class="dz-size"></span>'
+    + '<button type="button" class="dz-clear" title="Remove" onclick="event.preventDefault();dzClear(\'' + id + '\')">&times;</button></span>'
+    + '</label>';
+}
+function fmtBytes(n){ return n < 1024 ? n + ' B' : (n < 1048576 ? (n / 1024).toFixed(0) + ' KB' : (n / 1048576).toFixed(1) + ' MB'); }
+function dzChanged(id){
+  const input = document.getElementById(id), zone = document.getElementById('dz-' + id);
+  if(!input || !zone) return;
+  const f = input.files && input.files[0];
+  zone.classList.toggle('has-file', !!f);
+  if(f){
+    zone.querySelector('.dz-name').textContent = f.name;
+    zone.querySelector('.dz-size').textContent = fmtBytes(f.size);
+  }
+  const btn = zone.getAttribute('data-btn') && document.getElementById(zone.getAttribute('data-btn'));
+  if(btn) btn.disabled = !f;
+}
+window.dzChanged = dzChanged;
+function dzClear(id){
+  const input = document.getElementById(id);
+  if(input){ input.value = ''; dzChanged(id); }
+}
+window.dzClear = dzClear;
+function wireDropzones(){
+  document.querySelectorAll('.dropzone').forEach(function(zone){
+    if(zone._wired) return;
+    zone._wired = true;
+    ['dragenter','dragover'].forEach(function(ev){ zone.addEventListener(ev, function(e){ e.preventDefault(); zone.classList.add('drag'); }); });
+    ['dragleave','drop'].forEach(function(ev){ zone.addEventListener(ev, function(e){ e.preventDefault(); zone.classList.remove('drag'); }); });
+    zone.addEventListener('drop', function(e){
+      const id = zone.getAttribute('data-input');
+      const input = document.getElementById(id);
+      if(input && e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length){
+        try{ input.files = e.dataTransfer.files; }catch(err){ /* very old browser: fall back to browse */ }
+        dzChanged(id);
+      }
+    });
+  });
+}
+function setUploadType(btn){
+  btn.parentNode.querySelectorAll('.seg-btn').forEach(function(b){ b.classList.toggle('on', b === btn); });
+  document.getElementById('fileTypeSelect').value = btn.getAttribute('data-val');
+}
+window.setUploadType = setUploadType;
+
+// Email preferences - collapsed under the tabs, off the main path.
+function renderEmailPrefs(a){
+  const row = function(key, label, hint){
+    return '<label class="pref-row"><span><span class="pref-label">' + label + '</span><span class="pref-hint">' + hint + '</span></span>'
+      + '<span class="switch"><input type="checkbox" ' + (a[key] !== false ? 'checked' : '') + ' onchange="saveEmailPref(\'' + key + '\', this)"><span class="slider"></span></span></label>';
+  };
+  return '<details class="prefs"><summary>Email notifications</summary><div class="prefs-body">'
+    + row('email_status_updates', 'Status updates', 'When your application moves to a new stage')
+    + row('email_messages', 'Messages', 'When your tuner sends you a message')
+    + row('email_files', 'New files', 'When your tuner uploads a tune or file')
+    + '<div class="pref-note">Invoice emails come from our store and are always sent.</div>'
+    + '</div></details>';
+}
+
+async function saveEmailPref(key, el){
+  const val = el.checked;
+  el.disabled = true;
+  try{
+    const body = {}; body[key] = val;
+    const data = await callPortal('update_email_prefs', body);
+    STATE.application = data.application;
+    toastLike('Email preference saved');
+  }catch(e){
+    el.checked = !val;
+    toastLike('Could not save: ' + e.message);
+  }
+  el.disabled = false;
+}
+window.saveEmailPref = saveEmailPref;
+
 function portalTabs(a){
   const tabs = [
     { id:'messages', label:'Messages' },
@@ -464,10 +588,14 @@ function renderMessagesTab(a){
 function renderFilesTab(){
   let html = '<div id="fileList">' + renderFiles() + '</div>';
   html += '<div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border)">';
-  html += '<div class="sub" style="margin-bottom:8px">Send a datalog, dyno sheet, or other file to your tuner</div>';
-  html += '<div class="upload-row"><select class="form-input" id="fileTypeSelect" style="width:auto"><option value="log">Datalog</option><option value="dyno">Dyno sheet</option><option value="other">Other</option></select>'
-    + '<input type="file" id="fileInput">'
-    + '<button class="btn btn-sm" onclick="uploadLog()" id="uploadBtn">Upload</button></div>';
+  html += '<div class="upload-head"><span class="upload-title">Send a file to your tuner</span>'
+    + '<div class="seg" role="group" aria-label="File type">'
+    + [['log','Datalog'],['dyno','Dyno sheet'],['other','Other']].map(function(t, i){
+        return '<button type="button" class="seg-btn' + (i === 0 ? ' on' : '') + '" data-val="' + t[0] + '" onclick="setUploadType(this)">' + t[1] + '</button>';
+      }).join('')
+    + '</div><input type="hidden" id="fileTypeSelect" value="log"></div>';
+  html += fileDropHtml('fileInput', false, 'uploadBtn');
+  html += '<div class="upload-actions"><button class="btn btn-sm" onclick="uploadLog()" id="uploadBtn" disabled>Upload</button></div>';
   html += '<div class="status-msg" id="uploadErr"></div>';
   html += '</div>';
   return html;
@@ -508,6 +636,7 @@ function renderPortal(){
   else if(STATE.tab === 'logging') html += renderLogGuideCard(a);
   html += '</div></div>';
 
+  html += renderEmailPrefs(a);
   html += '<p class="footer-note">TGK Motorsport - Ghost Tuning</p>';
 
   document.getElementById('portalWrap').innerHTML = html;
@@ -519,6 +648,7 @@ function renderPortal(){
   // messages, not just a genuinely new message arriving.
   const list = document.getElementById('msgList');
   if(list) list.scrollTop = list.scrollHeight;
+  wireDropzones();
 }
 window.renderPortal = renderPortal;
 

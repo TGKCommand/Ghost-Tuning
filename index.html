@@ -187,6 +187,15 @@ tr.row-click:hover td{background:var(--bg3)}
 .log-x:hover{color:var(--red)}
 .log-svg{width:100%;height:130px;display:block;cursor:crosshair}
 .log-line{fill:none;stroke:var(--teal);stroke-width:1.5;vector-effect:non-scaling-stroke}
+.log-line-b{fill:none;stroke:var(--orange);stroke-width:1.5;stroke-dasharray:5 3;vector-effect:non-scaling-stroke;opacity:.9}
+.log-toolbar{display:flex;flex-wrap:wrap;gap:8px 18px;align-items:center;margin:12px 0 4px;font-size:var(--t-sm)}
+.log-tool{display:flex;align-items:center;gap:6px;color:var(--text2)}
+.log-tool select.form-input{width:auto;max-width:320px;padding-top:5px;padding-bottom:5px}
+.log-legend{display:flex;align-items:center;gap:6px;font-size:var(--t-xs);color:var(--text2);margin:6px 0}
+.lg-a,.lg-b{display:inline-block;width:18px;height:0;border-top:2px solid var(--teal);margin-left:6px}
+.lg-b{border-top:2px dashed var(--orange);margin-left:12px}
+.lg-b-text{color:var(--orange-d, #c2410c)}
+.log-flag.muted{background:var(--bg3);color:var(--text2);border-color:var(--border);cursor:default}
 .log-hitline{stroke:rgba(220,38,38,.35);stroke-width:1;vector-effect:non-scaling-stroke}
 .log-threshold{stroke:var(--red);stroke-width:1;stroke-dasharray:6 4;vector-effect:non-scaling-stroke}
 .log-cursor{stroke:var(--orange);stroke-width:1;vector-effect:non-scaling-stroke}
@@ -434,7 +443,7 @@ tr.row-click:hover td{background:var(--bg3)}
         </div>
         <div class="sync-sub" onclick="doLogout()">Sign out</div>
         <div class="version-row">
-          <span>v1.66</span>
+          <span>v1.67</span>
           <span id="buildDate"></span>
         </div>
       </div>
@@ -2722,7 +2731,7 @@ function evaluateRules(log){
     const th = Number(rule.threshold);
     const out = { rule: rule, cols: cols, hitsByCol: {}, events: 0, worst: null, worstCol: -1, trippedCols: [], total: 0 };
     cols.forEach(function(c){
-      const data = log.cols[c], hits = [];
+      const data = colData(log, c), hits = [];
       for(let i = 0; i < data.length; i++){
         const v = data[i];
         if(isNaN(v)) continue;
@@ -2742,31 +2751,83 @@ function evaluateRules(log){
 }
 
 function xValue(log, i){ return log.timeIdx !== -1 ? (log.cols[log.timeIdx][i] - log.t0) / log.timeScale : i; }
+
+// Fuel cut / overrun: on lift-off the ECU stops injecting and lambda
+// channels jump to their maximum (16 on DS1/Bosch), passing through values
+// like 2-12 on the way. A gasoline engine never runs at lambda >= 2 while
+// combusting, so any sample where ANY lambda channel (actual or setpoint)
+// reads >= 2 is overrun. With "Hide fuel cut" on, those samples are gaps
+// on every lambda chart and are ignored by flag rules - otherwise a lean
+// rule fires every time the driver lifts.
+const FUEL_CUT_LAMBDA = 2.0;
+function isLambdaCol(log, c){ return /^lam|lambda/i.test(log.headers[c] || ''); }
+function fuelCutMask(log){
+  if(log._fcMask) return log._fcMask;
+  const cols = [];
+  log.headers.forEach(function(h, c){ if(log.numeric[c] && isLambdaCol(log, c)) cols.push(c); });
+  const mask = new Array(log.rows).fill(false);
+  if(cols.length){
+    for(let i = 0; i < log.rows; i++) mask[i] = cols.some(function(c){ return log.cols[c][i] >= FUEL_CUT_LAMBDA; });
+  }
+  log._fcMask = mask;
+  return mask;
+}
+function colData(log, c){
+  const hide = !S.logView || S.logView.hideFuelCut !== false;
+  if(!hide || !isLambdaCol(log, c)) return log.cols[c];
+  log._fc = log._fc || {};
+  if(!log._fc[c]){
+    const mask = fuelCutMask(log);
+    log._fc[c] = log.cols[c].map(function(v, i){ return mask[i] ? NaN : v; });
+  }
+  return log._fc[c];
+}
+function fuelCutCount(log){ return fuelCutMask(log).filter(Boolean).length; }
+function logSpan(log){ return log.rows > 1 ? xValue(log, log.rows - 1) : 1; }
+// Nearest sample at time t (logs are time-ordered).
+function sampleAt(log, t){
+  let lo = 0, hi = log.rows - 1;
+  while(hi - lo > 1){ const mid = (lo + hi) >> 1; if(xValue(log, mid) < t) lo = mid; else hi = mid; }
+  return Math.abs(xValue(log, lo) - t) <= Math.abs(xValue(log, hi) - t) ? lo : hi;
+}
+// Matching channel in the comparison log, by normalized header name.
+function compareCol(c){
+  const V = S.logView;
+  if(!V || !V.compare) return -1;
+  const want = normCol(V.log.headers[c]);
+  const b = V.compare.log;
+  for(let i = 0; i < b.headers.length; i++) if(b.numeric[i] && normCol(b.headers[i]) === want) return i;
+  return -1;
+}
 function timeLabel(log){ return log.timeIdx === -1 ? 'Sample' : (log.timeUnit ? 'Time (' + log.timeUnit + ')' : log.headers[log.timeIdx]); }
 function fmtNum(v){ if(v === null || isNaN(v)) return '-'; const a = Math.abs(v); return a >= 1000 ? v.toFixed(0) : (a >= 10 ? v.toFixed(1) : v.toFixed(2)); }
 
+async function fetchLog(path){
+  const { data, error } = await sb.storage.from('tuning-files').createSignedUrl(path, 600);
+  if(error) throw error;
+  const resp = await fetch(data.signedUrl);
+  if(!resp.ok) throw new Error('Download failed (' + resp.status + ')');
+  return parseLog(await resp.text());
+}
+
 async function openLogViewer(fileId, path){
-  // Name is looked up rather than passed through onclick, so file names
-  // with quotes can't break the handler.
-  let fileName = 'Datalog';
-  Object.keys(S.files).forEach(function(k){ (S.files[k] || []).forEach(function(f){ if(f.id === fileId) fileName = f.file_name; }); });
-  (S.pendingLogs || []).forEach(function(f){ if(f.id === fileId) fileName = f.file_name; });
-  openModal('<div class="modal log-modal"><div class="modal-title">Loading ' + escapeHtml(fileName || 'log') + '&hellip;</div></div>');
+  // Name/application are looked up rather than passed through onclick, so
+  // file names with quotes can't break the handler.
+  let fileName = 'Datalog', appId = null;
+  Object.keys(S.files).forEach(function(k){ (S.files[k] || []).forEach(function(f){ if(f.id === fileId){ fileName = f.file_name; appId = k; } }); });
+  (S.pendingLogs || []).forEach(function(f){ if(f.id === fileId){ fileName = f.file_name; appId = f.application_id; } });
+  openModal('<div class="modal log-modal"><div class="modal-title">Loading ' + escapeHtml(fileName) + '&hellip;</div></div>');
   try{
-    const { data, error } = await sb.storage.from('tuning-files').createSignedUrl(path, 600);
-    if(error) throw error;
-    const resp = await fetch(data.signedUrl);
-    if(!resp.ok) throw new Error('Download failed (' + resp.status + ')');
-    const text = await resp.text();
-    const log = parseLog(text);
+    const log = await fetchLog(path);
     if(!S.logRules) await loadLogRules();
+    if(appId && !S.files[appId]) await loadFiles(appId); // for the "Compare with" list
     let selected = [];
     try{ selected = JSON.parse(localStorage.getItem(logSignature(log.headers)) || '[]'); }catch(e){ selected = []; }
     selected = selected.filter(function(c){ return c < log.headers.length && log.numeric[c] && c !== log.timeIdx; });
     if(!selected.length){
       log.headers.forEach(function(h, c){ if(selected.length < 3 && log.numeric[c] && c !== log.timeIdx) selected.push(c); });
     }
-    S.logView = { fileId: fileId, path: path, fileName: fileName, log: log, selected: selected, filter: '', hover: null };
+    S.logView = { fileId: fileId, path: path, fileName: fileName, appId: appId, log: log, selected: selected, filter: '', compare: null, hideFuelCut: true };
     renderLogViewer();
   }catch(e){
     openModal('<div class="modal"><div class="modal-title">Could not open log</div><p class="file-meta">' + escapeHtml(e.message) + '</p>'
@@ -2775,102 +2836,158 @@ async function openLogViewer(fileId, path){
 }
 window.openLogViewer = openLogViewer;
 
+async function setLogCompare(fileId){
+  const V = S.logView; if(!V) return;
+  if(!fileId){ V.compare = null; renderLogViewer(); return; }
+  const f = (S.files[V.appId] || []).find(function(x){ return x.id === fileId; });
+  if(!f) return;
+  toast('Loading ' + f.file_name + '...');
+  try{
+    V.compare = { fileId: f.id, fileName: f.file_name, log: await fetchLog(f.file_path) };
+    renderLogViewer();
+  }catch(e){ toast('Could not load comparison log: ' + e.message, true); }
+}
+window.setLogCompare = setLogCompare;
+
+function toggleFuelCut(on){ if(S.logView){ S.logView.hideFuelCut = on; renderLogViewer(); } }
+window.toggleFuelCut = toggleFuelCut;
+window.openLogViewer = openLogViewer;
+
 // Downsample to ~W buckets keeping each bucket's min and max, so short
 // spikes (a knock event, a boost overshoot) survive on a long log.
-function chartPath(log, c, W, H, pad){
-  const data = log.cols[c], n = data.length;
+function colRange(log, c){
+  const data = colData(log, c);
   let min = Infinity, max = -Infinity;
-  for(let i = 0; i < n; i++){ const v = data[i]; if(!isNaN(v)){ if(v < min) min = v; if(v > max) max = v; } }
-  if(min === Infinity){ return { d:'', min:NaN, max:NaN }; }
-  if(min === max){ min -= 1; max += 1; }
-  const y = function(v){ return pad + (H - 2 * pad) * (1 - (v - min) / (max - min)); };
-  const buckets = Math.min(n, W);
-  let d = '';
-  for(let b = 0; b < buckets; b++){
-    const from = Math.floor(b * n / buckets), to = Math.max(from + 1, Math.floor((b + 1) * n / buckets));
-    let lo = Infinity, hi = -Infinity;
-    for(let i = from; i < to; i++){ const v = data[i]; if(!isNaN(v)){ if(v < lo) lo = v; if(v > hi) hi = v; } }
-    if(lo === Infinity) continue;
-    const x = (b / Math.max(1, buckets - 1)) * W;
-    d += (d ? 'L' : 'M') + x.toFixed(1) + ' ' + y(lo).toFixed(1);
-    if(hi !== lo) d += 'L' + x.toFixed(1) + ' ' + y(hi).toFixed(1);
+  for(let i = 0; i < data.length; i++){ const v = data[i]; if(!isNaN(v)){ if(v < min) min = v; if(v > max) max = v; } }
+  return min === Infinity ? null : [min, max];
+}
+
+// Time-based downsampling: each of W pixel buckets keeps its min and max,
+// so short spikes survive on long logs. Gaps (fuel cut, missing samples)
+// break the line instead of bridging it.
+function chartPath(log, c, W, H, pad, xMax, yMin, yMax){
+  const data = colData(log, c), n = data.length;
+  const y = function(v){ return pad + (H - 2 * pad) * (1 - (v - yMin) / (yMax - yMin)); };
+  // brk[b]: a missing sample (NaN) sits between this bucket's data and the
+  // previous point, so the line must break here rather than bridge it.
+  const lo = [], hi = [], brk = [];
+  let sawData = false, pendingBreak = false;
+  for(let i = 0; i < n; i++){
+    const v = data[i];
+    if(isNaN(v)){ if(sawData) pendingBreak = true; continue; }
+    const b = Math.min(W - 1, Math.floor((xValue(log, i) / xMax) * (W - 1)));
+    if(pendingBreak){ brk[b] = true; pendingBreak = false; }
+    sawData = true;
+    if(lo[b] === undefined || v < lo[b]) lo[b] = v;
+    if(hi[b] === undefined || v > hi[b]) hi[b] = v;
   }
-  return { d: d, min: min, max: max };
+  let d = '', first = true;
+  for(let b = 0; b < W; b++){
+    if(lo[b] === undefined) continue;
+    d += ((first || brk[b]) ? 'M' : 'L') + b + ' ' + y(lo[b]).toFixed(1);
+    if(hi[b] !== lo[b]) d += 'L' + b + ' ' + y(hi[b]).toFixed(1);
+    first = false;
+  }
+  return { d: d };
 }
 
 function renderLogViewer(){
   const V = S.logView; if(!V) return;
-  const log = V.log;
+  const log = V.log, B = V.compare ? V.compare.log : null;
   const results = evaluateRules(log);
+  const resultsB = B ? evaluateRules(B) : [];
   const W = 1000, H = 130, pad = 8;
-  const colsStats = function(c){
+  const xMax = Math.max(logSpan(log), B ? logSpan(B) : 0) || 1;
+  const stats = function(lg, c){
     let min = Infinity, max = -Infinity, sum = 0, n = 0;
-    log.cols[c].forEach(function(v){ if(!isNaN(v)){ if(v < min) min = v; if(v > max) max = v; sum += v; n++; } });
-    return { min: n ? min : NaN, max: n ? max : NaN, avg: n ? sum / n : NaN };
+    colData(lg, c).forEach(function(v){ if(!isNaN(v)){ if(v < min) min = v; if(v > max) max = v; sum += v; n++; } });
+    return n ? 'min ' + fmtNum(min) + ' &middot; avg ' + fmtNum(sum / n) + ' &middot; max ' + fmtNum(max) : 'no data';
   };
-  const span = log.rows > 1 ? xValue(log, log.rows - 1) - xValue(log, 0) : 0;
+  const fc = fuelCutCount(log);
 
   let html = '<div class="modal log-modal">';
-  html += '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">'
+  html += '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap">'
     + '<div><div class="modal-title" style="margin-bottom:2px">' + escapeHtml(V.fileName || 'Datalog') + '</div>'
     + '<div class="file-meta">' + log.rows.toLocaleString() + ' samples &middot; ' + log.headers.length + ' columns'
-    + (log.timeIdx !== -1 ? ' &middot; ' + fmtNum(span) + (log.timeUnit ? ' ' + log.timeUnit : ' (' + escapeHtml(log.headers[log.timeIdx]) + ')') + ' long' : ' &middot; no time column found, x-axis is sample number') + '</div></div>'
+    + (log.timeIdx !== -1 ? ' &middot; ' + fmtNum(logSpan(log)) + (log.timeUnit ? ' ' + log.timeUnit : '') + ' long' : ' &middot; no time column, x-axis is sample number') + '</div></div>'
     + '<div style="display:flex;gap:6px"><button class="btn btn-sm" onclick="downloadFile(\'' + V.fileId + '\',\'' + V.path + '\')">Download</button><button class="btn btn-sm" onclick="closeModal();S.logView=null">Close</button></div></div>';
 
+  // Toolbar: compare + fuel cut
+  const others = (S.files[V.appId] || []).filter(function(f){ return f.id !== V.fileId && isLogFile(f); });
+  html += '<div class="log-toolbar">'
+    + '<label class="log-tool">Compare with '
+    + '<select class="form-input" onchange="setLogCompare(this.value)"><option value="">- None -</option>'
+    + others.map(function(f){ return '<option value="' + f.id + '"' + (V.compare && V.compare.fileId === f.id ? ' selected' : '') + '>' + escapeHtml(f.file_name) + ' (' + fmtDate(f.created_at) + ')</option>'; }).join('')
+    + '</select></label>'
+    + (fc ? '<label class="log-tool"><input type="checkbox" ' + (V.hideFuelCut ? 'checked' : '') + ' onchange="toggleFuelCut(this.checked)"> Hide fuel cut / overrun on lambda (' + fc + ' sample' + (fc === 1 ? '' : 's') + ')</label>' : '')
+    + (!others.length ? '<span class="file-meta">No other logs on this application to compare.</span>' : '')
+    + '</div>';
+  if(B){
+    html += '<div class="log-legend"><span class="lg-a"></span>' + escapeHtml(V.fileName) + '<span class="lg-b"></span>' + escapeHtml(V.compare.fileName) + ' <span class="file-meta">&middot; aligned from the start of each log</span></div>';
+  }
+
   // Flags
-  const fired = results.filter(function(r){ return r.total; });
-  const missing = results.filter(function(r){ return !r.cols.length; });
+  const flagChips = function(res, prefix, cls){
+    return res.filter(function(r){ return r.total; }).map(function(r){
+      const where = r.cols.length > 1 ? ' on ' + r.trippedCols.length + ' of ' + r.cols.length + ' columns' : '';
+      return '<span class="log-flag' + (cls || '') + '"' + (cls ? '' : ' onclick="logFocusColumn(' + r.worstCol + ')"') + '>' + prefix + escapeHtml(r.rule.label) + ': ' + r.events + ' event' + (r.events === 1 ? '' : 's') + where + ', worst ' + fmtNum(r.worst) + '</span>';
+    }).join('');
+  };
+  const firedA = results.filter(function(r){ return r.total; }).length;
+  const checked = results.filter(function(r){ return r.cols.length; }).length;
   html += '<div class="log-flags">';
   if(!(S.logRules || []).length) html += '<span class="file-meta">No flag rules yet - add one below to auto-check logs.</span>';
-  else if(!fired.length) html += '<span class="pill pill-green">No flags</span> <span class="file-meta">' + (S.logRules.length - missing.length) + ' rule' + ((S.logRules.length - missing.length) === 1 ? '' : 's') + ' checked</span>';
-  fired.forEach(function(r){
-    const where = r.cols.length > 1 ? ' on ' + r.trippedCols.length + ' of ' + r.cols.length + ' columns' : '';
-    html += '<span class="log-flag" onclick="logFocusColumn(' + r.worstCol + ')" title="' + escapeHtml(r.trippedCols.map(function(c){ return log.headers[c]; }).join(', ')) + '">'
-      + escapeHtml(r.rule.label) + ': ' + r.events + ' event' + (r.events === 1 ? '' : 's') + where + ', worst ' + fmtNum(r.worst) + '</span>';
-  });
-  if(missing.length) html += '<span class="file-meta">' + missing.length + ' rule' + (missing.length === 1 ? '' : 's') + ' skipped (column not in this log)</span>';
+  else if(!firedA) html += '<span class="pill pill-green">No flags</span> <span class="file-meta">' + checked + ' rule' + (checked === 1 ? '' : 's') + ' checked</span>';
+  html += flagChips(results, B ? 'This log - ' : '', '');
+  if(B){
+    const fb = flagChips(resultsB, 'Compared - ', ' muted');
+    html += fb || '<span class="pill pill-green">Compared log: no flags</span>';
+  }
   html += '</div>';
 
-  // Hover readout + charts
   html += '<div class="log-readout" id="logReadout">Hover a chart to read values.</div>';
   html += '<div id="logCharts">';
   if(!V.selected.length) html += '<div class="empty-state">Pick channels below to chart them.</div>';
   V.selected.forEach(function(c){
-    const pth = chartPath(log, c, W, H, pad);
-    const st = colsStats(c);
-    const ruleHits = results.filter(function(r){ return r.hitsByCol[c]; });
+    const cb = B ? compareCol(c) : -1;
+    const ra = colRange(log, c), rb = cb !== -1 ? colRange(B, cb) : null;
+    let yMin = Math.min(ra ? ra[0] : Infinity, rb ? rb[0] : Infinity);
+    let yMax = Math.max(ra ? ra[1] : -Infinity, rb ? rb[1] : -Infinity);
+    if(yMin === Infinity){ yMin = 0; yMax = 1; }
+    if(yMin === yMax){ yMin -= 1; yMax += 1; }
+    const pa = chartPath(log, c, W, H, pad, xMax, yMin, yMax);
+    const pb = cb !== -1 ? chartPath(B, cb, W, H, pad, xMax, yMin, yMax) : null;
     let marks = '';
-    ruleHits.forEach(function(r){
+    results.filter(function(r){ return r.hitsByCol[c]; }).forEach(function(r){
       const hits = r.hitsByCol[c];
       const step = Math.max(1, Math.floor(hits.length / 300));
       for(let k = 0; k < hits.length; k += step){
-        const x = (hits[k] / Math.max(1, log.rows - 1)) * W;
-        marks += '<line x1="' + x.toFixed(1) + '" x2="' + x.toFixed(1) + '" y1="0" y2="' + H + '" class="log-hitline"/>';
+        const x = ((xValue(log, hits[k]) / xMax) * (W - 1)).toFixed(1);
+        marks += '<line x1="' + x + '" x2="' + x + '" y1="0" y2="' + H + '" class="log-hitline"/>';
       }
-      const ty = pad + (H - 2 * pad) * (1 - (Number(r.rule.threshold) - pth.min) / (pth.max - pth.min));
+      const ty = pad + (H - 2 * pad) * (1 - (Number(r.rule.threshold) - yMin) / (yMax - yMin));
       if(ty >= 0 && ty <= H) marks += '<line x1="0" x2="' + W + '" y1="' + ty.toFixed(1) + '" y2="' + ty.toFixed(1) + '" class="log-threshold"/>';
     });
     html += '<div class="log-chart">'
       + '<div class="log-chart-head"><strong>' + escapeHtml(log.headers[c]) + '</strong>'
-      + '<span class="file-meta">min ' + fmtNum(st.min) + ' &middot; avg ' + fmtNum(st.avg) + ' &middot; max ' + fmtNum(st.max) + '</span>'
+      + '<span class="file-meta">' + stats(log, c) + '</span>'
+      + (B ? (cb !== -1 ? '<span class="file-meta lg-b-text">compared: ' + stats(B, cb) + '</span>' : '<span class="file-meta">not in compared log</span>') : '')
       + '<a class="log-x" onclick="logToggleColumn(' + c + ')" title="Remove">&times;</a></div>'
       + '<svg viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none" class="log-svg" onmousemove="logHover(event,this)" onmouseleave="logHoverEnd()">'
       + marks
-      + '<path d="' + pth.d + '" class="log-line"/>'
+      + (pb ? '<path d="' + pb.d + '" class="log-line-b"/>' : '')
+      + '<path d="' + pa.d + '" class="log-line"/>'
       + '<line class="log-cursor" x1="-10" x2="-10" y1="0" y2="' + H + '"/>'
       + '</svg>'
-      + '<div class="log-axis"><span>' + fmtNum(pth.max) + '</span><span>' + fmtNum(pth.min) + '</span></div>'
+      + '<div class="log-axis"><span>' + fmtNum(yMax) + '</span><span>' + fmtNum(yMin) + '</span></div>'
       + '</div>';
   });
   html += '</div>';
 
-  // Channel picker
-  const filt = V.filter.toLowerCase();
   html += '<details class="ov-sec" open style="margin-top:12px"><summary>Channels (' + V.selected.length + '/' + LOG_MAX_CHARTS + ' shown)</summary><div class="ov-body">'
     + '<input class="form-input" placeholder="Filter channels..." value="' + escapeHtml(V.filter) + '" oninput="logFilter(this.value)" style="margin-bottom:8px" id="logFilterInput">'
-    + '<div class="log-channels" id="logChannels">' + renderLogChannelList(filt) + '</div></div></details>';
+    + '<div class="log-channels" id="logChannels">' + renderLogChannelList(V.filter.toLowerCase()) + '</div></div></details>';
 
-  // Rules
   const numericCols = log.headers.map(function(h, i){ return i; }).filter(function(i){ return log.numeric[i] && i !== log.timeIdx; });
   html += '<details class="ov-sec"><summary>Flag rules (' + (S.logRules || []).length + ', shared by all tuners)</summary><div class="ov-body">';
   (S.logRules || []).forEach(function(r){
@@ -2942,12 +3059,19 @@ function logHover(ev, svg){
   const V = S.logView; if(!V) return;
   const rect = svg.getBoundingClientRect();
   const frac = Math.min(1, Math.max(0, (ev.clientX - rect.left) / rect.width));
-  const idx = Math.round(frac * (V.log.rows - 1));
-  const x = (frac * 1000).toFixed(1);
+  const log = V.log, B = V.compare ? V.compare.log : null;
+  const xMax = Math.max(logSpan(log), B ? logSpan(B) : 0) || 1;
+  const t = frac * xMax;
+  const ia = sampleAt(log, t), ib = B ? sampleAt(B, t) : -1;
+  const x = (frac * 999).toFixed(1);
   document.querySelectorAll('#logCharts .log-cursor').forEach(function(l){ l.setAttribute('x1', x); l.setAttribute('x2', x); });
-  const log = V.log;
-  const parts = [escapeHtml(timeLabel(log)) + ' <strong>' + fmtNum(xValue(log, idx)) + '</strong>'];
-  V.selected.forEach(function(c){ parts.push(escapeHtml(log.headers[c]) + ' <strong>' + fmtNum(log.cols[c][idx]) + '</strong>'); });
+  const parts = [escapeHtml(timeLabel(log)) + ' <strong>' + fmtNum(t) + '</strong>'];
+  V.selected.forEach(function(c){
+    let txt = escapeHtml(log.headers[c]) + ' <strong>' + fmtNum(colData(log, c)[ia]) + '</strong>';
+    const cb = B ? compareCol(c) : -1;
+    if(cb !== -1) txt += ' <span class="lg-b-text">/ ' + fmtNum(colData(B, cb)[ib]) + '</span>';
+    parts.push(txt);
+  });
   const ro = document.getElementById('logReadout');
   if(ro) ro.innerHTML = parts.join(' &middot; ');
 }
