@@ -492,7 +492,7 @@ tr.row-click:hover td{background:var(--bg3)}
         </div>
         <div class="sync-sub" onclick="doLogout()">Sign out</div>
         <div class="version-row">
-          <span>v1.69</span>
+          <span>v1.70</span>
           <span id="buildDate"></span>
         </div>
       </div>
@@ -949,7 +949,12 @@ async function loadPendingLogs(){
       .order('created_at', { ascending:true });
     if(error) throw error;
     S.pendingLogs = data || [];
-  }catch(e){ /* non-critical: badge just reads 0 */ }
+  }catch(e){
+    // Previously swallowed silently, which made a failing query look like
+    // an empty queue. Keep the existing list, and say so once.
+    console.error('Log Review query failed:', e);
+    if(!S.pendingLogsErrShown){ S.pendingLogsErrShown = true; toast('Could not load Log Review: ' + (e.message || e), true); }
+  }
 }
 
 async function loadPlatformLibrary(){
