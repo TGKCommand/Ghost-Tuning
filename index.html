@@ -562,7 +562,7 @@ tr.row-click:hover td{background:var(--bg3)}
         </div>
         <div class="sync-sub" onclick="doLogout()">Sign out</div>
         <div class="version-row">
-          <span>v1.73</span>
+          <span>v1.74</span>
           <span id="buildDate"></span>
         </div>
       </div>
@@ -1106,6 +1106,14 @@ function renderLiveIndicator(){
 // change, server broadcast, and the 45s backup check), de-duplicated by
 // file id so the tuner is told exactly once.
 const SEEN_FILE_IDS = {};
+// Refetch one application's files if they're loaded (i.e. the tuner has
+// opened it), and redraw the Files tab if it's the one on screen.
+async function refreshAppFiles(appId, force){
+  if(!appId || (!S.files[appId] && !force)) return;
+  await loadFiles(appId);
+  if(S.openAppId === appId && S.activeTab === 'files') renderPanelBody();
+}
+
 function announceCustomerFile(f){
   if(!f || !f.id || SEEN_FILE_IDS[f.id]) return;
   SEEN_FILE_IDS[f.id] = true;
@@ -1172,6 +1180,8 @@ function subscribeGlobalRealtime(){
     const f = payload.new || {};
     if(payload.eventType === 'INSERT' && f.uploaded_by === 'customer') announceCustomerFile(f);
     refreshPendingLogs(false);
+    const appId = f.application_id || (payload.old && payload.old.application_id);
+    if(appId) refreshAppFiles(appId);
   });
 
   // Server-side ping from the portal's upload function. Content-free
@@ -1179,6 +1189,16 @@ function subscribeGlobalRealtime(){
   // stream above is misconfigured, because it doesn't depend on the
   // publication or RLS.
   sb.channel('tuning-tuner-alerts')
+    .on('broadcast', { event:'current_tune' }, function(msg){
+      // Customer marked a different revision as flashed on their portal.
+      const p = (msg && msg.payload) || {};
+      const app = S.applications.find(function(a){ return a.id === p.application_id; });
+      refreshAppFiles(p.application_id, true).then(function(){
+        const f = (S.files[p.application_id] || []).find(function(x){ return x.id === p.file_id; });
+        const label = f ? (f.revision_number ? 'Revision ' + f.revision_number : f.file_name) : 'a tune';
+        toast((app ? app.customer_name + ' (#' + app.application_number + ')' : 'A customer') + ' marked ' + label + ' as flashed');
+      });
+    })
     .on('broadcast', { event:'customer_file' }, function(msg){
       const p = (msg && msg.payload) || {};
       loadPendingLogs().then(function(){
@@ -2735,6 +2755,7 @@ function renderFilesTab(a){
         + ' <span class="pill ' + (isTune?'pill-teal':(f.file_type==='log'?'pill-orange':(f.file_type==='dyno'?'pill-green':'pill-muted'))) + '">' + escapeHtml(f.file_type||'file') + '</span>'
         + (isTune && f.fuel ? ' <span class="pill pill-muted">' + escapeHtml(f.fuel) + '</span>' : '')
         + (isTune && f.is_current ? ' <span class="pill pill-green">Currently flashed</span>' : '')
+        + (isTune && f.is_current && f.flashed_marked_by ? ' <span class="file-meta">' + (f.flashed_marked_by === 'customer' ? 'marked by customer' : 'marked by ' + escapeHtml(f.flashed_marked_by === (S.user && S.user.email) ? 'you' : f.flashed_marked_by)) + (f.flashed_marked_at ? ', ' + fmtDate(f.flashed_marked_at) : '') + '</span>' : '')
       + '</div>'
       + '<div class="file-meta">' + escapeHtml(f.uploaded_by_name || f.uploaded_by) + ' &middot; ' + fmtDate(f.created_at) + '</div>'
       + (isTune && f.description ? '<div class="file-meta" style="font-style:italic;white-space:pre-wrap">' + escapeHtml(f.description) + '</div>' : '')
@@ -2848,9 +2869,11 @@ async function clearCurrentTune(appId){
 
 async function setCurrentTune(appId, fileId){
   try{
-    await clearCurrentTune(appId);
-    const { data, error } = await sb.from('tuning_files').update({ is_current:true }).eq('id', fileId).select().single();
+    // One transaction server-side (clear old + set new), shared with the
+    // customer portal - see tuning_set_current_tune in Phase 19.
+    const { data, error } = await sb.rpc('tuning_set_current_tune', { p_file_id: fileId, p_marked_by: S.user.email });
     if(error) throw error;
+    (S.files[appId] || []).forEach(function(f){ if(f.file_type === 'tune') f.is_current = false; });
     const list = S.files[appId] || [];
     const idx = list.findIndex(function(f){ return f.id === fileId; });
     if(idx !== -1) list[idx] = data;
@@ -2894,7 +2917,9 @@ async function uploadFile(appId){
       revision_number: revision ? parseInt(revision, 10) : null,
       fuel: fuel,
       description: changelog,
-      is_current: markCurrent
+      is_current: markCurrent,
+      flashed_marked_by: markCurrent ? S.user.email : null,
+      flashed_marked_at: markCurrent ? new Date().toISOString() : null
     }).select().single();
     if(error) throw error;
 
@@ -3760,7 +3785,7 @@ function describeActivity(l){
   else if(l.field_changed === 'file_deleted') desc = 'File deleted: ' + (l.old_value || '');
   else if(l.field_changed === 'review_submitted') desc = 'Customer left a review: ' + (l.new_value || '');
   else if(l.field_changed === 'log_guide') desc = 'Logging guide set: ' + (l.new_value || 'None');
-  else if(l.field_changed === 'current_tune') desc = 'Marked currently flashed: ' + (l.new_value || '');
+  else if(l.field_changed === 'current_tune') desc = 'Currently flashed set to ' + (l.new_value || '');
   else if(l.field_changed === 'mods_updated') desc = 'Customer updated their mods';
   else if(l.field_changed === 'invoice_reminder') desc = 'Payment reminder sent' + (l.new_value ? ' (' + l.new_value + ')' : '');
   else if(l.field_changed === 'invoice_cancelled') desc = 'Invoice cancelled' + (l.old_value ? ' (was ' + l.old_value + ')' : '');

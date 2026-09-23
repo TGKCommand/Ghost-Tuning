@@ -194,6 +194,16 @@ body{background-image:url('data:image/webp;base64,UklGRqIrAABXRUJQVlA4WAoAAAAQAA
 .switch input:checked + .slider::before{transform:translateX(16px)}
 .switch input:disabled + .slider{opacity:.6}
 @media(max-width:480px){.ptab-body{padding:16px 14px}.ptab{padding:12px 9px 10px;font-size:13px}}
+/* iOS zooms the page when a field under 16px is focused - avoid on phones. */
+@media(max-width:720px){.form-input,select.form-input,textarea.form-input,input.form-input{font-size:16px}}
+/* Touch devices: finger-sized hit areas. */
+@media (pointer:coarse){
+  .btn-sm{min-height:38px}
+  .seg-btn{min-height:34px}
+  .ptab{min-height:44px}
+  .rev-check{min-height:30px}
+  .dz-clear{padding:6px 8px;font-size:20px}
+}
 .queue-line{margin-top:10px;font-size:13px;color:#D6DBE0;text-shadow:0 1px 3px rgba(0,0,0,.6)}
 .queue-num{font-weight:800;color:#5ce6cc;font-size:15px}
 .review-stars span{font-size:28px;color:var(--border2);cursor:pointer;padding-right:4px;transition:color .1s}
@@ -206,6 +216,11 @@ body{background-image:url('data:image/webp;base64,UklGRqIrAABXRUJQVlA4WAoAAAAQAA
 @media(max-width:480px){.log-params{columns:1}}
 .msg-modupdate{background:rgba(234,88,12,.08);align-self:flex-end;margin-left:auto;border:1px solid rgba(234,88,12,.25)}
 .msg-modupdate-badge{font-weight:700;font-size:11.5px;color:var(--orange-d);text-transform:uppercase;letter-spacing:.03em;margin-bottom:3px}
+.tv-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:6px}
+.tv-info{flex:1;min-width:0}
+.tv-actions{display:flex;gap:6px;flex-shrink:0;flex-wrap:wrap;justify-content:flex-end}
+.tv-marked{font-size:12px;color:var(--green);margin-top:2px;font-weight:600}
+@media(max-width:480px){.tune-version{flex-wrap:wrap}.tv-info{flex-basis:100%}.tv-actions{width:100%;justify-content:flex-start}}
 .tune-version.is-current{border-left:3px solid var(--green);padding-left:10px}
 .tune-changelog{font-size:12.5px;color:var(--text2);margin-top:4px;white-space:pre-wrap}
 .msg-revision-badge{font-weight:700;font-size:11.5px;color:var(--red);text-transform:uppercase;letter-spacing:.03em;margin-bottom:3px}
@@ -820,22 +835,51 @@ function renderTuneVersions(){
       return new Date(y.created_at) - new Date(x.created_at);
     });
   if(!tunes.length) return '';
-  let html = '<div class="sub" style="font-weight:700;color:var(--text2);margin-bottom:6px">Tune versions</div>';
+  const closed = ['declined','archived'].indexOf((STATE.application || {}).status) !== -1;
+  let html = '<div class="tv-head"><span class="sub" style="font-weight:700;color:var(--text2);margin:0">Tune versions</span>'
+    + (tunes.length > 1 && !closed ? '<span class="file-meta">Flashed a different revision? Mark it so your tuner knows.</span>' : '') + '</div>';
   html += tunes.map(function(f){
+    const who = f.flashed_marked_by === 'customer' ? 'by you' : (f.flashed_marked_by ? 'by your tuner' : '');
+    const marked = f.is_current && (who || f.flashed_marked_at)
+      ? '<div class="tv-marked">Marked flashed ' + who + (f.flashed_marked_at ? ' &middot; ' + fmtDate(f.flashed_marked_at) : '') + '</div>' : '';
     return '<div class="file-row tune-version' + (f.is_current ? ' is-current' : '') + '">'
-      + '<div style="flex:1;min-width:0">'
+      + '<div class="tv-info">'
       + '<div class="file-name">' + (f.revision_number ? 'Revision ' + f.revision_number : escapeHtml(f.file_name))
         + (f.is_current ? ' <span class="pill pill-green">Currently flashed</span>' : '')
         + (f.fuel ? ' <span class="pill pill-muted">' + escapeHtml(f.fuel) + '</span>' : '')
       + '</div>'
       + '<div class="file-meta">' + escapeHtml(f.file_name) + ' &middot; ' + fmtDate(f.created_at) + '</div>'
+      + marked
       + (f.description ? '<div class="tune-changelog">' + escapeHtml(f.description) + '</div>' : '')
       + '</div>'
+      + '<div class="tv-actions">'
+      + (!f.is_current && !closed ? '<button class="btn btn-sm btn-muted" id="flashBtn-' + f.id + '" onclick="markFlashed(\'' + f.id + '\')">Mark as flashed</button>' : '')
       + '<button class="btn btn-sm" onclick="downloadFile(\'' + f.id + '\')">Download</button>'
+      + '</div>'
       + '</div>';
   }).join('');
   return html + '<div style="height:12px"></div>';
 }
+
+// Customer tells the tuner which revision is actually on the car. Updates
+// the tuner's dashboard live and is logged there with who set it.
+async function markFlashed(fileId){
+  const f = STATE.files.find(function(x){ return x.id === fileId; });
+  const label = f && f.revision_number ? 'Revision ' + f.revision_number : (f ? f.file_name : 'this tune');
+  if(!confirm('Mark ' + label + ' as the tune currently flashed on your car?\n\nYour tuner will be notified.')) return;
+  const btn = document.getElementById('flashBtn-' + fileId);
+  if(btn){ btn.disabled = true; btn.textContent = 'Saving...'; }
+  try{
+    const data = await callPortal('set_current_tune', { file_id: fileId });
+    if(data.files) STATE.files = data.files;
+    renderPortal();
+    toastLike(label + ' marked as flashed - your tuner has been notified.');
+  }catch(e){
+    toastLike('Could not update: ' + e.message);
+    if(btn){ btn.disabled = false; btn.textContent = 'Mark as flashed'; }
+  }
+}
+window.markFlashed = markFlashed;
 
 function renderFiles(){
   const others = STATE.files.filter(function(f){ return !(f.uploaded_by === 'tuner' && f.file_type === 'tune'); });
