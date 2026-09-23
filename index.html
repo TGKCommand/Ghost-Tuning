@@ -2321,10 +2321,10 @@ function canManageInvoice(a){
   return reachedAccepted || hasInvoices;
 }
 function invoiceStatusLabel(s){
-  return { sent:'Awaiting Payment', paid:'Paid', cancelled:'Cancelled' }[s] || s;
+  return { sent:'Awaiting Payment', paid:'Paid', cancelled:'Cancelled', refunded:'Refunded' }[s] || s;
 }
 function invoiceStatusPillClass(s){
-  return { sent:'pill-yellow', paid:'pill-green', cancelled:'pill-muted' }[s] || 'pill-muted';
+  return { sent:'pill-yellow', paid:'pill-green', cancelled:'pill-muted', refunded:'pill-red' }[s] || 'pill-muted';
 }
 
 // Renders the whole "Invoices" section for the Overview tab: every invoice
@@ -2357,8 +2357,9 @@ function renderInvoicesSection(a){
 
   html += invoices.map(function(inv){
     const lines = Array.isArray(inv.line_items) ? inv.line_items : [];
-    const when = inv.status === 'paid' ? 'Paid ' + fmtDate(inv.paid_at)
-      : (inv.status === 'cancelled' ? 'Cancelled ' + fmtDate(inv.cancelled_at) : 'Sent ' + fmtDate(inv.sent_at) + ' &middot; ' + (daysSince(inv.sent_at) || 0) + 'd');
+    const when = inv.status === 'refunded' ? 'Refunded ' + fmtDate(inv.refunded_at) + (inv.refunded_amount != null && Number(inv.refunded_amount) < Number(inv.amount||0) - 0.01 ? ' (partial, $' + Number(inv.refunded_amount).toFixed(2) + ')' : '')
+      : (inv.status === 'paid' ? 'Paid ' + fmtDate(inv.paid_at)
+      : (inv.status === 'cancelled' ? 'Cancelled ' + fmtDate(inv.cancelled_at) : 'Sent ' + fmtDate(inv.sent_at) + ' &middot; ' + (daysSince(inv.sent_at) || 0) + 'd'));
     const stale = inv.status === 'sent' && (daysSince(inv.sent_at) || 0) >= STALE_INVOICE_DAYS;
 
     let primary = '';
@@ -4868,6 +4869,7 @@ function describeActivity(l){
   else if(l.field_changed === 'mods_updated') desc = 'Customer updated their mods';
   else if(l.field_changed === 'invoice_reminder') desc = 'Payment reminder sent' + (l.new_value ? ' (' + l.new_value + ')' : '');
   else if(l.field_changed === 'invoice_cancelled') desc = 'Invoice cancelled' + (l.old_value ? ' (was ' + l.old_value + ')' : '');
+  else if(l.field_changed === 'invoice_refunded') desc = 'Invoice refunded by Shopify' + (l.new_value ? ' (' + l.new_value + ')' : '');
   return desc;
 }
 
@@ -4885,6 +4887,7 @@ function activityAccent(l){
   if(l.field_changed === 'invoice_sent') return 'yellow';
   if(l.field_changed === 'invoice_paid') return 'teal';
   if(l.field_changed === 'invoice_cancelled') return 'red';
+  if(l.field_changed === 'invoice_refunded') return 'red';
   if(l.field_changed === 'invoice_reminder') return 'yellow';
   if(l.field_changed === 'current_tune') return 'teal';
   if(l.field_changed === 'log_guide') return 'muted';
