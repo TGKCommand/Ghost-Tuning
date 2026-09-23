@@ -188,6 +188,8 @@ tr.row-click:hover td{background:var(--bg3)}
 .notice-banner.red{border-left-color:var(--red);background:var(--red-dim)}
 .notice-banner a{color:var(--orange-d);font-weight:700;cursor:pointer;text-decoration:underline}
 .notice-banner ul{margin:6px 0 0 18px;padding:0}
+.inv-chip{display:inline-flex;align-items:center;padding:2px 8px;font-size:var(--t-xs);font-weight:700;border-radius:6px;margin-left:6px;background:rgba(234,88,12,.1);color:var(--orange);border:1px solid rgba(234,88,12,.25)}
+.inv-chip.stale{background:var(--red-dim);color:var(--red);border-color:rgba(220,38,38,.25)}
 .flag-chip{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;font-size:var(--t-xs);font-weight:700;border-radius:6px;background:var(--red-dim);color:var(--red);border:1px solid rgba(220,38,38,.2);margin-left:6px}
 .section-title{font-size:var(--t-md);font-weight:700;color:var(--teal-d);text-transform:uppercase;letter-spacing:.05em;margin:20px 0 10px}
 .section-title:first-child{margin-top:0}
@@ -357,7 +359,7 @@ tr.row-click:hover td{background:var(--bg3)}
         </div>
         <div class="sync-sub" onclick="doLogout()">Sign out</div>
         <div class="version-row">
-          <span>v1.59</span>
+          <span>v1.61</span>
           <span id="buildDate"></span>
         </div>
       </div>
@@ -415,7 +417,7 @@ const NAV = [
 const S = { user:null, page:'dashboard', applications:[], openAppId:null, messages:{}, files:{}, activity:{}, recentActivity:[], templates:[], activeTab:'overview', filter:'active', search:'',
   pendingLogs:[], platformLibrary:[], ecuReference:[], revisionCount:0, lookupQuery:'', libraryFormOpen:false, ecuFormOpen:false, tuners:[], selectedIds:new Set(),
   fullActivity:[], fullActivityOffset:0, fullActivityHasMore:true, fullActivityLoading:false,
-  invoiceCatalog:null, invoiceCatalogLoading:false, modalInvoiceLines:[], modalInvoiceId:null, invoices:{} };
+  invoiceCatalog:null, invoiceCatalogLoading:false, modalInvoiceLines:[], modalInvoiceId:null, invoices:{}, unpaidInvoices:[] };
 
 function escapeHtml(s){
   return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){
@@ -675,6 +677,7 @@ async function afterLogin(user){
   await loadEcuReference();
   await loadRevisionCount();
   await loadTuners();
+  await loadUnpaidInvoices();
   subscribeGlobalRealtime();
   renderNav();
   goPage('dashboard');
@@ -874,6 +877,18 @@ function subscribeGlobalRealtime(){
     // status change, message, file, or invoice action from anywhere else
     // (another tuner, the customer, the Shopify webhook) never appeared
     // there without a manual reload. This one INSERT listener fixes both.
+    // Any invoice change anywhere (sent, paid by the Shopify webhook,
+    // cancelled, reminded) - keeps dashboard badges and the open panel live.
+    .on('postgres_changes', { event:'*', schema:'public', table:'tuning_invoices' }, function(payload){
+      const row = payload.new && payload.new.application_id ? payload.new : payload.old;
+      const appId = row && row.application_id;
+      const jobs = [loadUnpaidInvoices()];
+      if(appId && S.invoices[appId]) jobs.push(loadInvoices(appId));
+      Promise.all(jobs).then(function(){
+        if(appId && S.openAppId === appId && S.activeTab === 'overview') renderPanelBody();
+        renderPage();
+      });
+    })
     .on('postgres_changes', { event:'INSERT', schema:'public', table:'tuning_activity_log' }, function(payload){
       const entry = payload.new;
       const app = S.applications.find(function(a){ return a.id === entry.application_id; });
@@ -1054,7 +1069,14 @@ function renderDashboard(){
   html += statCard(active.length, 'Active Builds', 'sc-teal');
   html += statCard(completed.length, 'Completed', 'sc-green');
   html += statCard(apps.length, 'Total Applications', '');
+  const unpaidTotal = S.unpaidInvoices.reduce(function(sum, i){ return sum + (Number(i.amount) || 0); }, 0);
+  html += statCard(S.unpaidInvoices.length ? '$' + unpaidTotal.toFixed(0) : '0', 'Unpaid Invoices', S.unpaidInvoices.some(isStaleInvoice) ? 'sc-attn' : '');
   html += '</div>';
+
+  if(S.unpaidInvoices.length){
+    html += '<div class="section-title">Unpaid Invoices</div><div class="sub" style="color:var(--text3);font-size:var(--t-sm);margin-bottom:10px">Oldest first - anything ' + STALE_INVOICE_DAYS + '+ days unpaid is flagged red</div>';
+    html += '<div class="tbl-wrap">' + renderUnpaidInvoicesTable() + '</div>';
+  }
 
   html += '<div class="section-title">New Submissions</div><div class="sub" style="color:var(--text3);font-size:var(--t-sm);margin-bottom:10px">Applications waiting on your first review</div>';
   html += '<div class="tbl-wrap">' + (newSubmissions.length ? appTable(newSubmissions) : '<div class="empty-state"><div class="big">&#10003;</div>Nothing new to review.</div>') + '</div>';
@@ -1256,7 +1278,7 @@ function appTable(rows, selectable){
       html += '<td onclick="event.stopPropagation()"><input type="checkbox" onclick="toggleBulkSelect(\'' + a.id + '\')" ' + (S.selectedIds.has(a.id)?'checked':'') + '></td>';
     }
     html += '<td>' + (a.has_unread ? '<span class="unread-dot"></span>' : '') + '#' + a.application_number + '</td>'
-      + '<td>' + escapeHtml(a.customer_name) + flagChips(a) + '<div class="file-meta">' + escapeHtml(a.customer_email) + '</div></td>'
+      + '<td>' + escapeHtml(a.customer_name) + flagChips(a) + invoiceChip(a) + '<div class="file-meta">' + escapeHtml(a.customer_email) + '</div></td>'
       + '<td>' + escapeHtml([a.car_year, a.car_make, a.car_model].filter(Boolean).join(' ')) + '</td>'
       + '<td><span class="pill ' + (STATUS_PILL[a.status]||'pill-muted') + '">' + (STATUS_LABEL[a.status]||a.status) + '</span></td>'
       + '<td>' + agingCell(a) + '</td>'
@@ -1283,7 +1305,7 @@ function activeAppsTable(rows){
     const lastActivity = a.last_message_at ? (daysSince(a.last_message_at) + 'd ago') : (daysSince(a.updated_at) + 'd ago (no activity)');
     html += '<tr class="row-click" onclick="openApplication(\'' + a.id + '\')">'
       + '<td>' + (a.has_unread ? '<span class="unread-dot"></span>' : '') + '#' + a.application_number + '</td>'
-      + '<td>' + escapeHtml(a.customer_name) + flagChips(a) + '<div class="file-meta">' + escapeHtml(a.customer_email) + '</div></td>'
+      + '<td>' + escapeHtml(a.customer_name) + flagChips(a) + invoiceChip(a) + '<div class="file-meta">' + escapeHtml(a.customer_email) + '</div></td>'
       + '<td>' + escapeHtml([a.car_year, a.car_make, a.car_model].filter(Boolean).join(' ')) + '</td>'
       + '<td><span class="pill ' + (STATUS_PILL[a.status]||'pill-muted') + '">' + (STATUS_LABEL[a.status]||a.status) + '</span></td>'
       + '<td><span class="pill ' + w.cls + '">' + w.text + '</span></td>'
@@ -1609,6 +1631,84 @@ function flagChips(a){
   return computeFlags(a).map(function(f){ return '<span class="flag-chip">' + escapeHtml(f) + '</span>'; }).join('');
 }
 
+/* ================= UNPAID INVOICES (dashboard + list badges) ================= */
+// An invoice counts as stale once it's been unpaid this many days since it
+// was sent - the point where a reminder is probably worth sending.
+const STALE_INVOICE_DAYS = 7;
+
+async function loadUnpaidInvoices(){
+  try{
+    const { data, error } = await sb.from('tuning_invoices')
+      .select('id,application_id,amount,sent_at,reminder_count,last_reminded_at')
+      .eq('status', 'sent')
+      .order('sent_at', { ascending:true });
+    if(error) throw error;
+    S.unpaidInvoices = data || [];
+  }catch(e){ /* non-critical: badges just don't show */ }
+}
+
+function invoiceAgeDays(inv){ return daysSince(inv.sent_at) || 0; }
+function isStaleInvoice(inv){ return invoiceAgeDays(inv) >= STALE_INVOICE_DAYS; }
+
+function invoiceChip(a){
+  const mine = S.unpaidInvoices.filter(function(i){ return i.application_id === a.id; });
+  if(!mine.length) return '';
+  const total = mine.reduce(function(sum, i){ return sum + (Number(i.amount) || 0); }, 0);
+  const oldest = Math.max.apply(null, mine.map(invoiceAgeDays));
+  const stale = oldest >= STALE_INVOICE_DAYS;
+  return '<span class="inv-chip' + (stale ? ' stale' : '') + '" title="' + mine.length + ' unpaid invoice' + (mine.length > 1 ? 's' : '') + '">'
+    + 'Unpaid $' + total.toFixed(2) + (stale ? ' - ' + oldest + 'd' : '') + '</span>';
+}
+
+function renderUnpaidInvoicesTable(){
+  const rows = S.unpaidInvoices.slice().sort(function(x, y){ return invoiceAgeDays(y) - invoiceAgeDays(x); });
+  let html = '<table><thead><tr><th>#</th><th>Customer</th><th>Amount</th><th>Sent</th><th>Reminders</th><th></th></tr></thead><tbody>';
+  rows.forEach(function(inv){
+    const a = S.applications.find(function(x){ return x.id === inv.application_id; });
+    if(!a) return;
+    const age = invoiceAgeDays(inv);
+    html += '<tr class="row-click" onclick="openApplication(\'' + a.id + '\')">'
+      + '<td>#' + a.application_number + '</td>'
+      + '<td>' + escapeHtml(a.customer_name) + '<div class="file-meta">' + escapeHtml(a.customer_email) + '</div></td>'
+      + '<td>$' + Number(inv.amount || 0).toFixed(2) + '</td>'
+      + '<td><span class="pill ' + (isStaleInvoice(inv) ? 'pill-red' : 'pill-yellow') + '">' + age + 'd ago</span></td>'
+      + '<td>' + (inv.reminder_count ? inv.reminder_count + ' (last ' + daysSince(inv.last_reminded_at) + 'd ago)' : '-') + '</td>'
+      + '<td onclick="event.stopPropagation()"><button class="btn btn-sm" id="remindBtn-' + inv.id + '" onclick="sendInvoiceReminder(\'' + a.id + '\',\'' + inv.id + '\')">Remind</button></td>'
+      + '</tr>';
+  });
+  html += '</tbody></table>';
+  return html;
+}
+
+// Re-sends Shopify's invoice email for an unpaid invoice (same payment link).
+// Not wired into undo: an email can't be unsent.
+async function sendInvoiceReminder(appId, invoiceId){
+  const a = S.applications.find(function(x){ return x.id === appId; });
+  if(!confirm('Email ' + (a ? a.customer_name : 'the customer') + ' a payment reminder for this invoice?')) return;
+  const btns = [document.getElementById('remindBtn-' + invoiceId), document.getElementById('panelRemindBtn-' + invoiceId)];
+  btns.forEach(function(b){ if(b){ b.disabled = true; b.textContent = 'Sending...'; } });
+  try{
+    const { data: sess } = await sb.auth.getSession();
+    const token = sess && sess.session && sess.session.access_token;
+    if(!token) throw new Error('Not signed in');
+    const resp = await fetch(SUPABASE_URL + '/functions/v1/tuning-invoice', {
+      method: 'POST',
+      headers: { 'Content-Type':'application/json', 'Authorization':'Bearer ' + token, 'apikey': SUPABASE_ANON_KEY },
+      body: JSON.stringify({ action: 'remind', invoice_id: invoiceId })
+    });
+    const result = await resp.json();
+    if(!result.success) throw new Error(result.error || 'Reminder failed');
+    if(result.invoice && S.invoices[appId]) replaceInvoiceInState(appId, result.invoice);
+    await loadUnpaidInvoices();
+    renderPage();
+    toast('Payment reminder sent');
+  }catch(e){
+    toast('Failed to send reminder: ' + e.message, true);
+    btns.forEach(function(b){ if(b){ b.disabled = false; b.textContent = b.id.indexOf('panel') === 0 ? 'Send Reminder' : 'Remind'; } });
+  }
+}
+window.sendInvoiceReminder = sendInvoiceReminder;
+
 // Invoice tracking is deliberately separate from shopify_order_number /
 // payment_status above - those track the ORIGINAL Shopify purchase, this
 // tracks an invoice the tuner sends once an application is accepted (extra
@@ -1645,7 +1745,8 @@ function renderInvoicesSection(a){
     }).join('') : '<div class="invoice-empty">No line items on record for this invoice.</div>';
 
     let meta = '';
-    if(inv.status === 'sent') meta = 'Sent ' + fmtDate(inv.sent_at) + (inv.sent_by ? ' by ' + inv.sent_by : '');
+    if(inv.status === 'sent') meta = 'Sent ' + fmtDate(inv.sent_at) + (inv.sent_by ? ' by ' + inv.sent_by : '')
+      + (inv.reminder_count ? ' - reminded ' + inv.reminder_count + 'x, last ' + fmtDate(inv.last_reminded_at) : '');
     else if(inv.status === 'paid') meta = 'Paid ' + fmtDate(inv.paid_at) + (inv.paid_by ? ' by ' + inv.paid_by : '') + ' - sent ' + fmtDate(inv.sent_at);
     else if(inv.status === 'cancelled') meta = 'Cancelled ' + fmtDate(inv.cancelled_at) + (inv.cancelled_by ? ' by ' + inv.cancelled_by : '');
 
@@ -1654,6 +1755,7 @@ function renderInvoicesSection(a){
       actions = '<div style="display:flex;gap:8px;align-items:center;margin-top:10px">'
         + '<button class="btn btn-sm" onclick="openEditInvoiceModal(\'' + a.id + '\',\'' + inv.id + '\')">Resend / Edit</button>'
         + ' <button class="btn btn-sm btn-teal" id="refreshInvoiceBtn-' + inv.id + '" onclick="refreshInvoiceStatus(\'' + a.id + '\',\'' + inv.id + '\')">Refresh from Shopify</button>'
+        + ' <button class="btn btn-sm" id="panelRemindBtn-' + inv.id + '" onclick="sendInvoiceReminder(\'' + a.id + '\',\'' + inv.id + '\')">Send Reminder</button>'
         + ' <button class="btn btn-sm" id="cancelInvoiceBtn-' + inv.id + '" onclick="cancelInvoice(\'' + a.id + '\',\'' + inv.id + '\')" style="color:var(--red)">Cancel Invoice</button>'
         + '</div>';
     }
@@ -2144,44 +2246,109 @@ async function sendMessage(appId){
 window.sendMessage = sendMessage;
 
 /* ---- files tab ---- */
+const TUNE_FUELS = ['91 pump','93 pump','E30','E40','E50','E85','Race fuel','Flex'];
+
+function nextRevisionNumber(appId){
+  const tunes = (S.files[appId] || []).filter(function(f){ return f.file_type === 'tune'; });
+  const max = tunes.reduce(function(m, f){ return Math.max(m, f.revision_number || 0); }, 0);
+  return max + 1;
+}
+
 function renderFilesTab(a){
   const files = S.files[a.id] || [];
+  const fuelOpts = TUNE_FUELS.map(function(f){ return '<option>' + f + '</option>'; }).join('');
   let html = '<div style="margin-bottom:16px">';
   html += '<label class="form-label">Upload a Tune File or Log</label>';
   html += '<input type="file" id="fileInput" style="margin-top:6px">';
-  html += '<div style="display:flex;gap:8px;margin-top:8px">';
-  html += '<select class="form-input" id="fileTypeSelect" style="width:auto">'
+  html += '<div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">';
+  html += '<select class="form-input" id="fileTypeSelect" style="width:auto" onchange="toggleTuneFields()">'
     + '<option value="tune">Tune</option><option value="log">Log</option><option value="other">Other</option></select>';
-  html += '<input class="form-input" id="fileRevision" type="number" placeholder="Revision #" style="width:110px">';
-  html += '<button class="btn btn-primary" onclick="uploadFile(\'' + a.id + '\')">Upload</button>';
-  html += '</div></div>';
+  html += '</div>';
+  // Tune-only metadata: this is what the customer sees in their Tune Versions list.
+  html += '<div id="tuneFields" style="margin-top:10px">'
+    + '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">'
+      + '<input class="form-input" id="fileRevision" type="number" min="1" value="' + nextRevisionNumber(a.id) + '" title="Revision #" style="width:110px">'
+      + '<select class="form-input" id="fileFuel" style="width:auto"><option value="">Fuel...</option>' + fuelOpts + '</select>'
+      + '<label style="display:flex;align-items:center;gap:6px;font-size:var(--t-sm)"><input type="checkbox" id="fileIsCurrent" checked> Currently flashed</label>'
+    + '</div>'
+    + '<textarea class="form-input" id="fileChangelog" placeholder="Changelog - what changed in this revision (shown to the customer)" style="min-height:52px"></textarea>'
+    + '</div>';
+  html += '<div style="margin-top:10px"><button class="btn btn-primary" onclick="uploadFile(\'' + a.id + '\')">Upload</button></div>';
+  html += '</div>';
 
   html += '<div>';
   if(!files.length) html += '<div class="empty-state">No files exchanged yet.</div>';
   files.forEach(function(f){
+    const isTune = f.file_type === 'tune';
     html += '<div class="file-row">'
-      + '<div style="flex:1">'
-      + '<div class="file-name">' + escapeHtml(f.file_name) + (f.revision_number ? ' <span class="pill pill-muted">rev ' + f.revision_number + '</span>' : '') + ' <span class="pill ' + (f.file_type==='tune'?'pill-teal':(f.file_type==='log'?'pill-orange':'pill-muted')) + '">' + escapeHtml(f.file_type||'file') + '</span></div>'
-      + '<div class="file-meta">' + escapeHtml(f.uploaded_by_name || f.uploaded_by) + ' &middot; ' + fmtDate(f.created_at) + '</div>'
+      + '<div style="flex:1;min-width:0">'
+      + '<div class="file-name">' + escapeHtml(f.file_name)
+        + (f.revision_number ? ' <span class="pill pill-muted">rev ' + f.revision_number + '</span>' : '')
+        + ' <span class="pill ' + (isTune?'pill-teal':(f.file_type==='log'?'pill-orange':'pill-muted')) + '">' + escapeHtml(f.file_type||'file') + '</span>'
+        + (isTune && f.fuel ? ' <span class="pill pill-muted">' + escapeHtml(f.fuel) + '</span>' : '')
+        + (isTune && f.is_current ? ' <span class="pill pill-green">Currently flashed</span>' : '')
       + '</div>'
+      + '<div class="file-meta">' + escapeHtml(f.uploaded_by_name || f.uploaded_by) + ' &middot; ' + fmtDate(f.created_at) + '</div>'
+      + (isTune && f.description ? '<div class="file-meta" style="font-style:italic;white-space:pre-wrap">' + escapeHtml(f.description) + '</div>' : '')
+      + '</div>'
+      + '<div style="display:flex;gap:6px;flex-shrink:0">'
+      + (isTune && !f.is_current ? '<button class="btn btn-sm" onclick="setCurrentTune(\'' + a.id + '\',\'' + f.id + '\')">Mark current</button>' : '')
       + '<button class="btn btn-sm" onclick="downloadFile(\'' + f.id + '\',\'' + f.file_path + '\')">Download</button>'
+      + '</div>'
       + '</div>';
   });
   html += '</div>';
   return html;
 }
 
+function toggleTuneFields(){
+  const el = document.getElementById('tuneFields');
+  if(el) el.style.display = document.getElementById('fileTypeSelect').value === 'tune' ? '' : 'none';
+}
+window.toggleTuneFields = toggleTuneFields;
+
+// Clears the current flag on every tune for this application. Must run
+// BEFORE marking a new one - the unique index allows only one current tune.
+async function clearCurrentTune(appId){
+  const { error } = await sb.from('tuning_files').update({ is_current:false })
+    .eq('application_id', appId).eq('file_type', 'tune').eq('is_current', true);
+  if(error) throw error;
+  (S.files[appId] || []).forEach(function(f){ if(f.file_type === 'tune') f.is_current = false; });
+}
+
+async function setCurrentTune(appId, fileId){
+  try{
+    await clearCurrentTune(appId);
+    const { data, error } = await sb.from('tuning_files').update({ is_current:true }).eq('id', fileId).select().single();
+    if(error) throw error;
+    const list = S.files[appId] || [];
+    const idx = list.findIndex(function(f){ return f.id === fileId; });
+    if(idx !== -1) list[idx] = data;
+    await logActivity(appId, 'current_tune', null, data.file_name + (data.revision_number ? ' (rev ' + data.revision_number + ')' : ''));
+    pingPortal(appId);
+    renderPanelBody();
+    toast('Marked as currently flashed');
+  }catch(e){ toast('Failed to update: ' + e.message, true); }
+}
+window.setCurrentTune = setCurrentTune;
+
 async function uploadFile(appId){
   const input = document.getElementById('fileInput');
   const file = input.files[0];
   if(!file){ toast('Choose a file first', true); return; }
   const type = document.getElementById('fileTypeSelect').value;
-  const revision = document.getElementById('fileRevision').value || null;
+  const isTune = type === 'tune';
+  const revision = isTune ? (document.getElementById('fileRevision').value || null) : null;
+  const fuel = isTune ? (document.getElementById('fileFuel').value || null) : null;
+  const changelog = isTune ? (document.getElementById('fileChangelog').value.trim() || null) : null;
+  const markCurrent = isTune && document.getElementById('fileIsCurrent').checked;
   const path = appId + '/' + Date.now() + '_' + file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
 
   try{
     const { error: upErr } = await sb.storage.from('tuning-files').upload(path, file);
     if(upErr) throw upErr;
+
+    if(markCurrent) await clearCurrentTune(appId);
 
     const { data, error } = await sb.from('tuning_files').insert({
       application_id: appId,
@@ -2190,15 +2357,18 @@ async function uploadFile(appId){
       file_name: file.name,
       file_path: path,
       file_type: type,
-      revision_number: revision ? parseInt(revision, 10) : null
+      revision_number: revision ? parseInt(revision, 10) : null,
+      fuel: fuel,
+      description: changelog,
+      is_current: markCurrent
     }).select().single();
     if(error) throw error;
 
     if(!S.files[appId]) S.files[appId] = [];
-    S.files[appId].unshift(data);
+    if(!S.files[appId].some(function(f){ return f.id === data.id; })) S.files[appId].unshift(data);
     await logActivity(appId, 'file_uploaded', null, file.name);
 
-    if(type === 'tune'){
+    if(isTune){
       await sb.from('tuning_applications').update({ customer_has_unread:true, updated_at:new Date().toISOString() }).eq('id', appId);
       const app = S.applications.find(function(x){ return x.id === appId; });
       if(app) app.customer_has_unread = true;
@@ -2237,6 +2407,9 @@ function describeActivity(l){
   else if(l.field_changed === 'assigned_tuner') desc = l.new_value && l.new_value !== 'Unassigned' ? 'Reassigned to ' + l.new_value : 'Unassigned';
   else if(l.field_changed === 'invoice_sent') desc = 'Invoice sent for ' + (l.new_value || 'an amount');
   else if(l.field_changed === 'invoice_paid') desc = 'Invoice marked paid' + (l.new_value ? ' (' + l.new_value + ')' : '');
+  else if(l.field_changed === 'current_tune') desc = 'Marked currently flashed: ' + (l.new_value || '');
+  else if(l.field_changed === 'mods_updated') desc = 'Customer updated their mods';
+  else if(l.field_changed === 'invoice_reminder') desc = 'Payment reminder sent' + (l.new_value ? ' (' + l.new_value + ')' : '');
   else if(l.field_changed === 'invoice_cancelled') desc = 'Invoice cancelled' + (l.old_value ? ' (was ' + l.old_value + ')' : '');
   return desc;
 }
@@ -2255,6 +2428,9 @@ function activityAccent(l){
   if(l.field_changed === 'invoice_sent') return 'yellow';
   if(l.field_changed === 'invoice_paid') return 'teal';
   if(l.field_changed === 'invoice_cancelled') return 'red';
+  if(l.field_changed === 'invoice_reminder') return 'yellow';
+  if(l.field_changed === 'current_tune') return 'teal';
+  if(l.field_changed === 'mods_updated') return 'orange';
   return 'muted';
 }
 
