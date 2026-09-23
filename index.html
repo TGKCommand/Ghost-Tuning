@@ -255,6 +255,23 @@ tr.row-click:hover td{background:var(--bg3)}
 .log-rule{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px dashed var(--border);font-size:var(--t-sm)}
 .log-rule-form{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
 .log-rule-form select.form-input{width:auto;max-width:220px}
+.file-toolbar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin:4px 0 10px}
+.file-kinds{display:flex;gap:6px;flex-wrap:wrap}
+.fk{background:var(--bg);border:1px solid var(--border2);border-radius:999px;padding:4px 11px;font-size:var(--t-xs);font-weight:700;color:var(--text2);cursor:pointer;font-family:inherit}
+.fk span{color:var(--text3);font-weight:600;margin-left:2px}
+.fk.on{background:var(--teal);border-color:var(--teal);color:#fff}
+.fk.on span{color:rgba(255,255,255,.8)}
+.fk-sort{background:none;border:none;font-size:var(--t-xs);font-weight:700;color:var(--text3);cursor:pointer;font-family:inherit}
+.fk-sort:hover{color:var(--teal-d)}
+.btn.file-del{color:var(--red)}
+.team-default{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-md);padding:10px 14px;margin-bottom:14px;font-size:var(--t-sm)}
+.t-switch{position:relative;display:inline-block;width:36px;height:20px;vertical-align:middle;cursor:pointer}
+.t-switch input{position:absolute;opacity:0;width:0;height:0}
+.t-slider{position:absolute;top:0;left:0;right:0;bottom:0;background:var(--border2);border-radius:20px;transition:background .15s}
+.t-slider::before{content:'';position:absolute;width:16px;height:16px;left:2px;top:2px;background:#fff;border-radius:50%;box-shadow:0 1px 2px rgba(0,0,0,.2);transition:transform .15s}
+.t-switch input:checked + .t-slider{background:var(--teal)}
+.t-switch input:checked + .t-slider::before{transform:translateX(16px)}
+.t-switch.disabled{opacity:.55;cursor:not-allowed}
 .product-form{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r-lg);padding:16px;margin:0 0 14px}
 .pf-variant{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:8px}
 .report-box{padding:14px 16px}
@@ -492,7 +509,7 @@ tr.row-click:hover td{background:var(--bg3)}
         </div>
         <div class="sync-sub" onclick="doLogout()">Sign out</div>
         <div class="version-row">
-          <span>v1.70</span>
+          <span>v1.71</span>
           <span id="buildDate"></span>
         </div>
       </div>
@@ -547,13 +564,14 @@ const NAV = [
   { id:'library', label:'Platform Library', group:'Library' },
   { id:'logguides', label:'Logging Guides', group:'Library' },
   { id:'ecuref', label:'ECU Reference', group:'Library' },
-  { id:'templates', label:'Templates', group:'Library' }
+  { id:'templates', label:'Templates', group:'Library' },
+  { id:'team', label:'Team', group:'Admin' }
 ];
 
 const S = { user:null, page:'dashboard', applications:[], openAppId:null, messages:{}, files:{}, activity:{}, recentActivity:[], templates:[], activeTab:'overview', filter:'active', search:'',
   pendingLogs:[], platformLibrary:[], ecuReference:[], revisionCount:0, lookupQuery:'', libraryFormOpen:false, ecuFormOpen:false, tuners:[], selectedIds:new Set(),
   fullActivity:[], fullActivityOffset:0, fullActivityHasMore:true, fullActivityLoading:false,
-  invoiceCatalog:null, invoiceCatalogLoading:false, modalInvoiceLines:[], modalInvoiceId:null, invoices:{}, unpaidInvoices:[], logGuides:[], logGuideFormOpen:false, editingGuideId:null };
+  invoiceCatalog:null, invoiceCatalogLoading:false, modalInvoiceLines:[], modalInvoiceId:null, invoices:{}, unpaidInvoices:[], settings:{}, logGuides:[], logGuideFormOpen:false, editingGuideId:null };
 
 function escapeHtml(s){
   return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){
@@ -794,8 +812,8 @@ async function afterLogin(user){
   if(!row || row.ghost_tuning_access !== true){
     let msg = 'Your account does not have Ghost Tuning Center access.';
     if(lookupError) msg += ' (profiles lookup failed: ' + lookupError.message + ')';
-    else if(!row) msg += ' No profiles row found for ' + user.email + '.';
-    else msg += ' Ask whoever manages users to grant Ghost Tuning access on this account.';
+    else if(!row) msg += ' No staff profile was found for ' + user.email + ' yet - ask a tuner to check the Team page once your account exists.';
+    else msg += ' Ask a tuner to turn on access for ' + user.email + ' on the Team page.';
     document.getElementById('login-error').textContent = msg;
     await sb.auth.signOut();
     return;
@@ -815,6 +833,7 @@ async function afterLogin(user){
   await loadRevisionCount();
   await loadTuners();
   await loadUnpaidInvoices();
+  await loadSettings();
   subscribeGlobalRealtime();
   renderNav();
   goPage('dashboard');
@@ -1239,6 +1258,7 @@ window.closeMobileNav = closeMobileNav;
 function goPage(id){
   S.page = id;
   if(id === 'reports') S.reportData = null;
+  if(id === 'team') S.team = null;
   if(id === 'products'){ S.products = null; S.productFormOpen = false; S.editingProductId = null; }
   renderNav();
   document.getElementById('pageTitle').textContent = (NAV.find(function(n){ return n.id===id; }) || {}).label || 'Dashboard';
@@ -1253,6 +1273,7 @@ function renderPage(){
   else if(S.page === 'applications') el.innerHTML = renderApplications();
   else if(S.page === 'board') el.innerHTML = renderBoard();
   else if(S.page === 'products') el.innerHTML = renderProducts();
+  else if(S.page === 'team') el.innerHTML = renderTeam();
   else if(S.page === 'activity') el.innerHTML = renderActivityPage();
   else if(S.page === 'logreview') el.innerHTML = renderLogReview();
   else if(S.page === 'lookup') el.innerHTML = renderLookup();
@@ -1653,7 +1674,7 @@ function statusSelector(app){
   html += '<select class="form-input" onchange="reassignApplication(\'' + app.id + '\',this.value)">';
   html += '<option value="">Unassigned</option>';
   (S.tuners || []).forEach(function(t){
-    html += '<option value="' + escapeHtml(t.email) + '" ' + (app.assigned_tuner===t.email?'selected':'') + '>' + escapeHtml(t.full_name || t.email) + '</option>';
+    html += '<option value="' + escapeHtml(t.email) + '" ' + (app.assigned_tuner===t.email?'selected':'') + '>' + escapeHtml(t.full_name || t.email) + (S.settings && S.settings.default_tuner === t.email ? ' (default)' : '') + '</option>';
   });
   if(app.assigned_tuner && !(S.tuners||[]).some(function(t){ return t.email===app.assigned_tuner; })){
     html += '<option value="' + escapeHtml(app.assigned_tuner) + '" selected>' + escapeHtml(app.assigned_tuner) + '</option>';
@@ -1760,7 +1781,7 @@ async function updateStatus(appId, newStatus, quiet, skipUndo){
     patch.reviewed_at = new Date().toISOString();
     patch.reviewed_by = S.user ? S.user.email : null;
   }
-  if(!app.assigned_tuner) patch.assigned_tuner = S.user ? S.user.email : null;
+  if(!app.assigned_tuner) patch.assigned_tuner = S.settings.default_tuner || (S.user ? S.user.email : null);
 
   try{
     const { data, error } = await sb.from('tuning_applications').update(patch).eq('id', appId).select().single();
@@ -2618,9 +2639,25 @@ function renderFilesTab(a){
   html += '<div style="margin-top:10px"><button class="btn btn-primary" onclick="uploadFile(\'' + a.id + '\')">Upload</button></div>';
   html += '</div>';
 
+  // Type filter + sort. Counts come from the full list so the chips always
+  // show what's there even while a filter is active.
+  const FILE_KINDS = [['all','All'], ['tune','Tunes'], ['log','Logs'], ['dyno','Dyno'], ['other','Other']];
+  const kindOf = function(f){ return ['tune','log','dyno'].indexOf(f.file_type) !== -1 ? f.file_type : 'other'; };
+  const counts = { all: files.length };
+  files.forEach(function(f){ const k = kindOf(f); counts[k] = (counts[k] || 0) + 1; });
+  const filt = S.fileFilter || 'all', sortDir = S.fileSort || 'new';
+  html += '<div class="file-toolbar"><div class="file-kinds">' + FILE_KINDS.map(function(k){
+      if(k[0] !== 'all' && !counts[k[0]]) return '';
+      return '<button class="fk' + (filt === k[0] ? ' on' : '') + '" onclick="setFileFilter(\'' + k[0] + '\')">' + k[1] + ' <span>' + (counts[k[0]] || 0) + '</span></button>';
+    }).join('') + '</div>'
+    + '<button class="fk-sort" onclick="toggleFileSort()">' + (sortDir === 'new' ? 'Newest first' : 'Oldest first') + ' &#8645;</button></div>';
+  const shown = files.filter(function(f){ return filt === 'all' || kindOf(f) === filt; })
+    .sort(function(x, y){ const d = new Date(y.created_at) - new Date(x.created_at); return sortDir === 'new' ? d : -d; });
+
   html += '<div>';
   if(!files.length) html += '<div class="empty-state">No files exchanged yet.</div>';
-  files.forEach(function(f){
+  else if(!shown.length) html += '<div class="empty-state">No files of this type.</div>';
+  shown.forEach(function(f){
     const isTune = f.file_type === 'tune';
     html += '<div class="file-row">'
       + '<div style="flex:1;min-width:0">'
@@ -2637,12 +2674,45 @@ function renderFilesTab(a){
       + (isTune && !f.is_current ? '<button class="btn btn-sm" onclick="setCurrentTune(\'' + a.id + '\',\'' + f.id + '\')">Mark current</button>' : '')
       + (isLogFile(f) ? '<button class="btn btn-sm btn-teal" onclick="openLogViewer(\'' + f.id + '\',\'' + f.file_path + '\')">View</button>' : '')
       + '<button class="btn btn-sm" onclick="downloadFile(\'' + f.id + '\',\'' + f.file_path + '\')">Download</button>'
+      + '<button class="btn btn-sm file-del" onclick="deleteFile(\'' + a.id + '\',\'' + f.id + '\')" title="Delete file">Delete</button>'
       + '</div>'
       + '</div>';
   });
   html += '</div>';
   return html;
 }
+
+function setFileFilter(k){ S.fileFilter = k; renderPanelBody(); }
+window.setFileFilter = setFileFilter;
+function toggleFileSort(){ S.fileSort = S.fileSort === 'old' ? 'new' : 'old'; renderPanelBody(); }
+window.toggleFileSort = toggleFileSort;
+
+// Deletes the stored file and its record. Not undoable - storage deletes
+// are permanent - so it confirms first, with a stronger warning for the
+// tune the customer currently has flashed.
+async function deleteFile(appId, fileId){
+  const f = (S.files[appId] || []).find(function(x){ return x.id === fileId; });
+  if(!f) return;
+  const who = f.uploaded_by === 'customer' ? 'uploaded by the customer' : 'uploaded by a tuner';
+  let msg = 'Delete "' + f.file_name + '" (' + who + ')?\n\nThis permanently removes the file for both you and the customer.';
+  if(f.file_type === 'tune' && f.is_current) msg += '\n\nThis is the tune marked "Currently flashed" - the customer will no longer see it.';
+  if(!confirm(msg)) return;
+  try{
+    const { error: stErr } = await sb.storage.from('tuning-files').remove([f.file_path]);
+    // A missing storage object shouldn't block cleaning up the record.
+    if(stErr && !/not.?found/i.test(stErr.message || '')) throw stErr;
+    const { error } = await sb.from('tuning_files').delete().eq('id', fileId);
+    if(error) throw error;
+    S.files[appId] = (S.files[appId] || []).filter(function(x){ return x.id !== fileId; });
+    S.pendingLogs = (S.pendingLogs || []).filter(function(x){ return x.id !== fileId; });
+    await logActivity(appId, 'file_deleted', f.file_name, null);
+    pingPortal(appId);
+    renderNav();
+    renderPanelBody();
+    toast('File deleted');
+  }catch(e){ toast('Delete failed: ' + e.message, true); }
+}
+window.deleteFile = deleteFile;
 
 function toggleTuneFields(){
   const el = document.getElementById('tuneFields');
@@ -3565,6 +3635,7 @@ function describeActivity(l){
   else if(l.field_changed === 'assigned_tuner') desc = l.new_value && l.new_value !== 'Unassigned' ? 'Reassigned to ' + l.new_value : 'Unassigned';
   else if(l.field_changed === 'invoice_sent') desc = 'Invoice sent for ' + (l.new_value || 'an amount');
   else if(l.field_changed === 'invoice_paid') desc = 'Invoice marked paid' + (l.new_value ? ' (' + l.new_value + ')' : '');
+  else if(l.field_changed === 'file_deleted') desc = 'File deleted: ' + (l.old_value || '');
   else if(l.field_changed === 'review_submitted') desc = 'Customer left a review: ' + (l.new_value || '');
   else if(l.field_changed === 'log_guide') desc = 'Logging guide set: ' + (l.new_value || 'None');
   else if(l.field_changed === 'current_tune') desc = 'Marked currently flashed: ' + (l.new_value || '');
@@ -3592,6 +3663,7 @@ function activityAccent(l){
   if(l.field_changed === 'current_tune') return 'teal';
   if(l.field_changed === 'log_guide') return 'muted';
   if(l.field_changed === 'review_submitted') return 'teal';
+  if(l.field_changed === 'file_deleted') return 'red';
   if(l.field_changed === 'mods_updated') return 'orange';
   return 'muted';
 }
@@ -3702,6 +3774,115 @@ function performLookup(v){
   document.getElementById('lookupResults').innerHTML = renderLookupResults();
 }
 window.performLookup = performLookup;
+
+/* ================= SETTINGS + TEAM ================= */
+async function loadSettings(){
+  S.settings = S.settings || {};
+  try{
+    const { data, error } = await sb.from('tuning_settings').select('key,value');
+    if(error) throw error;
+    (data || []).forEach(function(r){ S.settings[r.key] = r.value; });
+  }catch(e){ /* table missing until Phase 18 runs - falls back to old behavior */ }
+}
+
+async function teamCall(body){
+  const { data: sess } = await sb.auth.getSession();
+  const token = sess && sess.session && sess.session.access_token;
+  if(!token) throw new Error('Not signed in');
+  const resp = await fetch(SUPABASE_URL + '/functions/v1/tuning-team', {
+    method: 'POST',
+    headers: { 'Content-Type':'application/json', 'Authorization':'Bearer ' + token, 'apikey': SUPABASE_ANON_KEY },
+    body: JSON.stringify(body)
+  });
+  const result = await resp.json();
+  if(!result.success) throw new Error(result.error || 'Request failed');
+  return result;
+}
+
+async function loadTeam(){
+  S.teamLoading = true;
+  try{
+    const r = await teamCall({ action:'list' });
+    S.team = r.people || [];
+    S.teamMe = r.me;
+  }catch(e){
+    toast('Failed to load team: ' + e.message, true);
+    S.team = [];
+  }
+  S.teamLoading = false;
+  if(S.page === 'team') renderPage();
+}
+
+function renderTeam(){
+  if(!S.team){
+    if(!S.teamLoading) loadTeam();
+    return '<div class="empty-state">Loading team&hellip;</div>';
+  }
+  const q = (S.teamSearch || '').toLowerCase();
+  const people = S.team.filter(function(p){ return !q || (p.email + ' ' + (p.name || '')).toLowerCase().indexOf(q) !== -1; })
+    .sort(function(x, y){ return (y.ghost_tuning_access ? 1 : 0) - (x.ghost_tuning_access ? 1 : 0) || x.email.localeCompare(y.email); });
+  const def = S.settings.default_tuner || '';
+  let html = '<div class="dash-head" style="margin-top:0"><div><div class="section-title" style="margin:0">Team &amp; Access</div>'
+    + '<div class="file-meta" style="margin-top:2px">Who can sign in to Ghost Tuning Center, and who new applications are assigned to by default.</div></div></div>';
+  html += '<div class="team-default"><span class="dl-label">Default tuner</span> <strong>' + escapeHtml(def || 'None set') + '</strong>'
+    + '<span class="file-meta"> &middot; new applications are assigned here automatically unless changed</span></div>';
+  html += '<input class="form-input" placeholder="Search staff by name or email..." value="' + escapeHtml(S.teamSearch || '') + '" oninput="teamSearchInput(this.value)" style="max-width:360px;margin-bottom:12px" id="teamSearch">';
+  html += '<div class="tbl-wrap"><table><thead><tr><th>Staff member</th><th>Ghost Tuning access</th><th></th></tr></thead><tbody>';
+  if(!people.length) html += '<tr><td colspan="3"><div class="empty-state">No matching staff accounts. New users appear here once they have created an account.</div></td></tr>';
+  people.forEach(function(p){
+    const isMe = p.id === S.teamMe, isDef = p.email === def;
+    html += '<tr>'
+      + '<td><strong>' + escapeHtml(p.name || p.email) + '</strong>' + (isMe ? ' <span class="pill pill-muted">you</span>' : '') + (isDef ? ' <span class="pill pill-teal">default tuner</span>' : '')
+      + (p.name ? '<div class="file-meta">' + escapeHtml(p.email) + '</div>' : '') + '</td>'
+      + '<td><label class="t-switch' + (isMe ? ' disabled' : '') + '" title="' + (isMe ? "You can't remove your own access" : '') + '"><input type="checkbox" ' + (p.ghost_tuning_access ? 'checked' : '') + (isMe ? ' disabled' : '') + ' onchange="setTeamAccess(\'' + p.id + '\', this)"><span class="t-slider"></span></label>'
+      + ' <span class="file-meta">' + (p.ghost_tuning_access ? 'Can sign in' : 'No access') + '</span></td>'
+      + '<td style="text-align:right">' + (p.ghost_tuning_access && !isDef ? '<button class="btn btn-sm" onclick="setDefaultTuner(\'' + escapeHtml(p.email) + '\')">Make default</button>' : '') + '</td>'
+      + '</tr>';
+  });
+  html += '</tbody></table></div>';
+  return html;
+}
+
+// Re-render, then put focus back in the NEW search box (the old one is gone).
+function teamSearchInput(v){
+  S.teamSearch = v;
+  renderPage();
+  const el = document.getElementById('teamSearch');
+  if(el){ el.focus(); el.setSelectionRange(v.length, v.length); }
+}
+window.teamSearchInput = teamSearchInput;
+
+async function setTeamAccess(id, el){
+  const on = el.checked;
+  const p = (S.team || []).find(function(x){ return x.id === id; });
+  if(!on && p && p.email === S.settings.default_tuner && !confirm(p.email + ' is the default tuner. Remove their access anyway? New applications will still be assigned to them until you choose another default.')){
+    el.checked = true; return;
+  }
+  el.disabled = true;
+  try{
+    const r = await teamCall({ action:'set_access', profile_id:id, access:on });
+    const idx = S.team.findIndex(function(x){ return x.id === id; });
+    if(idx !== -1) S.team[idx] = r.person;
+    await loadTuners();
+    toast((r.person.name || r.person.email) + (on ? ' can now sign in to Ghost Tuning' : ' no longer has access'));
+    renderPage();
+  }catch(e){
+    el.checked = !on; el.disabled = false;
+    toast('Could not update access: ' + e.message, true);
+  }
+}
+window.setTeamAccess = setTeamAccess;
+
+async function setDefaultTuner(email){
+  try{
+    const { error } = await sb.from('tuning_settings').upsert({ key:'default_tuner', value:email, updated_by: S.user.email, updated_at: new Date().toISOString() });
+    if(error) throw error;
+    S.settings.default_tuner = email;
+    toast('Default tuner set to ' + email);
+    renderPage();
+  }catch(e){ toast('Could not set default: ' + e.message, true); }
+}
+window.setDefaultTuner = setDefaultTuner;
 
 /* ================= PRODUCTS (Shopify, vendor Ghostronics) ================= */
 // Live view of the Ghostronics products in Shopify - add, edit price/SKU/
