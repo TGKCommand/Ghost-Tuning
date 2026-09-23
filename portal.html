@@ -205,7 +205,7 @@ const STATUS_ACCENT = {
   completed:'#16a34a', archived:'#9ca3af'
 };
 
-let STATE = { application:null, messages:[], files:[], invoices:[], _channel:null, _prevMsgCount:0 };
+let STATE = { application:null, messages:[], files:[], invoices:[], _channel:null };
 
 function escapeHtml(s){
   return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){
@@ -361,11 +361,13 @@ function renderPortal(){
 
   document.getElementById('portalWrap').innerHTML = html;
 
-  if(STATE.messages.length > STATE._prevMsgCount){
-    const list = document.getElementById('msgList');
-    if(list) list.scrollTop = list.scrollHeight;
-  }
-  STATE._prevMsgCount = STATE.messages.length;
+  // Every render fully replaces this DOM (innerHTML), which resets any
+  // scrollable element back to its top by default - so without this, an
+  // unrelated realtime update (an invoice getting paid, a status change)
+  // would silently scroll the customer away from their most recent
+  // messages, not just a genuinely new message arriving.
+  const list = document.getElementById('msgList');
+  if(list) list.scrollTop = list.scrollHeight;
 }
 window.renderPortal = renderPortal;
 
