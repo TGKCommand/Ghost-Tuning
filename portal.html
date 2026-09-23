@@ -216,6 +216,46 @@ body{background-image:url('data:image/webp;base64,UklGRqIrAABXRUJQVlA4WAoAAAAQAA
 @media(max-width:480px){.log-params{columns:1}}
 .msg-modupdate{background:rgba(234,88,12,.08);align-self:flex-end;margin-left:auto;border:1px solid rgba(234,88,12,.25)}
 .msg-modupdate-badge{font-weight:700;font-size:11.5px;color:var(--orange-d);text-transform:uppercase;letter-spacing:.03em;margin-bottom:3px}
+.fs-title{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text3);margin:20px 0 8px;display:flex;align-items:center;gap:6px}
+#fileList > .fs-title:first-child{margin-top:0}
+.fs-count{font-size:11px;font-weight:700;color:var(--text3);background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:0 7px;line-height:17px;letter-spacing:0}
+.tune-hero{display:flex;gap:16px;align-items:center;justify-content:space-between;border:1px solid rgba(22,163,74,.3);border-left:4px solid var(--green);background:linear-gradient(90deg,rgba(22,163,74,.06),transparent 70%);border-radius:var(--r-lg);padding:14px 16px}
+.tune-hero.not-marked{border-color:var(--border2);border-left-color:var(--orange);background:linear-gradient(90deg,rgba(234,88,12,.05),transparent 70%)}
+.tune-hero.empty{display:block;border:1.5px dashed var(--border2);background:none;text-align:center;padding:18px}
+.th-empty-title{font-weight:700;color:var(--text2);margin-bottom:2px}
+.th-main{flex:1;min-width:0}
+.th-main .file-meta,.fs-info .file-meta{overflow-wrap:anywhere;word-break:break-word}
+.th-kicker{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--green);margin-bottom:2px}
+.not-marked .th-kicker{color:var(--orange-d)}
+.th-title{font-size:18px;font-weight:800;color:var(--text);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.th-marked{font-size:12px;color:var(--green);font-weight:600;margin-top:3px}
+.th-unmarked{font-size:12px;color:var(--orange-d);font-weight:600;margin-top:3px}
+.th-notes{margin-top:8px;font-size:13px;color:var(--text2);background:var(--bg);border:1px solid var(--border);border-radius:var(--r);padding:8px 10px;white-space:pre-wrap}
+.th-notes span{display:block;font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text3);margin-bottom:2px}
+.th-actions{display:flex;flex-direction:column;gap:8px;flex-shrink:0}
+.fs-block{margin-top:20px;padding-top:16px;border-top:1px solid var(--border)}
+.fs-list{border:1px solid var(--border);border-radius:var(--r-lg);background:var(--bg);overflow:hidden}
+.fs-row{display:flex;align-items:center;gap:12px;padding:10px 14px;border-top:1px solid var(--border)}
+.fs-row:first-child{border-top:none}
+.fs-info{flex:1;min-width:0}
+.fs-name{font-weight:600;font-size:13.5px;color:var(--text);overflow-wrap:anywhere}
+.fs-notes{font-size:12.5px;color:var(--text2);margin-top:3px;white-space:pre-wrap}
+.fs-actions{display:flex;gap:6px;flex-shrink:0;flex-wrap:wrap;justify-content:flex-end}
+.fk-badge{flex-shrink:0;width:42px;text-align:center;font-size:10px;font-weight:800;letter-spacing:.05em;border-radius:6px;padding:5px 0}
+.fk-log{background:rgba(234,88,12,.1);color:var(--orange-d)}
+.fk-dyno{background:rgba(22,163,74,.1);color:var(--green)}
+.fk-file{background:var(--bg3);color:var(--text3)}
+.fs-history{margin-top:20px}
+.fs-history > summary{list-style:none;cursor:pointer;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text3);display:flex;align-items:center;gap:6px;margin-bottom:8px}
+.fs-history > summary::-webkit-details-marker{display:none}
+.fs-history > summary::after{content:'Show';margin-left:auto;font-size:12px;letter-spacing:0;text-transform:none;color:var(--teal-d);font-weight:600}
+.fs-history[open] > summary::after{content:'Hide'}
+@media(max-width:560px){
+  .tune-hero{flex-direction:column;align-items:stretch}
+  .th-actions .btn{width:100%}
+  .fs-rev{flex-wrap:wrap}
+  .fs-rev .fs-actions{width:100%;justify-content:flex-start}
+}
 .tv-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:6px}
 .tv-info{flex:1;min-width:0}
 .tv-actions{display:flex;gap:6px;flex-shrink:0;flex-wrap:wrap;justify-content:flex-end}
@@ -600,10 +640,61 @@ function renderMessagesTab(a){
   return html;
 }
 
+// Files tab, ordered by what the customer actually needs: the tune on the
+// car first, then sending a file, then what they've sent, then history.
+// Only the current tune's Download is a primary (orange) button.
+function tuneLabel(f){ return f.revision_number ? 'Revision ' + f.revision_number : f.file_name; }
+function fileKindBadge(f){
+  const k = f.file_type === 'log' ? ['LOG','fk-log'] : (f.file_type === 'dyno' ? ['DYNO','fk-dyno'] : ['FILE','fk-file']);
+  return '<span class="fk-badge ' + k[1] + '">' + k[0] + '</span>';
+}
+
+function renderCurrentTuneCard(tunes, closed){
+  if(!tunes.length){
+    return '<div class="tune-hero empty"><div class="th-empty-title">No tune yet</div>'
+      + '<div class="file-meta">Your tune will appear here as soon as your tuner uploads it.</div></div>';
+  }
+  const cur = tunes.find(function(f){ return f.is_current; });
+  const f = cur || tunes[0];
+  const who = f.flashed_marked_by === 'customer' ? 'by you' : (f.flashed_marked_by ? 'by your tuner' : '');
+  let html = '<div class="tune-hero' + (cur ? '' : ' not-marked') + '">'
+    + '<div class="th-main">'
+      + '<div class="th-kicker">' + (cur ? 'Currently flashed' : 'Latest tune') + '</div>'
+      + '<div class="th-title">' + escapeHtml(tuneLabel(f)) + (f.fuel ? ' <span class="pill pill-muted">' + escapeHtml(f.fuel) + '</span>' : '') + '</div>'
+      + '<div class="file-meta">' + escapeHtml(f.file_name) + ' &middot; sent ' + fmtDate(f.created_at) + '</div>'
+      + (cur
+          ? (who || f.flashed_marked_at ? '<div class="th-marked">Marked flashed ' + who + (f.flashed_marked_at ? ' &middot; ' + fmtDate(f.flashed_marked_at) : '') + '</div>' : '')
+          : '<div class="th-unmarked">Not marked as flashed yet</div>')
+      + (f.description ? '<div class="th-notes"><span>Tuner notes</span>' + escapeHtml(f.description) + '</div>' : '')
+    + '</div>'
+    + '<div class="th-actions">'
+      + '<button class="btn" onclick="downloadFile(\'' + f.id + '\')">Download tune</button>'
+      + (!cur && !closed ? '<button class="btn btn-muted" id="flashBtn-' + f.id + '" onclick="markFlashed(\'' + f.id + '\')">I\'ve flashed this</button>' : '')
+    + '</div></div>';
+  return html;
+}
+
 function renderFilesTab(){
-  let html = '<div id="fileList">' + renderFiles() + '</div>';
-  html += '<div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border)">';
-  html += '<div class="upload-head"><span class="upload-title">Send a file to your tuner</span>'
+  const closed = ['declined','archived'].indexOf((STATE.application || {}).status) !== -1;
+  const tunes = STATE.files.filter(function(f){ return f.uploaded_by === 'tuner' && f.file_type === 'tune'; })
+    .sort(function(x, y){
+      const rx = x.revision_number || 0, ry = y.revision_number || 0;
+      if(rx !== ry) return ry - rx;
+      return new Date(y.created_at) - new Date(x.created_at);
+    });
+  const cur = tunes.find(function(f){ return f.is_current; }) || tunes[0];
+  const earlier = tunes.filter(function(f){ return f !== cur; });
+  const mine = STATE.files.filter(function(f){ return f.uploaded_by === 'customer'; });
+  const fromTuner = STATE.files.filter(function(f){ return f.uploaded_by === 'tuner' && f.file_type !== 'tune'; });
+
+  let html = '<div id="fileList">';
+
+  // 1. The tune on the car
+  html += '<div class="fs-title">Your tune</div>' + renderCurrentTuneCard(tunes, closed);
+
+  // 2. Send a file
+  html += '<div class="fs-block">';
+  html += '<div class="upload-head"><span class="fs-title" style="margin:0">Send a file to your tuner</span>'
     + '<div class="seg" role="group" aria-label="File type">'
     + [['log','Datalog'],['dyno','Dyno sheet'],['other','Other']].map(function(t, i){
         return '<button type="button" class="seg-btn' + (i === 0 ? ' on' : '') + '" data-val="' + t[0] + '" onclick="setUploadType(this)">' + t[1] + '</button>';
@@ -612,6 +703,46 @@ function renderFilesTab(){
   html += fileDropHtml('fileInput', false, 'uploadBtn');
   html += '<div class="upload-actions"><button class="btn btn-sm" onclick="uploadLog()" id="uploadBtn" disabled>Upload</button></div>';
   html += '<div class="status-msg" id="uploadErr"></div>';
+  html += '</div>';
+
+  // 3. What the customer has sent
+  if(mine.length){
+    html += '<div class="fs-title">Files you\'ve sent <span class="fs-count">' + mine.length + '</span></div><div class="fs-list">';
+    html += mine.map(function(f){
+      return '<div class="fs-row">' + fileKindBadge(f)
+        + '<div class="fs-info"><div class="fs-name">' + escapeHtml(f.file_name) + '</div>'
+        + '<div class="file-meta">' + fmtDate(f.created_at) + '</div></div></div>';
+    }).join('');
+    html += '</div>';
+  }
+
+  // 4. Non-tune files from the tuner
+  if(fromTuner.length){
+    html += '<div class="fs-title">From your tuner <span class="fs-count">' + fromTuner.length + '</span></div><div class="fs-list">';
+    html += fromTuner.map(function(f){
+      return '<div class="fs-row">' + fileKindBadge(f)
+        + '<div class="fs-info"><div class="fs-name">' + escapeHtml(f.file_name) + '</div>'
+        + '<div class="file-meta">' + fmtDate(f.created_at) + '</div></div>'
+        + '<button class="btn btn-sm btn-muted" onclick="downloadFile(\'' + f.id + '\')">Download</button></div>';
+    }).join('');
+    html += '</div>';
+  }
+
+  // 5. Tune history, collapsed
+  if(earlier.length){
+    html += '<details class="fs-history"><summary>Earlier tune revisions <span class="fs-count">' + earlier.length + '</span></summary><div class="fs-list">';
+    html += earlier.map(function(f){
+      return '<div class="fs-row fs-rev">'
+        + '<div class="fs-info"><div class="fs-name">' + escapeHtml(tuneLabel(f)) + (f.fuel ? ' <span class="pill pill-muted">' + escapeHtml(f.fuel) + '</span>' : '') + '</div>'
+        + '<div class="file-meta">' + escapeHtml(f.file_name) + ' &middot; ' + fmtDate(f.created_at) + '</div>'
+        + (f.description ? '<div class="fs-notes">' + escapeHtml(f.description) + '</div>' : '') + '</div>'
+        + '<div class="fs-actions">'
+        + (!closed ? '<button class="btn btn-sm btn-muted" id="flashBtn-' + f.id + '" onclick="markFlashed(\'' + f.id + '\')">Mark as flashed</button>' : '')
+        + '<button class="btn btn-sm btn-muted" onclick="downloadFile(\'' + f.id + '\')">Download</button></div></div>';
+    }).join('');
+    html += '</div></details>';
+  }
+
   html += '</div>';
   return html;
 }
@@ -825,42 +956,6 @@ function renderMessages(){
   }).join('');
 }
 
-// Tunes get their own version history (changelog, fuel, currently
-// flashed); logs and other files stay in the plain list below it.
-function renderTuneVersions(){
-  const tunes = STATE.files.filter(function(f){ return f.uploaded_by === 'tuner' && f.file_type === 'tune'; })
-    .sort(function(x, y){
-      const rx = x.revision_number || 0, ry = y.revision_number || 0;
-      if(rx !== ry) return ry - rx;
-      return new Date(y.created_at) - new Date(x.created_at);
-    });
-  if(!tunes.length) return '';
-  const closed = ['declined','archived'].indexOf((STATE.application || {}).status) !== -1;
-  let html = '<div class="tv-head"><span class="sub" style="font-weight:700;color:var(--text2);margin:0">Tune versions</span>'
-    + (tunes.length > 1 && !closed ? '<span class="file-meta">Flashed a different revision? Mark it so your tuner knows.</span>' : '') + '</div>';
-  html += tunes.map(function(f){
-    const who = f.flashed_marked_by === 'customer' ? 'by you' : (f.flashed_marked_by ? 'by your tuner' : '');
-    const marked = f.is_current && (who || f.flashed_marked_at)
-      ? '<div class="tv-marked">Marked flashed ' + who + (f.flashed_marked_at ? ' &middot; ' + fmtDate(f.flashed_marked_at) : '') + '</div>' : '';
-    return '<div class="file-row tune-version' + (f.is_current ? ' is-current' : '') + '">'
-      + '<div class="tv-info">'
-      + '<div class="file-name">' + (f.revision_number ? 'Revision ' + f.revision_number : escapeHtml(f.file_name))
-        + (f.is_current ? ' <span class="pill pill-green">Currently flashed</span>' : '')
-        + (f.fuel ? ' <span class="pill pill-muted">' + escapeHtml(f.fuel) + '</span>' : '')
-      + '</div>'
-      + '<div class="file-meta">' + escapeHtml(f.file_name) + ' &middot; ' + fmtDate(f.created_at) + '</div>'
-      + marked
-      + (f.description ? '<div class="tune-changelog">' + escapeHtml(f.description) + '</div>' : '')
-      + '</div>'
-      + '<div class="tv-actions">'
-      + (!f.is_current && !closed ? '<button class="btn btn-sm btn-muted" id="flashBtn-' + f.id + '" onclick="markFlashed(\'' + f.id + '\')">Mark as flashed</button>' : '')
-      + '<button class="btn btn-sm" onclick="downloadFile(\'' + f.id + '\')">Download</button>'
-      + '</div>'
-      + '</div>';
-  }).join('');
-  return html + '<div style="height:12px"></div>';
-}
-
 // Customer tells the tuner which revision is actually on the car. Updates
 // the tuner's dashboard live and is logged there with who set it.
 async function markFlashed(fileId){
@@ -881,25 +976,6 @@ async function markFlashed(fileId){
 }
 window.markFlashed = markFlashed;
 
-function renderFiles(){
-  const others = STATE.files.filter(function(f){ return !(f.uploaded_by === 'tuner' && f.file_type === 'tune'); });
-  const tunesHtml = renderTuneVersions();
-  if(!tunesHtml && !others.length) return '<div class="empty-state">No files exchanged yet.</div>';
-  let html = tunesHtml;
-  if(others.length){
-    if(tunesHtml) html += '<div class="sub" style="font-weight:700;color:var(--text2);margin-bottom:6px">Other files</div>';
-    html += others.map(function(f){
-      const label = (f.uploaded_by === 'tuner' ? 'From your tuner' : 'You sent this')
-        + (f.file_type === 'dyno' ? ' &middot; <span class="pill pill-green">Dyno sheet</span>' : (f.file_type === 'log' ? ' &middot; Datalog' : ''));
-      return '<div class="file-row">'
-        + '<div style="flex:1;min-width:0"><div class="file-name">' + escapeHtml(f.file_name) + (f.revision_number ? ' <span class="pill pill-muted">rev ' + f.revision_number + '</span>' : '') + '</div>'
-        + '<div class="file-meta">' + label + ' &middot; ' + fmtDate(f.created_at) + '</div></div>'
-        + (f.uploaded_by === 'tuner' ? '<button class="btn btn-sm" onclick="downloadFile(\'' + f.id + '\')">Download</button>' : '')
-        + '</div>';
-    }).join('');
-  }
-  return html;
-}
 
 // Mid-project setup changes (new parts, different fuel) - flagged to the
 // tuner so the next revision is built for what's actually on the car.
