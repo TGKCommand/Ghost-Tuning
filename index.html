@@ -779,6 +779,7 @@ const NAV = [
   { id:'board', label:'Board', group:'Work' },
   { id:'applications', label:'Applications', group:'Work', badge: function(){ return S.applications.filter(function(a){ return a.has_unread; }).length; } },
   { id:'logreview', label:'Log Review', group:'Work', badge: function(){ return S.pendingLogs.length; } },
+  { id:'viewlogs', label:'View Log', group:'Work' },
   { id:'lookup', label:'Lookup', group:'Tools' },
   { id:'reports', label:'Reports', group:'Tools' },
   { id:'products', label:'Products', group:'Tools' },
@@ -1531,12 +1532,14 @@ function renderPage(){
   else if(S.page === 'health') el.innerHTML = renderHealth();
   else if(S.page === 'activity') el.innerHTML = renderActivityPage();
   else if(S.page === 'logreview') el.innerHTML = renderLogReview();
+  else if(S.page === 'viewlogs') el.innerHTML = renderViewLogs();
   else if(S.page === 'lookup') el.innerHTML = renderLookup();
   else if(S.page === 'reports') el.innerHTML = renderReports();
   else if(S.page === 'library') el.innerHTML = renderLibrary();
   else if(S.page === 'logguides') el.innerHTML = renderLogGuides();
   else if(S.page === 'ecuref') el.innerHTML = renderEcuReference();
   else if(S.page === 'templates') el.innerHTML = renderTemplates();
+  wireDropzones();
 }
 
 function jumpToApplication(appId, tab){
@@ -1635,6 +1638,7 @@ function renderApplications(){
   let html = '<div class="filter-row">';
   html += '<span id="appFilterChips" style="display:contents">' + renderAppFilterChips() + '</span>';
   html += '<input class="form-input search-input" placeholder="Search name, email, car..." value="' + escapeHtml(S.search) + '" oninput="setAppSearch(this.value)">';
+  html += '<button class="btn btn-primary" style="margin-left:auto" onclick="openNewApplicationModal()">+ New Application</button>';
   html += '</div>';
   html += '<div id="appResults">' + renderAppResultsHtml() + '</div>';
   return html;
@@ -1673,6 +1677,72 @@ function setAppSearch(v){
   document.getElementById('appResults').innerHTML = renderAppResultsHtml();
 }
 window.setAppSearch = setAppSearch;
+
+/* ================= MANUALLY ADD AN APPLICATION / CUSTOMER ================= */
+// For phone, in-person, or otherwise off-portal sign-ups - creates the same
+// tuning_applications row the customer portal's intake would, just with a
+// short set of fields instead of the full questionnaire. The intake_defaults
+// DB trigger fills in the application number, portal link, and default
+// tuner the same way it does for a normal submission.
+function renderNewApplicationModal(){
+  return '<div class="modal">'
+    + '<div class="modal-title">New Application</div>'
+    + '<div class="file-meta" style="margin-top:-8px;margin-bottom:14px">For a customer signed up by phone, in person, or any other way outside the portal.</div>'
+    + '<div class="form-group"><label class="form-label">Customer Name</label><input class="form-input" id="naName" placeholder="Full name"></div>'
+    + '<div class="form-group"><label class="form-label">Customer Email</label><input class="form-input" id="naEmail" type="email" placeholder="name@example.com"></div>'
+    + '<div style="display:flex;gap:10px">'
+      + '<div class="form-group" style="flex:1"><label class="form-label">Year</label><input class="form-input" id="naYear" placeholder="2019"></div>'
+      + '<div class="form-group" style="flex:2"><label class="form-label">Make</label><input class="form-input" id="naMake" placeholder="Audi"></div>'
+      + '<div class="form-group" style="flex:2"><label class="form-label">Model</label><input class="form-input" id="naModel" placeholder="S4"></div>'
+    + '</div>'
+    + '<div class="form-group"><label class="form-label">Mileage</label><input class="form-input" id="naMileage" placeholder="Optional"></div>'
+    + '<div style="display:flex;gap:10px">'
+      + '<div class="form-group" style="flex:1"><label class="form-label">Status</label><select class="form-input" id="naStatus">'
+        + STATUS_ORDER.map(function(s){ return '<option value="' + s + '"' + (s === 'accepted' ? ' selected' : '') + '>' + STATUS_LABEL[s] + '</option>'; }).join('')
+      + '</select></div>'
+      + '<div class="form-group" style="flex:1"><label class="form-label">Assigned Tuner</label><select class="form-input" id="naTuner"><option value="">Unassigned (use default)</option>'
+        + (S.tuners || []).map(function(t){ return '<option value="' + escapeHtml(t.email) + '">' + escapeHtml(t.full_name || t.email) + '</option>'; }).join('')
+      + '</select></div>'
+    + '</div>'
+    + '<div class="modal-footer"><button class="btn" onclick="closeModal()">Cancel</button><button class="btn btn-primary" id="naSaveBtn" onclick="saveNewApplication()">Create Application</button></div>'
+    + '</div>';
+}
+function openNewApplicationModal(){ openModal(renderNewApplicationModal()); }
+window.openNewApplicationModal = openNewApplicationModal;
+
+async function saveNewApplication(){
+  const val = function(id){ const el = document.getElementById(id); return el ? el.value.trim() : ''; };
+  const numOrText = function(v){ if(!v) return null; return isNaN(Number(v)) ? v : Number(v); };
+  const name = val('naName'), email = val('naEmail');
+  if(!name){ toast('Customer name is required', true); return; }
+  if(!email){ toast('Customer email is required', true); return; }
+  const btn = document.getElementById('naSaveBtn');
+  if(btn){ btn.disabled = true; btn.textContent = 'Creating...'; }
+  try{
+    const row = {
+      customer_name: name,
+      customer_email: email,
+      car_year: numOrText(val('naYear')),
+      car_make: val('naMake') || null,
+      car_model: val('naModel') || null,
+      car_mileage: numOrText(val('naMileage')),
+      status: val('naStatus') || 'accepted',
+      assigned_tuner: val('naTuner') || null
+    };
+    const { data, error } = await sb.from('tuning_applications').insert(row).select().single();
+    if(error) throw error;
+    S.applications.unshift(data);
+    closeModal();
+    renderNav();
+    if(S.page === 'applications' || S.page === 'dashboard' || S.page === 'board') renderPage();
+    toast('Application #' + data.application_number + ' created for ' + data.customer_name);
+    openApplication(data.id);
+  }catch(e){
+    toast('Failed to create application: ' + e.message, true);
+    if(btn){ btn.disabled = false; btn.textContent = 'Create Application'; }
+  }
+}
+window.saveNewApplication = saveNewApplication;
 
 function daysSince(dateStr){
   if(!dateStr) return null;
@@ -3504,6 +3574,55 @@ function toggleFuelCut(on){ if(S.logView){ S.logView.hideFuelCut = on; renderLog
 window.toggleFuelCut = toggleFuelCut;
 window.openLogViewer = openLogViewer;
 
+/* ================= STANDALONE LOG VIEWER (no application) ================= */
+// Quick "drop a file, see the log" tool - doesn't touch storage or the
+// database at all. Reuses the same parser/chart engine as an application's
+// Files tab, just fed straight from the File object the browser already
+// has in memory.
+function renderViewLogs(){
+  return '<div class="section-title">View a Log</div>'
+    + '<div class="file-meta" style="margin-bottom:14px">Drop in a datalog to chart it - nothing is uploaded or saved, this just opens the same viewer used on applications.</div>'
+    + '<div style="max-width:460px">'
+    + fileDropHtml('scratchLogInput', 'viewLogBtn')
+    + '<button class="btn btn-primary" id="viewLogBtn" style="margin-top:12px" onclick="viewLocalLog()" disabled>View Log</button>'
+    + '</div>';
+}
+
+async function viewLocalLog(){
+  const input = document.getElementById('scratchLogInput');
+  const file = input && input.files && input.files[0];
+  if(!file){ toast('Choose a file first', true); return; }
+  openModal('<div class="modal log-modal"><div class="modal-title">Loading ' + escapeHtml(file.name) + '&hellip;</div></div>');
+  try{
+    const text = await file.text();
+    const log = parseLog(text);
+    if(!S.logRules) await loadLogRules();
+    let saved = null;
+    try{ saved = JSON.parse(localStorage.getItem(logSignature(log.headers)) || 'null'); }catch(e){ saved = null; }
+    const valid = function(c){ return typeof c === 'number' && c < log.headers.length && log.numeric[c] && c !== log.timeIdx; };
+    let charts = [], units = 'native';
+    if(saved && saved.v === 2){
+      charts = (saved.charts || []).map(function(ch){ return ch.filter(valid); }).filter(function(ch){ return ch.length; });
+      units = saved.units === 'us' ? 'us' : 'native';
+    } else if(Array.isArray(saved)){
+      charts = saved.filter(valid).map(function(c){ return [c]; });
+    }
+    // fileId/path/appId stay null - this log was never stored, so there's
+    // no Download button and no "Compare with" list from another app.
+    S.logView = { fileId:null, path:null, fileName:file.name, appId:null, log:log, charts:[], filter:'', compare:null, hideFuelCut:true, units:units, range:null };
+    if(!charts.length) charts = buildPreset(log, 'Overview');
+    if(!charts.length){
+      log.headers.forEach(function(h, c){ if(charts.length < 3 && valid(c)) charts.push([c]); });
+    }
+    S.logView.charts = charts;
+    renderLogViewer();
+  }catch(e){
+    openModal('<div class="modal"><div class="modal-title">Could not open log</div><p class="file-meta">' + escapeHtml(e.message) + '</p>'
+      + '<div class="modal-footer"><button class="btn btn-sm" onclick="closeModal()">Close</button></div></div>');
+  }
+}
+window.viewLocalLog = viewLocalLog;
+
 // Downsample to ~W buckets keeping each bucket's min and max, so short
 // spikes (a knock event, a boost overshoot) survive on a long log.
 /* ---------- LOG FORMAT PROFILES ---------- */
@@ -3834,7 +3953,7 @@ function renderLogViewer(){
   html += '<div class="lv-top"><div><div class="modal-title" style="margin-bottom:2px">' + escapeHtml(V.fileName || 'Datalog') + '</div>'
     + '<div class="file-meta">' + escapeHtml(log.profile ? log.profile.name : 'Log') + ' &middot; ' + log.rows.toLocaleString() + ' samples &middot; ' + log.headers.length + ' channels'
     + (log.timeIdx !== -1 ? ' &middot; ' + fmtNum(logSpan(log)) + ' s' : ' &middot; no time column (x-axis is sample number)') + '</div></div>'
-    + '<div style="display:flex;gap:6px"><button class="btn btn-sm" onclick="downloadFile(\'' + V.fileId + '\',\'' + V.path + '\')">Download</button><button class="btn btn-sm" onclick="closeModal();S.logView=null">Close</button></div></div>';
+    + '<div style="display:flex;gap:6px">' + (V.fileId ? '<button class="btn btn-sm" onclick="downloadFile(\'' + V.fileId + '\',\'' + V.path + '\')">Download</button>' : '') + '<button class="btn btn-sm" onclick="closeModal();S.logView=null">Close</button></div></div>';
 
   // Toolbar
   const others = (S.files[V.appId] || []).filter(function(f){ return f.id !== V.fileId && isLogFile(f); });
