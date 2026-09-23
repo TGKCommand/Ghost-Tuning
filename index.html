@@ -187,6 +187,51 @@ tr.row-click:hover td{background:var(--bg3)}
 .log-x:hover{color:var(--red)}
 .log-svg{width:100%;height:130px;display:block;cursor:crosshair}
 .log-line{fill:none;stroke:var(--teal);stroke-width:1.5;vector-effect:non-scaling-stroke}
+.lv-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap}
+.lv-bar{display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px;margin-top:10px;font-size:var(--t-sm)}
+.lv-lbl{font-size:var(--t-xs);font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text3);margin-right:4px}
+.lv-presets{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.lv-chip{background:var(--bg);border:1px solid var(--border2);border-radius:999px;padding:4px 12px;font-size:var(--t-xs);font-weight:700;color:var(--text2);cursor:pointer;font-family:inherit}
+.lv-chip:hover{border-color:var(--teal);color:var(--teal-d)}
+.lv-seg{display:inline-flex;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:2px;margin-left:auto}
+.lv-seg button{background:none;border:none;border-radius:6px;padding:4px 10px;font-size:var(--t-xs);font-weight:700;color:var(--text3);cursor:pointer;font-family:inherit}
+.lv-seg button.on{background:var(--bg);color:var(--text);box-shadow:0 1px 2px rgba(0,0,0,.1)}
+.lv-tool{display:flex;align-items:center;gap:6px;color:var(--text2)}
+.lv-tool select.form-input{width:auto;max-width:300px;padding-top:4px;padding-bottom:4px;font-size:var(--t-sm)}
+.lv-zoom{color:var(--text3);font-size:var(--t-xs)}
+.lv-zoom a{color:var(--teal-d);font-weight:700;cursor:pointer;margin-left:4px}
+.lv-legend-note{display:flex;align-items:center;gap:6px;font-size:var(--t-xs);color:var(--text2);margin-top:8px}
+.lg-solid,.lg-dash{display:inline-block;width:20px;border-top:2px solid var(--text2);margin-left:4px}
+.lg-dash{border-top-style:dashed;margin-left:12px}
+.lv-readout{font-size:var(--t-sm);margin:4px 0 6px;min-height:18px;font-variant-numeric:tabular-nums}
+.lc{border:1px solid var(--border);border-radius:var(--r-md);background:var(--bg);margin-bottom:6px;padding:8px 10px 8px 0}
+.lc-head{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;padding-left:10px;margin-bottom:4px}
+.lc-legend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:var(--t-sm);min-width:0}
+.lg-item{display:inline-flex;align-items:baseline;gap:5px;white-space:nowrap}
+.lg-item i{display:inline-block;width:10px;height:3px;border-radius:2px;transform:translateY(-3px)}
+.lg-name{font-weight:700;color:var(--text)}
+.lg-raw{font-size:10.5px;color:var(--text3);font-family:var(--mono)}
+.lg-val{font-weight:700;font-variant-numeric:tabular-nums;color:var(--text);min-width:0}
+.lg-valb{font-variant-numeric:tabular-nums;color:var(--text3)}
+.lg-unit{font-size:var(--t-xs);color:var(--text3)}
+.lg-x{cursor:pointer;color:var(--text3);font-size:15px;line-height:1;padding:0 3px;text-decoration:none}
+.lg-x:hover{color:var(--red)}
+.lc-tools{display:flex;align-items:center;gap:6px;flex-shrink:0}
+.lc-add{border:1px solid var(--border);border-radius:6px;background:var(--bg2);font-size:var(--t-xs);padding:3px 4px;color:var(--text2);max-width:150px;font-family:inherit}
+.lc-body{display:flex}
+.lc-y{position:relative;width:52px;flex-shrink:0;height:170px}
+.lc-y span{position:absolute;right:8px;transform:translateY(-50%);font-size:10.5px;color:var(--text3);font-variant-numeric:tabular-nums;white-space:nowrap}
+.lv-svg{flex:1;min-width:0;height:170px;display:block;cursor:crosshair;touch-action:pan-y;user-select:none}
+.lv-grid{stroke:var(--border);stroke-width:1;vector-effect:non-scaling-stroke}
+.lv-line{fill:none;stroke-width:1.6;vector-effect:non-scaling-stroke;stroke-linejoin:round}
+.lv-dash{stroke-dasharray:5 3;opacity:.75}
+.lv-sel{fill:rgba(13,148,136,.12);stroke:var(--teal);stroke-width:1;vector-effect:non-scaling-stroke}
+.lc-x{display:flex;margin-top:2px}
+.lc-y-sp{width:52px;flex-shrink:0}
+.lc-x-track{position:relative;flex:1;height:16px;margin-right:10px}
+.lc-x-track span{position:absolute;transform:translateX(-50%);font-size:10.5px;color:var(--text3);font-variant-numeric:tabular-nums}
+.lc-x-title{text-align:center;font-size:var(--t-xs);color:var(--text3);margin-top:2px}
+@media(max-width:720px){.lc-y,.lc-y-sp{width:40px}.lg-raw{display:none}.lv-seg{margin-left:0}}
 .log-line-b{fill:none;stroke:var(--orange);stroke-width:1.5;stroke-dasharray:5 3;vector-effect:non-scaling-stroke;opacity:.9}
 .log-toolbar{display:flex;flex-wrap:wrap;gap:8px 18px;align-items:center;margin:12px 0 4px;font-size:var(--t-sm)}
 .log-tool{display:flex;align-items:center;gap:6px;color:var(--text2)}
@@ -443,7 +488,7 @@ tr.row-click:hover td{background:var(--bg3)}
         </div>
         <div class="sync-sub" onclick="doLogout()">Sign out</div>
         <div class="version-row">
-          <span>v1.67</span>
+          <span>v1.68</span>
           <span id="buildDate"></span>
         </div>
       </div>
@@ -976,6 +1021,23 @@ function subscribeGlobalRealtime(){
         if(appId && S.openAppId === appId) renderPanelBody();
         renderPage();
       });
+    })
+    // New customer files anywhere (not just the open application): refresh
+    // the Log Review queue + badge and tell the tuner. UPDATE covers another
+    // tuner marking a log reviewed.
+    .on('postgres_changes', { event:'INSERT', schema:'public', table:'tuning_files' }, function(payload){
+      const f = payload.new || {};
+      if(f.uploaded_by !== 'customer') return;
+      const app = S.applications.find(function(a){ return a.id === f.application_id; });
+      loadPendingLogs().then(function(){
+        renderNav();
+        if(S.page === 'logreview' || S.page === 'dashboard') renderPage();
+      });
+      const kind = f.file_type === 'log' ? 'datalog' : (f.file_type === 'dyno' ? 'dyno sheet' : 'file');
+      toast('New ' + kind + ' from ' + (app ? '#' + app.application_number + ' ' + app.customer_name : 'a customer') + ': ' + (f.file_name || ''));
+    })
+    .on('postgres_changes', { event:'UPDATE', schema:'public', table:'tuning_files' }, function(){
+      loadPendingLogs().then(function(){ renderNav(); if(S.page === 'logreview') renderPage(); });
     })
     .on('postgres_changes', { event:'INSERT', schema:'public', table:'tuning_activity_log' }, function(payload){
       const entry = payload.new;
@@ -2605,7 +2667,6 @@ window.uploadFile = uploadFile;
 // preamble lines), detects the delimiter, and lets the tuner pick which
 // columns to chart. Nothing here assumes DS1's column names - flag rules
 // are tuner-defined against the real headers (tuning_log_rules).
-const LOG_MAX_CHARTS = 6;
 
 function splitLogLine(line, delim){
   if(line.indexOf('"') === -1) return line.split(delim).map(function(c){ return c.trim(); });
@@ -2821,13 +2882,24 @@ async function openLogViewer(fileId, path){
     const log = await fetchLog(path);
     if(!S.logRules) await loadLogRules();
     if(appId && !S.files[appId]) await loadFiles(appId); // for the "Compare with" list
-    let selected = [];
-    try{ selected = JSON.parse(localStorage.getItem(logSignature(log.headers)) || '[]'); }catch(e){ selected = []; }
-    selected = selected.filter(function(c){ return c < log.headers.length && log.numeric[c] && c !== log.timeIdx; });
-    if(!selected.length){
-      log.headers.forEach(function(h, c){ if(selected.length < 3 && log.numeric[c] && c !== log.timeIdx) selected.push(c); });
+    // Saved layout for logs with these same channels (v2 = charts of
+    // several series; v1 was a flat list of single-channel charts).
+    let saved = null;
+    try{ saved = JSON.parse(localStorage.getItem(logSignature(log.headers)) || 'null'); }catch(e){ saved = null; }
+    const valid = function(c){ return typeof c === 'number' && c < log.headers.length && log.numeric[c] && c !== log.timeIdx; };
+    let charts = [], units = 'native';
+    if(saved && saved.v === 2){
+      charts = (saved.charts || []).map(function(ch){ return ch.filter(valid); }).filter(function(ch){ return ch.length; });
+      units = saved.units === 'us' ? 'us' : 'native';
+    } else if(Array.isArray(saved)){
+      charts = saved.filter(valid).map(function(c){ return [c]; });
     }
-    S.logView = { fileId: fileId, path: path, fileName: fileName, appId: appId, log: log, selected: selected, filter: '', compare: null, hideFuelCut: true };
+    S.logView = { fileId: fileId, path: path, fileName: fileName, appId: appId, log: log, charts: [], filter: '', compare: null, hideFuelCut: true, units: units, range: null };
+    if(!charts.length) charts = buildPreset(log, 'Overview');
+    if(!charts.length){
+      log.headers.forEach(function(h, c){ if(charts.length < 3 && valid(c)) charts.push([c]); });
+    }
+    S.logView.charts = charts;
     renderLogViewer();
   }catch(e){
     openModal('<div class="modal"><div class="modal-title">Could not open log</div><p class="file-meta">' + escapeHtml(e.message) + '</p>'
@@ -2850,34 +2922,163 @@ async function setLogCompare(fileId){
 window.setLogCompare = setLogCompare;
 
 function toggleFuelCut(on){ if(S.logView){ S.logView.hideFuelCut = on; renderLogViewer(); } }
+// displayData caches are keyed by fuel-cut mode, so toggling needs no reset.
 window.toggleFuelCut = toggleFuelCut;
 window.openLogViewer = openLogViewer;
 
 // Downsample to ~W buckets keeping each bucket's min and max, so short
 // spikes (a knock event, a boost overshoot) survive on a long log.
-function colRange(log, c){
-  const data = colData(log, c);
-  let min = Infinity, max = -Infinity;
-  for(let i = 0; i < data.length; i++){ const v = data[i]; if(!isNaN(v)){ if(v < min) min = v; if(v > max) max = v; } }
-  return min === Infinity ? null : [min, max];
+/* ---------- channel names, units, groups ---------- */
+// Readable names only for channels whose meaning is verified - the boost
+// pair was confirmed from the data itself (pvds jumps to target the moment
+// the pedal goes down, pvdr follows with turbo lag). Anything not listed
+// keeps its raw DS1 name, and the raw name is always shown alongside.
+const LOG_FRIENDLY = [
+  [/^nmot_w$/i, 'Engine speed'],
+  [/^AccP_r_VW$/i, 'Accelerator pedal'],
+  [/^wdk_w/i, 'Throttle angle'],
+  [/^CHdT_vVehloc$/i, 'Vehicle speed'],
+  [/^CoEng_nrActGearHem$/i, 'Gear'],
+  [/^rl_w$/i, 'Relative load'],
+  [/^tans/i, 'Intake air temp'],
+  [/^tmot/i, 'Coolant temp'],
+  [/^SLmpCtl_tOilSwmp/i, 'Oil temp (sump)'],
+  [/^IKCtl_agKnkInt/i, 'Knock retard'],
+  [/^zwoutzyl/i, 'Ignition timing'],
+  [/^InjSys_tiInjSum$/i, 'Injection time'],
+  [/^FuelP_pAct$/i, 'Low-pressure fuel'],
+  [/^prist_w/i, 'Rail pressure (actual)'],
+  [/^prsoll_w/i, 'Rail pressure (setpoint)'],
+  [/^pvdr_w/i, 'Boost pressure (actual)'],
+  [/^pvds_w/i, 'Boost pressure (setpoint)']
+];
+const LOG_COLORS = ['#0d9488', '#ea580c', '#2563eb', '#9333ea', '#db2777', '#65a30d', '#0891b2', '#ca8a04'];
+
+function chUnitRaw(h){ const m = String(h).match(/\[([^\]]*)\]\s*$/); return m ? m[1].trim() : ''; }
+function chBase(h){ return String(h).replace(/\s*\[[^\]]*\]\s*$/, '').trim(); }            // strips the unit
+function chGroupKey(h){ return chBase(h).replace(/\[\d+\]/, '').trim(); }                  // strips a [n] index
+function chIndex(h){ const m = chBase(h).match(/\[(\d+)\]/); return m ? m[1] : null; }
+function chFriendly(h){
+  const key = chGroupKey(h);
+  for(let i = 0; i < LOG_FRIENDLY.length; i++) if(LOG_FRIENDLY[i][0].test(key)) return LOG_FRIENDLY[i][1];
+  return null;
+}
+function chName(h){
+  const f = chFriendly(h), idx = chIndex(h);
+  return (f || chBase(h).replace(/\[\d+\]/, '')) + (idx !== null ? ' [' + idx + ']' : '');
 }
 
-// Time-based downsampling: each of W pixel buckets keeps its min and max,
-// so short spikes survive on long logs. Gaps (fuel cut, missing samples)
-// break the line instead of bridging it.
-function chartPath(log, c, W, H, pad, xMax, yMin, yMax){
-  const data = colData(log, c), n = data.length;
+// Unit handling. "native" keeps the log's units; "us" converts pressure to
+// psi, temperature to F and speed to mph. Flag rules always evaluate in
+// the log's native units.
+function chConv(h){
+  const u = chUnitRaw(h).toLowerCase();
+  const us = S.logView && S.logView.units === 'us';
+  const nice = { 'grad kw':'deg CA', 'grad c':'deg C', 'deg c':'deg C', '1/min':'rpm', '-':'', '':'' };
+  if(us){
+    if(u === 'hpa') return { f:function(v){ return v * 0.0145038; }, unit:'psi' };
+    if(u === 'kpa') return { f:function(v){ return v * 0.145038; }, unit:'psi' };
+    if(u === 'mpa') return { f:function(v){ return v * 145.038; }, unit:'psi' };
+    if(u === 'bar') return { f:function(v){ return v * 14.5038; }, unit:'psi' };
+    if(u === 'grad c' || u === 'deg c') return { f:function(v){ return v * 9 / 5 + 32; }, unit:'deg F' };
+    if(u === 'km/h') return { f:function(v){ return v * 0.621371; }, unit:'mph' };
+  }
+  return { f:null, unit: Object.prototype.hasOwnProperty.call(nice, u) ? nice[u] : chUnitRaw(h) };
+}
+function displayData(log, c){
+  const conv = chConv(log.headers[c]);
+  const base = colData(log, c);
+  if(!conv.f) return base;
+  const key = (S.logView && S.logView.hideFuelCut !== false ? 'f' : 'r') + c;
+  log._disp = log._disp || {};
+  if(!log._disp[key]) log._disp[key] = base.map(function(v){ return isNaN(v) ? NaN : conv.f(v); });
+  return log._disp[key];
+}
+
+// Channels available to chart: per-cylinder arrays ([0]..[n]) collapse
+// into one group entry, so "Knock retard [0-5]" is one click.
+function logChannelEntries(log){
+  const groups = {}, order = [];
+  log.headers.forEach(function(h, c){
+    if(!log.numeric[c] || c === log.timeIdx) return;
+    const idx = chIndex(h);
+    const key = idx !== null ? 'g:' + chGroupKey(h) : 'c:' + c;
+    if(!groups[key]){ groups[key] = { key:key, cols:[], label:'' }; order.push(key); }
+    groups[key].cols.push(c);
+  });
+  return order.map(function(k){
+    const g = groups[k], h = log.headers[g.cols[0]];
+    g.label = g.cols.length > 1 ? (chFriendly(h) || chGroupKey(h)) + ' [' + chIndex(h) + '-' + chIndex(log.headers[g.cols[g.cols.length - 1]]) + ']' : chName(h);
+    g.raw = g.cols.length > 1 ? chGroupKey(h) : chBase(h);
+    return g;
+  });
+}
+function findCols(log, re){
+  const out = [];
+  log.headers.forEach(function(h, c){ if(log.numeric[c] && c !== log.timeIdx && re.test(chGroupKey(h))) out.push(c); });
+  return out;
+}
+
+// One-click layouts built from verified channels; charts with no matching
+// columns in this log are skipped.
+const LOG_PRESETS = {
+  Overview: [[/^nmot_w$/i], [/^AccP_r_VW$/i, /^wdk_w/i], [/^rl_w$/i], [/^CHdT_vVehloc$/i]],
+  Boost:    [[/^pvdr_w/i, /^pvds_w/i], [/^nmot_w$/i], [/^rl_w$/i], [/^wdk_w/i]],
+  Ignition: [[/^IKCtl_agKnkInt/i], [/^zwoutzyl/i], [/^nmot_w$/i]],
+  Fueling:  [[/^prist_w/i, /^prsoll_w/i], [/^FuelP_pAct$/i], [/^lam/i], [/^InjSys_tiInjSum$/i]]
+};
+function buildPreset(log, name){
+  return (LOG_PRESETS[name] || []).map(function(chart){
+    let cols = [];
+    chart.forEach(function(re){ cols = cols.concat(findCols(log, re)); });
+    return cols.slice(0, 8);
+  }).filter(function(cols){ return cols.length; });
+}
+
+/* ---------- axes ---------- */
+function niceNum(x, round){
+  const e = Math.floor(Math.log10(x)), f = x / Math.pow(10, e);
+  let nf;
+  if(round) nf = f < 1.5 ? 1 : (f < 3 ? 2 : (f < 7 ? 5 : 10));
+  else nf = f <= 1 ? 1 : (f <= 2 ? 2 : (f <= 5 ? 5 : 10));
+  return nf * Math.pow(10, e);
+}
+function niceTicks(min, max, count){
+  if(!(max > min)){ const d = Math.abs(min) || 1; min -= d * 0.1; max += d * 0.1; }
+  // Single rounding of the raw step - rounding the range first as well
+  // overshoots and leaves a band of empty chart above/below the data.
+  const step = niceNum((max - min) / Math.max(1, count - 1), true);
+  const lo = Math.floor(min / step) * step, hi = Math.ceil(max / step) * step;
+  const ticks = [];
+  for(let v = lo; v <= hi + step / 2; v += step) ticks.push(Math.abs(v) < step / 1e6 ? 0 : v);
+  return { ticks: ticks, step: step, lo: lo, hi: hi };
+}
+function fmtTick(v, step){
+  const dec = step >= 1 ? 0 : Math.min(3, Math.ceil(-Math.log10(step)));
+  return v.toFixed(dec);
+}
+
+function logRange(){
+  const V = S.logView, B = V.compare ? V.compare.log : null;
+  const full = Math.max(logSpan(V.log), B ? logSpan(B) : 0) || 1;
+  return V.range ? { a: V.range[0], b: V.range[1], full: full } : { a: 0, b: full, full: full };
+}
+
+// Min/max-per-pixel path over the visible window. Missing samples
+// (fuel cut, gaps) break the line instead of bridging it.
+function seriesPath(log, c, W, H, pad, r, yMin, yMax){
+  const data = displayData(log, c), n = data.length;
   const y = function(v){ return pad + (H - 2 * pad) * (1 - (v - yMin) / (yMax - yMin)); };
-  // brk[b]: a missing sample (NaN) sits between this bucket's data and the
-  // previous point, so the line must break here rather than bridge it.
   const lo = [], hi = [], brk = [];
-  let sawData = false, pendingBreak = false;
+  let saw = false, pending = false;
   for(let i = 0; i < n; i++){
+    const t = xValue(log, i);
+    if(t < r.a || t > r.b){ continue; }
     const v = data[i];
-    if(isNaN(v)){ if(sawData) pendingBreak = true; continue; }
-    const b = Math.min(W - 1, Math.floor((xValue(log, i) / xMax) * (W - 1)));
-    if(pendingBreak){ brk[b] = true; pendingBreak = false; }
-    sawData = true;
+    if(isNaN(v)){ if(saw) pending = true; continue; }
+    const b = Math.min(W - 1, Math.max(0, Math.round(((t - r.a) / (r.b - r.a)) * (W - 1))));
+    if(pending){ brk[b] = true; pending = false; }
+    saw = true;
     if(lo[b] === undefined || v < lo[b]) lo[b] = v;
     if(hi[b] === undefined || v > hi[b]) hi[b] = v;
   }
@@ -2888,122 +3089,189 @@ function chartPath(log, c, W, H, pad, xMax, yMin, yMax){
     if(hi[b] !== lo[b]) d += 'L' + b + ' ' + y(hi[b]).toFixed(1);
     first = false;
   }
-  return { d: d };
+  return d;
 }
+function seriesExtent(log, c, r){
+  const data = displayData(log, c);
+  let min = Infinity, max = -Infinity;
+  for(let i = 0; i < data.length; i++){
+    const t = xValue(log, i);
+    if(t < r.a || t > r.b) continue;
+    const v = data[i];
+    if(!isNaN(v)){ if(v < min) min = v; if(v > max) max = v; }
+  }
+  return min === Infinity ? null : [min, max];
+}
+function seriesStats(log, c, r){
+  const data = displayData(log, c);
+  let min = Infinity, max = -Infinity, sum = 0, n = 0;
+  for(let i = 0; i < data.length; i++){
+    const t = xValue(log, i);
+    if(t < r.a || t > r.b) continue;
+    const v = data[i];
+    if(!isNaN(v)){ if(v < min) min = v; if(v > max) max = v; sum += v; n++; }
+  }
+  return n ? { min:min, max:max, avg:sum / n } : null;
+}
+
+/* ---------- render ---------- */
+const LOG_CH = 170, LOG_PAD = 6;
 
 function renderLogViewer(){
   const V = S.logView; if(!V) return;
   const log = V.log, B = V.compare ? V.compare.log : null;
   const results = evaluateRules(log);
   const resultsB = B ? evaluateRules(B) : [];
-  const W = 1000, H = 130, pad = 8;
-  const xMax = Math.max(logSpan(log), B ? logSpan(B) : 0) || 1;
-  const stats = function(lg, c){
-    let min = Infinity, max = -Infinity, sum = 0, n = 0;
-    colData(lg, c).forEach(function(v){ if(!isNaN(v)){ if(v < min) min = v; if(v > max) max = v; sum += v; n++; } });
-    return n ? 'min ' + fmtNum(min) + ' &middot; avg ' + fmtNum(sum / n) + ' &middot; max ' + fmtNum(max) : 'no data';
-  };
+  const r = logRange();
+  const W = 1000, H = LOG_CH;
   const fc = fuelCutCount(log);
 
   let html = '<div class="modal log-modal">';
-  html += '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap">'
-    + '<div><div class="modal-title" style="margin-bottom:2px">' + escapeHtml(V.fileName || 'Datalog') + '</div>'
-    + '<div class="file-meta">' + log.rows.toLocaleString() + ' samples &middot; ' + log.headers.length + ' columns'
-    + (log.timeIdx !== -1 ? ' &middot; ' + fmtNum(logSpan(log)) + (log.timeUnit ? ' ' + log.timeUnit : '') + ' long' : ' &middot; no time column, x-axis is sample number') + '</div></div>'
+  // Header
+  html += '<div class="lv-top"><div><div class="modal-title" style="margin-bottom:2px">' + escapeHtml(V.fileName || 'Datalog') + '</div>'
+    + '<div class="file-meta">' + log.rows.toLocaleString() + ' samples &middot; ' + log.headers.length + ' channels'
+    + (log.timeIdx !== -1 ? ' &middot; ' + fmtNum(logSpan(log)) + ' s' : ' &middot; no time column (x-axis is sample number)') + '</div></div>'
     + '<div style="display:flex;gap:6px"><button class="btn btn-sm" onclick="downloadFile(\'' + V.fileId + '\',\'' + V.path + '\')">Download</button><button class="btn btn-sm" onclick="closeModal();S.logView=null">Close</button></div></div>';
 
-  // Toolbar: compare + fuel cut
+  // Toolbar
   const others = (S.files[V.appId] || []).filter(function(f){ return f.id !== V.fileId && isLogFile(f); });
-  html += '<div class="log-toolbar">'
-    + '<label class="log-tool">Compare with '
-    + '<select class="form-input" onchange="setLogCompare(this.value)"><option value="">- None -</option>'
+  html += '<div class="lv-bar">'
+    + '<div class="lv-presets"><span class="lv-lbl">Layout</span>' + Object.keys(LOG_PRESETS).map(function(p){
+        return buildPreset(log, p).length ? '<button class="lv-chip" onclick="logApplyPreset(\'' + p + '\')">' + p + '</button>' : '';
+      }).join('') + '</div>'
+    + '<div class="lv-seg" title="Units"><button class="' + (V.units !== 'us' ? 'on' : '') + '" onclick="logSetUnits(\'native\')">Native</button><button class="' + (V.units === 'us' ? 'on' : '') + '" onclick="logSetUnits(\'us\')">psi / F / mph</button></div>'
+    + '</div>';
+  html += '<div class="lv-bar">'
+    + '<label class="lv-tool"><span class="lv-lbl">Compare</span><select class="form-input" onchange="setLogCompare(this.value)"><option value="">None</option>'
     + others.map(function(f){ return '<option value="' + f.id + '"' + (V.compare && V.compare.fileId === f.id ? ' selected' : '') + '>' + escapeHtml(f.file_name) + ' (' + fmtDate(f.created_at) + ')</option>'; }).join('')
     + '</select></label>'
-    + (fc ? '<label class="log-tool"><input type="checkbox" ' + (V.hideFuelCut ? 'checked' : '') + ' onchange="toggleFuelCut(this.checked)"> Hide fuel cut / overrun on lambda (' + fc + ' sample' + (fc === 1 ? '' : 's') + ')</label>' : '')
-    + (!others.length ? '<span class="file-meta">No other logs on this application to compare.</span>' : '')
+    + (fc ? '<label class="lv-tool"><input type="checkbox" ' + (V.hideFuelCut ? 'checked' : '') + ' onchange="toggleFuelCut(this.checked)"> Hide fuel cut on lambda <span class="file-meta">(' + fc + ')</span></label>' : '')
+    + '<span class="lv-zoom">' + (V.range ? 'Zoom ' + fmtNum(r.a) + '-' + fmtNum(r.b) + ' s <a onclick="logResetZoom()">Reset</a>' : 'Drag across a chart to zoom') + '</span>'
+    + (logWotRange(log) ? '<button class="lv-chip" onclick="logZoomWot()">Zoom to WOT</button>' : '')
     + '</div>';
   if(B){
-    html += '<div class="log-legend"><span class="lg-a"></span>' + escapeHtml(V.fileName) + '<span class="lg-b"></span>' + escapeHtml(V.compare.fileName) + ' <span class="file-meta">&middot; aligned from the start of each log</span></div>';
+    html += '<div class="lv-legend-note"><span class="lg-solid"></span>' + escapeHtml(V.fileName) + '<span class="lg-dash"></span>' + escapeHtml(V.compare.fileName) + ' <span class="file-meta">aligned from the start of each log</span></div>';
   }
 
   // Flags
-  const flagChips = function(res, prefix, cls){
-    return res.filter(function(r){ return r.total; }).map(function(r){
-      const where = r.cols.length > 1 ? ' on ' + r.trippedCols.length + ' of ' + r.cols.length + ' columns' : '';
-      return '<span class="log-flag' + (cls || '') + '"' + (cls ? '' : ' onclick="logFocusColumn(' + r.worstCol + ')"') + '>' + prefix + escapeHtml(r.rule.label) + ': ' + r.events + ' event' + (r.events === 1 ? '' : 's') + where + ', worst ' + fmtNum(r.worst) + '</span>';
+  const chips = function(res, prefix, muted){
+    return res.filter(function(x){ return x.total; }).map(function(x){
+      const where = x.cols.length > 1 ? ' on ' + x.trippedCols.length + ' of ' + x.cols.length : '';
+      return '<span class="log-flag' + (muted ? ' muted' : '') + '"' + (muted ? '' : ' onclick="logFocusColumn(' + x.worstCol + ')"') + '>' + prefix + escapeHtml(x.rule.label) + ': ' + x.events + ' event' + (x.events === 1 ? '' : 's') + where + ', worst ' + fmtNum(x.worst) + '</span>';
     }).join('');
   };
-  const firedA = results.filter(function(r){ return r.total; }).length;
-  const checked = results.filter(function(r){ return r.cols.length; }).length;
+  const firedA = results.filter(function(x){ return x.total; }).length;
   html += '<div class="log-flags">';
-  if(!(S.logRules || []).length) html += '<span class="file-meta">No flag rules yet - add one below to auto-check logs.</span>';
-  else if(!firedA) html += '<span class="pill pill-green">No flags</span> <span class="file-meta">' + checked + ' rule' + (checked === 1 ? '' : 's') + ' checked</span>';
-  html += flagChips(results, B ? 'This log - ' : '', '');
-  if(B){
-    const fb = flagChips(resultsB, 'Compared - ', ' muted');
-    html += fb || '<span class="pill pill-green">Compared log: no flags</span>';
+  if(!(S.logRules || []).length) html += '<span class="file-meta">No flag rules yet - add one at the bottom to auto-check every log.</span>';
+  else if(!firedA) html += '<span class="pill pill-green">No flags</span>';
+  html += chips(results, B ? 'This log: ' : '', false);
+  if(B) html += chips(resultsB, 'Compared: ', true) || '<span class="pill pill-green">Compared log: no flags</span>';
+  html += '</div>';
+
+  // Time readout
+  html += '<div class="lv-readout" id="logReadout"><span class="file-meta">Hover for values &middot; drag to zoom &middot; double-click to reset</span></div>';
+
+  // Charts
+  const xt = niceTicks(r.a, r.b, 9);
+  const xPct = function(t){ return ((t - r.a) / (r.b - r.a)) * 100; };
+  html += '<div id="logCharts">';
+  if(!V.charts.length) html += '<div class="empty-state">Pick a layout above or add channels below.</div>';
+  V.charts.forEach(function(cols, k){
+    let yMin = Infinity, yMax = -Infinity;
+    cols.forEach(function(c){
+      const e = seriesExtent(log, c, r); if(e){ yMin = Math.min(yMin, e[0]); yMax = Math.max(yMax, e[1]); }
+      const cb = B ? compareCol(c) : -1;
+      if(cb !== -1){ const eb = seriesExtent(B, cb, r); if(eb){ yMin = Math.min(yMin, eb[0]); yMax = Math.max(yMax, eb[1]); } }
+    });
+    if(yMin === Infinity){ yMin = 0; yMax = 1; }
+    const yt = niceTicks(yMin, yMax, 5);
+    yMin = yt.lo; yMax = yt.hi;
+    const yy = function(v){ return LOG_PAD + (H - 2 * LOG_PAD) * (1 - (v - yMin) / (yMax - yMin)); };
+
+    let grid = '';
+    yt.ticks.forEach(function(v){ grid += '<line x1="0" x2="' + W + '" y1="' + yy(v).toFixed(1) + '" y2="' + yy(v).toFixed(1) + '" class="lv-grid"/>'; });
+    xt.ticks.forEach(function(t){ if(t < r.a || t > r.b) return; const x = (xPct(t) * (W - 1) / 100).toFixed(1); grid += '<line x1="' + x + '" x2="' + x + '" y1="0" y2="' + H + '" class="lv-grid"/>'; });
+
+    let marks = '';
+    results.forEach(function(res){
+      cols.forEach(function(c){
+        const hits = res.hitsByCol[c]; if(!hits) return;
+        hits.forEach(function(i){
+          const t = xValue(log, i); if(t < r.a || t > r.b) return;
+          const x = (xPct(t) * (W - 1) / 100).toFixed(1);
+          marks += '<line x1="' + x + '" x2="' + x + '" y1="0" y2="' + H + '" class="log-hitline"/>';
+        });
+        const conv = chConv(log.headers[c]);
+        const th = conv.f ? conv.f(Number(res.rule.threshold)) : Number(res.rule.threshold);
+        if(th >= yMin && th <= yMax) marks += '<line x1="0" x2="' + W + '" y1="' + yy(th).toFixed(1) + '" y2="' + yy(th).toFixed(1) + '" class="log-threshold"/>';
+      });
+    });
+
+    let paths = '';
+    cols.forEach(function(c, i){
+      const color = LOG_COLORS[i % LOG_COLORS.length];
+      const cb = B ? compareCol(c) : -1;
+      if(cb !== -1) paths += '<path d="' + seriesPath(B, cb, W, H, LOG_PAD, r, yMin, yMax) + '" class="lv-line lv-dash" style="stroke:' + color + '"/>';
+      paths += '<path d="' + seriesPath(log, c, W, H, LOG_PAD, r, yMin, yMax) + '" class="lv-line" style="stroke:' + color + '"/>';
+    });
+
+    // Legend with live values
+    const legend = cols.map(function(c, i){
+      const h = log.headers[c], color = LOG_COLORS[i % LOG_COLORS.length];
+      const st = seriesStats(log, c, r), unit = chConv(h).unit;
+      const tip = h + (st ? ' | min ' + fmtNum(st.min) + ' avg ' + fmtNum(st.avg) + ' max ' + fmtNum(st.max) : '');
+      return '<span class="lg-item" title="' + escapeHtml(tip) + '"><i style="background:' + color + '"></i>'
+        + '<span class="lg-name">' + escapeHtml(chName(h)) + '</span>'
+        + (chFriendly(h) ? '<span class="lg-raw">' + escapeHtml(chBase(h)) + '</span>' : '')
+        + '<span class="lg-val" id="lv-' + k + '-' + i + '"></span>'
+        + (B && compareCol(c) !== -1 ? '<span class="lg-valb" id="lvb-' + k + '-' + i + '"></span>' : '')
+        + (unit ? '<span class="lg-unit">' + escapeHtml(unit) + '</span>' : '')
+        + (cols.length > 1 ? '<a class="lg-x" onclick="logRemoveSeries(' + k + ',' + c + ')" title="Remove from chart">&times;</a>' : '')
+        + '</span>';
+    }).join('');
+    const addOpts = logChannelEntries(log).filter(function(e){ return e.cols.some(function(c){ return cols.indexOf(c) === -1; }); })
+      .map(function(e){ return '<option value="' + e.key + '">' + escapeHtml(e.label) + '</option>'; }).join('');
+
+    html += '<div class="lc">'
+      + '<div class="lc-head"><div class="lc-legend">' + legend + '</div>'
+      + '<div class="lc-tools"><select class="lc-add" onchange="logOverlay(' + k + ', this.value)"><option value="">+ Overlay</option>' + addOpts + '</select>'
+      + '<a class="lg-x" onclick="logRemoveChart(' + k + ')" title="Remove chart">&times;</a></div></div>'
+      + '<div class="lc-body"><div class="lc-y">' + yt.ticks.map(function(v){ return '<span style="top:' + (yy(v) / H * 100).toFixed(2) + '%">' + fmtTick(v, yt.step) + '</span>'; }).join('') + '</div>'
+      + '<svg viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none" class="lv-svg" data-k="' + k + '" onpointerdown="logDown(event,this)" onpointermove="logMove(event,this)" onpointerup="logUp(event,this)" onpointerleave="logLeave()" ondblclick="logResetZoom()">'
+      + grid + marks + paths
+      + '<rect class="lv-sel" x="0" y="0" width="0" height="' + H + '"/>'
+      + '<line class="log-cursor" x1="-10" x2="-10" y1="0" y2="' + H + '"/>'
+      + '</svg></div></div>';
+  });
+  if(V.charts.length){
+    html += '<div class="lc-x"><div class="lc-y-sp"></div><div class="lc-x-track">'
+      + xt.ticks.filter(function(t){ return t >= r.a && t <= r.b; }).map(function(t){ return '<span style="left:' + xPct(t).toFixed(2) + '%">' + fmtTick(t, xt.step) + '</span>'; }).join('')
+      + '</div></div><div class="lc-x-title">' + escapeHtml(log.timeIdx !== -1 ? 'Time (s)' : 'Sample') + '</div>';
   }
   html += '</div>';
 
-  html += '<div class="log-readout" id="logReadout">Hover a chart to read values.</div>';
-  html += '<div id="logCharts">';
-  if(!V.selected.length) html += '<div class="empty-state">Pick channels below to chart them.</div>';
-  V.selected.forEach(function(c){
-    const cb = B ? compareCol(c) : -1;
-    const ra = colRange(log, c), rb = cb !== -1 ? colRange(B, cb) : null;
-    let yMin = Math.min(ra ? ra[0] : Infinity, rb ? rb[0] : Infinity);
-    let yMax = Math.max(ra ? ra[1] : -Infinity, rb ? rb[1] : -Infinity);
-    if(yMin === Infinity){ yMin = 0; yMax = 1; }
-    if(yMin === yMax){ yMin -= 1; yMax += 1; }
-    const pa = chartPath(log, c, W, H, pad, xMax, yMin, yMax);
-    const pb = cb !== -1 ? chartPath(B, cb, W, H, pad, xMax, yMin, yMax) : null;
-    let marks = '';
-    results.filter(function(r){ return r.hitsByCol[c]; }).forEach(function(r){
-      const hits = r.hitsByCol[c];
-      const step = Math.max(1, Math.floor(hits.length / 300));
-      for(let k = 0; k < hits.length; k += step){
-        const x = ((xValue(log, hits[k]) / xMax) * (W - 1)).toFixed(1);
-        marks += '<line x1="' + x + '" x2="' + x + '" y1="0" y2="' + H + '" class="log-hitline"/>';
-      }
-      const ty = pad + (H - 2 * pad) * (1 - (Number(r.rule.threshold) - yMin) / (yMax - yMin));
-      if(ty >= 0 && ty <= H) marks += '<line x1="0" x2="' + W + '" y1="' + ty.toFixed(1) + '" y2="' + ty.toFixed(1) + '" class="log-threshold"/>';
-    });
-    html += '<div class="log-chart">'
-      + '<div class="log-chart-head"><strong>' + escapeHtml(log.headers[c]) + '</strong>'
-      + '<span class="file-meta">' + stats(log, c) + '</span>'
-      + (B ? (cb !== -1 ? '<span class="file-meta lg-b-text">compared: ' + stats(B, cb) + '</span>' : '<span class="file-meta">not in compared log</span>') : '')
-      + '<a class="log-x" onclick="logToggleColumn(' + c + ')" title="Remove">&times;</a></div>'
-      + '<svg viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none" class="log-svg" onmousemove="logHover(event,this)" onmouseleave="logHoverEnd()">'
-      + marks
-      + (pb ? '<path d="' + pb.d + '" class="log-line-b"/>' : '')
-      + '<path d="' + pa.d + '" class="log-line"/>'
-      + '<line class="log-cursor" x1="-10" x2="-10" y1="0" y2="' + H + '"/>'
-      + '</svg>'
-      + '<div class="log-axis"><span>' + fmtNum(yMax) + '</span><span>' + fmtNum(yMin) + '</span></div>'
-      + '</div>';
-  });
-  html += '</div>';
-
-  html += '<details class="ov-sec" open style="margin-top:12px"><summary>Channels (' + V.selected.length + '/' + LOG_MAX_CHARTS + ' shown)</summary><div class="ov-body">'
+  // Channel picker
+  html += '<details class="ov-sec" style="margin-top:14px"><summary>Add channels (' + V.charts.length + ' chart' + (V.charts.length === 1 ? '' : 's') + ')</summary><div class="ov-body">'
     + '<input class="form-input" placeholder="Filter channels..." value="' + escapeHtml(V.filter) + '" oninput="logFilter(this.value)" style="margin-bottom:8px" id="logFilterInput">'
     + '<div class="log-channels" id="logChannels">' + renderLogChannelList(V.filter.toLowerCase()) + '</div></div></details>';
 
+  // Rules
   const numericCols = log.headers.map(function(h, i){ return i; }).filter(function(i){ return log.numeric[i] && i !== log.timeIdx; });
   html += '<details class="ov-sec"><summary>Flag rules (' + (S.logRules || []).length + ', shared by all tuners)</summary><div class="ov-body">';
-  (S.logRules || []).forEach(function(r){
-    const res = results.find(function(x){ return x.rule.id === r.id; });
-    const cover = !res || !res.cols.length ? ' &middot; not in this log' : (res.cols.length > 1 ? ' &middot; checks ' + res.cols.length + ' columns' : '');
-    html += '<div class="log-rule"><span><strong>' + escapeHtml(r.label) + '</strong> <span class="file-meta">' + escapeHtml(r.column_name) + ' ' + r.operator + ' ' + r.threshold + cover + '</span></span>'
-      + '<a class="log-x" onclick="deleteLogRule(\'' + r.id + '\')" title="Delete rule">&times;</a></div>';
+  (S.logRules || []).forEach(function(rl){
+    const res = results.find(function(x){ return x.rule.id === rl.id; });
+    const cover = !res || !res.cols.length ? ' &middot; not in this log' : (res.cols.length > 1 ? ' &middot; checks ' + res.cols.length + ' channels' : '');
+    html += '<div class="log-rule"><span><strong>' + escapeHtml(rl.label) + '</strong> <span class="file-meta">' + escapeHtml(rl.column_name) + ' ' + rl.operator + ' ' + rl.threshold + cover + '</span></span>'
+      + '<a class="log-x" onclick="deleteLogRule(\'' + rl.id + '\')" title="Delete rule">&times;</a></div>';
   });
   html += '<div class="log-rule-form">'
-    + '<select class="form-input" id="lrCol">' + numericCols.map(function(i){ return '<option value="' + escapeHtml(log.headers[i]) + '">' + escapeHtml(log.headers[i]) + '</option>'; }).join('') + '</select>'
+    + '<select class="form-input" id="lrCol">' + numericCols.map(function(i){ return '<option value="' + escapeHtml(log.headers[i]) + '">' + escapeHtml(chName(log.headers[i]) + (chFriendly(log.headers[i]) ? ' - ' + chBase(log.headers[i]) : '')) + '</option>'; }).join('') + '</select>'
     + '<select class="form-input" id="lrOp" style="width:70px"><option value="&gt;">&gt;</option><option value="&lt;">&lt;</option></select>'
     + '<input class="form-input" id="lrTh" type="number" step="any" placeholder="Threshold" style="width:110px">'
     + '<input class="form-input" id="lrLabel" placeholder="Label, e.g. Timing pulled" style="flex:1;min-width:140px">'
     + '<label class="check-row" style="font-size:var(--t-sm)"><input type="checkbox" id="lrAllCyl" checked> All cylinders</label>'
     + '<button class="btn btn-sm btn-primary" onclick="addLogRule()">Add rule</button></div>'
-    + '<div class="file-meta" style="margin-top:6px">Rules match any log with a column containing that name, so one rule covers every DS1 log with that channel.</div>';
+    + '<div class="file-meta" style="margin-top:6px">Thresholds use the log\'s native units (e.g. hPa, deg CA). A rule matches any log with that channel.</div>';
   html += '</div></details>';
 
   html += '</div>';
@@ -3014,36 +3282,69 @@ function renderLogViewer(){
 
 function renderLogChannelList(filt){
   const V = S.logView, log = V.log;
-  return log.headers.map(function(h, i){
-    if(!log.numeric[i] || i === log.timeIdx) return '';
-    if(filt && h.toLowerCase().indexOf(filt) === -1) return '';
-    const on = V.selected.indexOf(i) !== -1;
-    return '<label class="log-ch' + (on ? ' on' : '') + '"><input type="checkbox" ' + (on ? 'checked' : '') + ' onchange="logToggleColumn(' + i + ')"> ' + escapeHtml(h) + '</label>';
-  }).join('') || '<span class="file-meta">No matching numeric channels.</span>';
+  const html = logChannelEntries(log).map(function(e){
+    const hay = (e.label + ' ' + e.raw).toLowerCase();
+    if(filt && hay.indexOf(filt) === -1) return '';
+    const on = V.charts.some(function(ch){ return e.cols.every(function(c){ return ch.indexOf(c) !== -1; }); });
+    return '<label class="log-ch' + (on ? ' on' : '') + '"><input type="checkbox" ' + (on ? 'checked' : '') + ' onchange="logToggleEntry(\'' + e.key + '\')"> '
+      + escapeHtml(e.label) + (e.label !== e.raw ? ' <span class="lg-raw">' + escapeHtml(e.raw) + '</span>' : '') + '</label>';
+  }).join('');
+  return html || '<span class="file-meta">No matching channels.</span>';
 }
 
+/* ---------- state changes ---------- */
+const LOG_MAX_CHART_COUNT = 8;
 function logSaveSelection(){
-  try{ localStorage.setItem(logSignature(S.logView.log.headers), JSON.stringify(S.logView.selected)); }catch(e){ /* storage unavailable */ }
+  try{ localStorage.setItem(logSignature(S.logView.log.headers), JSON.stringify({ v:2, charts:S.logView.charts, units:S.logView.units })); }catch(e){ /* storage unavailable */ }
 }
-function logToggleColumn(c){
-  const V = S.logView; if(!V) return;
-  const i = V.selected.indexOf(c);
-  if(i !== -1) V.selected.splice(i, 1);
-  else {
-    if(V.selected.length >= LOG_MAX_CHARTS){ toast('Up to ' + LOG_MAX_CHARTS + ' channels at once - remove one first', true); renderLogViewer(); return; }
-    V.selected.push(c);
+function logEntryCols(key){
+  const e = logChannelEntries(S.logView.log).find(function(x){ return x.key === key; });
+  return e ? e.cols : [];
+}
+function logToggleEntry(key){
+  const V = S.logView, cols = logEntryCols(key);
+  const idx = V.charts.findIndex(function(ch){ return cols.every(function(c){ return ch.indexOf(c) !== -1; }); });
+  if(idx !== -1){
+    V.charts[idx] = V.charts[idx].filter(function(c){ return cols.indexOf(c) === -1; });
+    if(!V.charts[idx].length) V.charts.splice(idx, 1);
+  } else {
+    if(V.charts.length >= LOG_MAX_CHART_COUNT){ toast('Up to ' + LOG_MAX_CHART_COUNT + ' charts - overlay onto an existing chart instead', true); renderLogViewer(); return; }
+    V.charts.push(cols.slice(0, 8));
   }
-  logSaveSelection();
-  renderLogViewer();
+  logSaveSelection(); renderLogViewer();
 }
-window.logToggleColumn = logToggleColumn;
+window.logToggleEntry = logToggleEntry;
+function logOverlay(k, key){
+  if(!key) return;
+  const V = S.logView, cols = logEntryCols(key);
+  cols.forEach(function(c){ if(V.charts[k].indexOf(c) === -1 && V.charts[k].length < 8) V.charts[k].push(c); });
+  logSaveSelection(); renderLogViewer();
+}
+window.logOverlay = logOverlay;
+function logRemoveSeries(k, c){
+  const V = S.logView;
+  V.charts[k] = V.charts[k].filter(function(x){ return x !== c; });
+  if(!V.charts[k].length) V.charts.splice(k, 1);
+  logSaveSelection(); renderLogViewer();
+}
+window.logRemoveSeries = logRemoveSeries;
+function logRemoveChart(k){ S.logView.charts.splice(k, 1); logSaveSelection(); renderLogViewer(); }
+window.logRemoveChart = logRemoveChart;
+function logApplyPreset(name){ S.logView.charts = buildPreset(S.logView.log, name); logSaveSelection(); renderLogViewer(); }
+window.logApplyPreset = logApplyPreset;
+function logSetUnits(u){ S.logView.units = u; logSaveSelection(); renderLogViewer(); }
+window.logSetUnits = logSetUnits;
+// Flag chip click: make sure the tripped channel (its whole cylinder group)
+// is charted, at the top.
 function logFocusColumn(c){
-  const V = S.logView; if(!V) return;
-  if(V.selected.indexOf(c) === -1){
-    if(V.selected.length >= LOG_MAX_CHARTS) V.selected.pop();
-    V.selected.unshift(c); logSaveSelection();
-  }
-  renderLogViewer();
+  const V = S.logView; if(!V || c < 0) return;
+  const h = V.log.headers[c];
+  const key = chIndex(h) !== null ? 'g:' + chGroupKey(h) : 'c:' + c;
+  const cols = logEntryCols(key);
+  const idx = V.charts.findIndex(function(ch){ return ch.indexOf(c) !== -1; });
+  if(idx > 0){ V.charts.unshift(V.charts.splice(idx, 1)[0]); }
+  else if(idx === -1){ V.charts.unshift(cols.slice(0, 8)); if(V.charts.length > LOG_MAX_CHART_COUNT) V.charts.pop(); }
+  logSaveSelection(); renderLogViewer();
 }
 window.logFocusColumn = logFocusColumn;
 function logFilter(v){
@@ -3053,33 +3354,90 @@ function logFilter(v){
 }
 window.logFilter = logFilter;
 
-// Crosshair across every chart, with a readout of every charted channel
-// at that sample.
-function logHover(ev, svg){
-  const V = S.logView; if(!V) return;
-  const rect = svg.getBoundingClientRect();
-  const frac = Math.min(1, Math.max(0, (ev.clientX - rect.left) / rect.width));
-  const log = V.log, B = V.compare ? V.compare.log : null;
-  const xMax = Math.max(logSpan(log), B ? logSpan(B) : 0) || 1;
-  const t = frac * xMax;
-  const ia = sampleAt(log, t), ib = B ? sampleAt(B, t) : -1;
-  const x = (frac * 999).toFixed(1);
-  document.querySelectorAll('#logCharts .log-cursor').forEach(function(l){ l.setAttribute('x1', x); l.setAttribute('x2', x); });
-  const parts = [escapeHtml(timeLabel(log)) + ' <strong>' + fmtNum(t) + '</strong>'];
-  V.selected.forEach(function(c){
-    let txt = escapeHtml(log.headers[c]) + ' <strong>' + fmtNum(colData(log, c)[ia]) + '</strong>';
-    const cb = B ? compareCol(c) : -1;
-    if(cb !== -1) txt += ' <span class="lg-b-text">/ ' + fmtNum(colData(B, cb)[ib]) + '</span>';
-    parts.push(txt);
-  });
-  const ro = document.getElementById('logReadout');
-  if(ro) ro.innerHTML = parts.join(' &middot; ');
+/* ---------- zoom ---------- */
+// Longest stretch at >= 95% pedal (or throttle, if no pedal channel).
+function logWotRange(log){
+  let c = findCols(log, /^AccP_r_VW$/i)[0];
+  if(c === undefined) c = findCols(log, /^wdk_w/i)[0];
+  if(c === undefined) return null;
+  const d = log.cols[c];
+  let best = null, start = -1;
+  for(let i = 0; i <= d.length; i++){
+    const on = i < d.length && d[i] >= 95;
+    if(on && start === -1) start = i;
+    if(!on && start !== -1){
+      if(!best || (i - start) > (best[1] - best[0])) best = [start, i - 1];
+      start = -1;
+    }
+  }
+  if(!best || best[1] - best[0] < 2) return null;
+  const a = xValue(log, best[0]), b = xValue(log, best[1]);
+  const padT = (b - a) * 0.15;
+  return [Math.max(0, a - padT), Math.min(logSpan(log), b + padT)];
 }
-window.logHover = logHover;
-function logHoverEnd(){
+function logZoomWot(){ const w = logWotRange(S.logView.log); if(w){ S.logView.range = w; renderLogViewer(); } }
+window.logZoomWot = logZoomWot;
+function logResetZoom(){ if(S.logView){ S.logView.range = null; renderLogViewer(); } }
+window.logResetZoom = logResetZoom;
+
+function logFrac(ev, svg){
+  const rect = svg.getBoundingClientRect();
+  return Math.min(1, Math.max(0, (ev.clientX - rect.left) / rect.width));
+}
+function logDown(ev, svg){
+  if(ev.button !== undefined && ev.button !== 0) return;
+  S.logView.drag = { f0: logFrac(ev, svg) };
+  try{ svg.setPointerCapture(ev.pointerId); }catch(e){ /* not supported */ }
+}
+window.logDown = logDown;
+function logMove(ev, svg){
+  const V = S.logView; if(!V) return;
+  const f = logFrac(ev, svg);
+  logShowCursor(f);
+  if(V.drag){
+    const x0 = Math.min(V.drag.f0, f) * 1000, w = Math.abs(f - V.drag.f0) * 1000;
+    document.querySelectorAll('#logCharts .lv-sel').forEach(function(rc){ rc.setAttribute('x', x0.toFixed(1)); rc.setAttribute('width', w.toFixed(1)); });
+  }
+}
+window.logMove = logMove;
+function logUp(ev, svg){
+  const V = S.logView; if(!V || !V.drag) return;
+  const f = logFrac(ev, svg), f0 = V.drag.f0;
+  V.drag = null;
+  document.querySelectorAll('#logCharts .lv-sel').forEach(function(rc){ rc.setAttribute('width', 0); });
+  if(Math.abs(f - f0) < 0.01) return; // a click, not a drag
+  const r = logRange();
+  const a = r.a + Math.min(f, f0) * (r.b - r.a), b = r.a + Math.max(f, f0) * (r.b - r.a);
+  if(b - a <= 0) return;
+  V.range = [a, b];
+  renderLogViewer();
+}
+window.logUp = logUp;
+function logLeave(){
   document.querySelectorAll('#logCharts .log-cursor').forEach(function(l){ l.setAttribute('x1', -10); l.setAttribute('x2', -10); });
 }
-window.logHoverEnd = logHoverEnd;
+window.logLeave = logLeave;
+
+// Crosshair on every chart plus each series' value at that moment.
+function logShowCursor(f){
+  const V = S.logView, log = V.log, B = V.compare ? V.compare.log : null;
+  const r = logRange(), t = r.a + f * (r.b - r.a);
+  const x = (f * 999).toFixed(1);
+  document.querySelectorAll('#logCharts .log-cursor').forEach(function(l){ l.setAttribute('x1', x); l.setAttribute('x2', x); });
+  const ia = sampleAt(log, t), ib = B ? sampleAt(B, t) : -1;
+  V.charts.forEach(function(cols, k){
+    cols.forEach(function(c, i){
+      const el = document.getElementById('lv-' + k + '-' + i);
+      if(el) el.textContent = fmtNum(displayData(log, c)[ia]);
+      const cb = B ? compareCol(c) : -1;
+      const eb = document.getElementById('lvb-' + k + '-' + i);
+      if(eb && cb !== -1) eb.textContent = '/ ' + fmtNum(displayData(B, cb)[ib]);
+    });
+  });
+  const ro = document.getElementById('logReadout');
+  if(ro) ro.innerHTML = '<strong>' + fmtNum(t) + (log.timeIdx !== -1 ? ' s' : '') + '</strong> <span class="file-meta">&middot; drag to zoom &middot; double-click to reset</span>';
+}
+
 
 async function addLogRule(){
   let col = document.getElementById('lrCol').value;
