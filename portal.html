@@ -135,6 +135,16 @@ body{background-image:url('data:image/webp;base64,UklGRqIrAABXRUJQVlA4WAoAAAAQAA
 .msg-me{background:rgba(45,212,191,.12);align-self:flex-end;margin-left:auto}
 .msg-system{background:var(--bg3);align-self:center;font-style:italic;color:var(--text3);font-size:12.5px;max-width:100%;text-align:center}
 .msg-revision{background:var(--red-dim);align-self:flex-end;margin-left:auto;border:1px solid rgba(220,38,38,.25)}
+.queue-line{margin-top:10px;font-size:13px;color:#D6DBE0;text-shadow:0 1px 3px rgba(0,0,0,.6)}
+.queue-num{font-weight:800;color:#5ce6cc;font-size:15px}
+.review-stars span{font-size:28px;color:var(--border2);cursor:pointer;padding-right:4px;transition:color .1s}
+.review-stars span.on{color:#f59e0b}
+.review-stars.static span{cursor:default;font-size:22px}
+.baseline-banner{background:rgba(234,88,12,.08);border:1px solid rgba(234,88,12,.25);border-radius:var(--r);padding:10px 13px;font-size:13.5px;color:var(--text);margin-bottom:6px}
+.log-params{margin:0 0 4px;padding-left:20px;font-size:13.5px;columns:2;column-gap:24px}
+.log-params li{margin-bottom:3px;break-inside:avoid}
+.log-procedure{font-size:13.5px;white-space:pre-wrap;line-height:1.5}
+@media(max-width:480px){.log-params{columns:1}}
 .msg-modupdate{background:rgba(234,88,12,.08);align-self:flex-end;margin-left:auto;border:1px solid rgba(234,88,12,.25)}
 .msg-modupdate-badge{font-weight:700;font-size:11.5px;color:var(--orange-d);text-transform:uppercase;letter-spacing:.03em;margin-bottom:3px}
 .tune-version.is-current{border-left:3px solid var(--green);padding-left:10px}
@@ -220,7 +230,7 @@ const STATUS_ACCENT = {
   completed:'#16a34a', archived:'#9ca3af'
 };
 
-let STATE = { application:null, messages:[], files:[], invoices:[], _channel:null };
+let STATE = { application:null, messages:[], files:[], invoices:[], logGuide:null, queue:null, _channel:null };
 
 function escapeHtml(s){
   return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){
@@ -402,9 +412,15 @@ function renderPortal(){
   html += '<div class="car-line">' + escapeHtml([a.car_year, a.car_make, a.car_model].filter(Boolean).join(' ')) + '</div>';
   if(['declined','archived'].indexOf(a.status) === -1) html += renderStageStepper(a);
   html += '<p class="status-blurb">' + escapeHtml(STATUS_BLURB[a.status] || '') + '</p>';
+  if(STATE.queue){
+    html += '<div class="queue-line"><span class="queue-num">#' + STATE.queue.position + '</span> in the build queue'
+      + (STATE.queue.in_progress ? ' &middot; ' + STATE.queue.in_progress + ' tune' + (STATE.queue.in_progress > 1 ? 's' : '') + ' currently being built' : '') + '</div>';
+  }
   html += renderRevisionCta(a);
   html += '</div></div>';
 
+  html += renderReviewCard(a);
+  html += renderLogGuideCard(a);
   html += renderInvoiceCard();
 
   html += '<div class="card">';
@@ -422,7 +438,8 @@ function renderPortal(){
   html += '<h2>Files</h2>';
   html += '<div id="fileList">' + renderFiles() + '</div>';
   html += '<div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border)">';
-  html += '<div class="sub" style="margin-bottom:8px">Send a datalog or other file to your tuner</div>';
+  html += '<div class="sub" style="margin-bottom:8px">Send a datalog, dyno sheet, or other file to your tuner</div>';
+  html += '<select class="form-input" id="fileTypeSelect" style="width:auto;margin-bottom:10px"><option value="log">Datalog</option><option value="dyno">Dyno sheet</option><option value="other">Other</option></select><br>';
   html += '<input type="file" id="fileInput" style="margin-bottom:10px">';
   html += '<button class="btn btn-sm" onclick="uploadLog()" id="uploadBtn">Upload</button>';
   html += '<div class="status-msg" id="uploadErr"></div>';
@@ -483,6 +500,84 @@ function renderInvoiceCard(){
   return html;
 }
 
+// Shows the tuner-assigned DS1 logging instructions, and - until the
+// customer has uploaded one - asks clearly for the baseline log.
+function renderLogGuideCard(a){
+  if(['declined','archived','completed'].indexOf(a.status) !== -1) return '';
+  const g = STATE.logGuide;
+  const myLogs = STATE.files.filter(function(f){ return f.uploaded_by === 'customer' && f.file_type === 'log'; });
+  const needsBaseline = !myLogs.length && ['submitted','under_review','needs_info','accepted'].indexOf(a.status) !== -1;
+  if(!g && !needsBaseline) return '';
+
+  let html = '<div class="card">';
+  html += '<h2>' + (g ? 'How to log: ' + escapeHtml(g.name) : 'Datalog needed') + '</h2>';
+  if(needsBaseline){
+    html += '<div class="baseline-banner">Your tuner needs a <strong>baseline (stock) datalog</strong> before your tune can start. '
+      + 'Record it following the steps below, then upload it in the Files section.</div>';
+  }
+  if(g){
+    const params = (g.parameters || '').split('\n').map(function(x){ return x.trim(); }).filter(Boolean);
+    if(params.length){
+      html += '<div class="sub" style="font-weight:700;color:var(--text2);margin:10px 0 6px">Parameters to log</div>';
+      html += '<ul class="log-params">' + params.map(function(p){ return '<li>' + escapeHtml(p) + '</li>'; }).join('') + '</ul>';
+    }
+    if(g.procedure){
+      html += '<div class="sub" style="font-weight:700;color:var(--text2);margin:10px 0 6px">Procedure</div>';
+      html += '<div class="log-procedure">' + escapeHtml(g.procedure) + '</div>';
+    }
+  }
+  if(myLogs.length){
+    html += '<div class="sub" style="margin-top:12px"><span class="pill pill-green">Log received</span> Latest: ' + escapeHtml(myLogs[0].file_name) + ' &middot; ' + fmtDate(myLogs[0].created_at) + '</div>';
+  }
+  html += '</div>';
+  return html;
+}
+
+// Completion review - once the tune is done. Rating + optional comment,
+// one per application; after submitting it shows as a thank-you.
+function renderReviewCard(a){
+  if(a.status !== 'completed') return '';
+  if(a.review_rating){
+    return '<div class="card"><h2>Your review</h2>'
+      + '<div class="review-stars static">' + [1,2,3,4,5].map(function(n){ return '<span class="' + (n <= a.review_rating ? 'on' : '') + '">&#9733;</span>'; }).join('') + '</div>'
+      + (a.review_comment ? '<p class="sub" style="margin-top:6px;white-space:pre-wrap">' + escapeHtml(a.review_comment) + '</p>' : '')
+      + '<p class="sub" style="margin-top:6px">Thanks for the feedback!</p></div>';
+  }
+  return '<div class="card"><h2>How did we do?</h2>'
+    + '<div class="sub" style="margin-bottom:8px">Your tune is complete. Rate your experience with Ghost Tuning.</div>'
+    + '<div class="review-stars" id="reviewStars">' + [1,2,3,4,5].map(function(n){ return '<span onclick="setReviewRating(' + n + ')" data-n="' + n + '">&#9733;</span>'; }).join('') + '</div>'
+    + '<textarea class="form-input" id="reviewComment" placeholder="Anything you\'d like to share? (optional)" style="margin:10px 0;min-height:60px"></textarea>'
+    + '<button class="btn btn-sm" id="reviewBtn" onclick="submitReview()">Submit Review</button>'
+    + '<div class="status-msg" id="reviewErr"></div></div>';
+}
+
+let REVIEW_RATING = 0;
+function setReviewRating(n){
+  REVIEW_RATING = n;
+  document.querySelectorAll('#reviewStars span').forEach(function(el){
+    el.className = Number(el.getAttribute('data-n')) <= n ? 'on' : '';
+  });
+}
+window.setReviewRating = setReviewRating;
+
+async function submitReview(){
+  const errEl = document.getElementById('reviewErr');
+  const btn = document.getElementById('reviewBtn');
+  errEl.className = 'status-msg'; errEl.textContent = '';
+  if(!REVIEW_RATING){ errEl.className = 'status-msg err'; errEl.textContent = 'Pick a star rating first.'; return; }
+  btn.disabled = true; btn.textContent = 'Submitting...';
+  try{
+    const data = await callPortal('submit_review', { rating: REVIEW_RATING, comment: document.getElementById('reviewComment').value.trim() });
+    STATE.application = data.application;
+    renderPortal();
+    toastLike('Thanks for your review!');
+  }catch(e){
+    errEl.className = 'status-msg err'; errEl.textContent = 'Failed to submit: ' + e.message;
+    btn.disabled = false; btn.textContent = 'Submit Review';
+  }
+}
+window.submitReview = submitReview;
+
 function renderMessages(){
   if(!STATE.messages.length) return '<div class="empty-state">No messages yet.</div>';
   return STATE.messages.map(function(m){
@@ -538,7 +633,8 @@ function renderFiles(){
   if(others.length){
     if(tunesHtml) html += '<div class="sub" style="font-weight:700;color:var(--text2);margin-bottom:6px">Other files</div>';
     html += others.map(function(f){
-      const label = f.uploaded_by === 'tuner' ? 'From your tuner' : 'You sent this';
+      const label = (f.uploaded_by === 'tuner' ? 'From your tuner' : 'You sent this')
+        + (f.file_type === 'dyno' ? ' &middot; <span class="pill pill-green">Dyno sheet</span>' : (f.file_type === 'log' ? ' &middot; Datalog' : ''));
       return '<div class="file-row">'
         + '<div style="flex:1;min-width:0"><div class="file-name">' + escapeHtml(f.file_name) + (f.revision_number ? ' <span class="pill pill-muted">rev ' + f.revision_number + '</span>' : '') + '</div>'
         + '<div class="file-meta">' + label + ' &middot; ' + fmtDate(f.created_at) + '</div></div>'
@@ -595,6 +691,8 @@ async function loadStatus(silent){
     STATE.messages = data.messages;
     STATE.files = data.files;
     STATE.invoices = data.invoices || [];
+    STATE.logGuide = data.log_guide || null;
+    STATE.queue = data.queue || null;
     renderPortal();
     const newDraftEl = document.getElementById('msgInput');
     if(newDraftEl && draft) newDraftEl.value = draft;
@@ -657,10 +755,13 @@ async function uploadLog(){
     const { error: upErr } = await sb.storage.from('tuning-files').uploadToSignedUrl(req.path, req.uploadToken, file);
     if(upErr) throw upErr;
 
-    const data = await callPortal('confirm_upload', { path: req.path, file_name: file.name, file_type: 'log' });
+    const typeEl = document.getElementById('fileTypeSelect');
+    const data = await callPortal('confirm_upload', { path: req.path, file_name: file.name, file_type: typeEl ? typeEl.value : 'log' });
     STATE.files.unshift(data.file);
-    document.getElementById('fileList').innerHTML = renderFiles();
-    input.value = '';
+    // Full re-render so the logging card's baseline banner clears too.
+    renderPortal();
+    toastLike('Upload complete - your tuner has been notified.');
+    return;
   }catch(e){
     errEl.className = 'status-msg err'; errEl.textContent = 'Upload failed: ' + e.message;
   }

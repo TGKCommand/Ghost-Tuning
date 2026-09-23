@@ -188,6 +188,20 @@ tr.row-click:hover td{background:var(--bg3)}
 .notice-banner.red{border-left-color:var(--red);background:var(--red-dim)}
 .notice-banner a{color:var(--orange-d);font-weight:700;cursor:pointer;text-decoration:underline}
 .notice-banner ul{margin:6px 0 0 18px;padding:0}
+.board{display:flex;gap:12px;overflow-x:auto;align-items:flex-start;padding-bottom:12px}
+.board-col{flex:0 0 230px;background:rgba(255,255,255,.66);border:1px solid var(--border);border-radius:var(--r-md);padding:8px;min-height:140px}
+.board-col.drag-over{outline:2px dashed var(--teal);outline-offset:-2px;background:var(--teal-dim)}
+.board-col-head{display:flex;justify-content:space-between;align-items:center;font-weight:700;font-size:var(--t-sm);padding:2px 4px 8px}
+.board-card{background:var(--bg);border:1px solid var(--border);border-left:3px solid var(--teal);border-radius:var(--r-md);padding:8px 10px;margin-bottom:8px;cursor:grab;font-size:var(--t-sm)}
+.board-card:active{cursor:grabbing}
+.board-card.age-warn{border-left-color:#eab308}
+.board-card.age-late{border-left-color:var(--red)}
+.board-name{margin-top:2px}
+.board-age{font-size:var(--t-xs);font-weight:700;color:var(--text3)}
+.board-age.age-warn{color:#a16207}
+.board-age.age-late{color:var(--red)}
+.board-empty{color:var(--text3);text-align:center;padding:12px 0}
+.board-hint{margin-bottom:10px}
 .inv-chip{display:inline-flex;align-items:center;padding:2px 8px;font-size:var(--t-xs);font-weight:700;border-radius:6px;margin-left:6px;background:rgba(234,88,12,.1);color:var(--orange);border:1px solid rgba(234,88,12,.25)}
 .inv-chip.stale{background:var(--red-dim);color:var(--red);border-color:rgba(220,38,38,.25)}
 .flag-chip{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;font-size:var(--t-xs);font-weight:700;border-radius:6px;background:var(--red-dim);color:var(--red);border:1px solid rgba(220,38,38,.2);margin-left:6px}
@@ -359,7 +373,7 @@ tr.row-click:hover td{background:var(--bg3)}
         </div>
         <div class="sync-sub" onclick="doLogout()">Sign out</div>
         <div class="version-row">
-          <span>v1.61</span>
+          <span>v1.63</span>
           <span id="buildDate"></span>
         </div>
       </div>
@@ -405,11 +419,13 @@ const STATUS_PILL = {
 
 const NAV = [
   { id:'dashboard', label:'Dashboard' },
+  { id:'board', label:'Board' },
   { id:'applications', label:'Applications', badge: function(){ return S.applications.filter(function(a){ return a.has_unread; }).length; } },
   { id:'logreview', label:'Log Review', badge: function(){ return S.pendingLogs.length; } },
   { id:'lookup', label:'Lookup' },
   { id:'reports', label:'Reports' },
   { id:'library', label:'Platform Library' },
+  { id:'logguides', label:'Logging Guides' },
   { id:'ecuref', label:'ECU Reference' },
   { id:'templates', label:'Templates' }
 ];
@@ -417,7 +433,7 @@ const NAV = [
 const S = { user:null, page:'dashboard', applications:[], openAppId:null, messages:{}, files:{}, activity:{}, recentActivity:[], templates:[], activeTab:'overview', filter:'active', search:'',
   pendingLogs:[], platformLibrary:[], ecuReference:[], revisionCount:0, lookupQuery:'', libraryFormOpen:false, ecuFormOpen:false, tuners:[], selectedIds:new Set(),
   fullActivity:[], fullActivityOffset:0, fullActivityHasMore:true, fullActivityLoading:false,
-  invoiceCatalog:null, invoiceCatalogLoading:false, modalInvoiceLines:[], modalInvoiceId:null, invoices:{}, unpaidInvoices:[] };
+  invoiceCatalog:null, invoiceCatalogLoading:false, modalInvoiceLines:[], modalInvoiceId:null, invoices:{}, unpaidInvoices:[], logGuides:[], logGuideFormOpen:false, editingGuideId:null };
 
 function escapeHtml(s){
   return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){
@@ -674,6 +690,7 @@ async function afterLogin(user){
   await loadRecentActivity();
   await loadPendingLogs();
   await loadPlatformLibrary();
+  await loadLogGuides();
   await loadEcuReference();
   await loadRevisionCount();
   await loadTuners();
@@ -1032,11 +1049,13 @@ function renderPage(){
   const el = document.getElementById('content');
   if(S.page === 'dashboard') el.innerHTML = renderDashboard();
   else if(S.page === 'applications') el.innerHTML = renderApplications();
+  else if(S.page === 'board') el.innerHTML = renderBoard();
   else if(S.page === 'activity') el.innerHTML = renderActivityPage();
   else if(S.page === 'logreview') el.innerHTML = renderLogReview();
   else if(S.page === 'lookup') el.innerHTML = renderLookup();
   else if(S.page === 'reports') el.innerHTML = renderReports();
   else if(S.page === 'library') el.innerHTML = renderLibrary();
+  else if(S.page === 'logguides') el.innerHTML = renderLogGuides();
   else if(S.page === 'ecuref') el.innerHTML = renderEcuReference();
   else if(S.page === 'templates') el.innerHTML = renderTemplates();
 }
@@ -1495,6 +1514,17 @@ async function updateStatus(appId, newStatus, quiet, skipUndo){
   if(!app) return;
   const oldStatus = app.status;
   if(oldStatus === newStatus) return;
+
+  // Baseline-log check: starting a build without a stock log from the
+  // customer is usually a mistake, but not always (a log may have come in
+  // another way), so this warns with an override rather than blocking.
+  if(!quiet && newStatus === 'active'){
+    const logCount = await countCustomerLogs(appId);
+    if(logCount === 0 && !confirm('No baseline datalog has been uploaded by this customer yet.\n\nMove to In Progress anyway?')){
+      if(S.openAppId === appId) renderPanelShell_refresh(app);
+      return;
+    }
+  }
 
   let declinedReason = app.declined_reason;
   let noteToCustomer = null;
@@ -2115,6 +2145,8 @@ function renderOverview(a){
     html += '<div class="notice-banner red"><strong>Flagged:</strong> ' + flags.map(escapeHtml).join(', ') + '</div>';
   }
 
+  html += renderReviewSection(a);
+  html += renderLogGuideSection(a);
   html += renderInvoicesSection(a);
 
   html += '<div class="section-title">Owner</div><div class="dl-grid">'
@@ -2204,10 +2236,38 @@ function renderMessagesTab(a){
   return html;
 }
 
+// Template variables - filled from the open application when a template
+// is inserted. Unknown {tokens} are left as-is so a typo is visible rather
+// than silently vanishing.
+const PORTAL_BASE_URL = 'https://ghost.tgkmotorsport.com';
+const TEMPLATE_VARS = [
+  { key:'first_name', desc:"Customer's first name" },
+  { key:'customer_name', desc:"Customer's full name" },
+  { key:'app_number', desc:'Application number' },
+  { key:'car', desc:'Year make model' },
+  { key:'status', desc:'Current status' },
+  { key:'log_guide', desc:'Assigned logging guide name' },
+  { key:'portal_link', desc:"Customer's portal link" }
+];
+function fillTemplate(body, a){
+  if(!a) return body;
+  const g = S.logGuides.find(function(x){ return x.id === a.log_guide_id; });
+  const vals = {
+    first_name: (a.customer_name || '').trim().split(/\s+/)[0] || '',
+    customer_name: a.customer_name || '',
+    app_number: '#' + a.application_number,
+    car: [a.car_year, a.car_make, a.car_model].filter(Boolean).join(' '),
+    status: STATUS_LABEL[a.status] || a.status,
+    log_guide: g ? g.name : '',
+    portal_link: a.portal_access_token ? PORTAL_BASE_URL + '/portal.html?token=' + encodeURIComponent(a.portal_access_token) : ''
+  };
+  return body.replace(/\{([a-z_]+)\}/g, function(m, k){ return Object.prototype.hasOwnProperty.call(vals, k) ? vals[k] : m; });
+}
 function applyTemplate(id){
   if(!id) return;
   const t = S.templates.find(function(x){ return String(x.id) === String(id); });
-  if(t) document.getElementById('replyBody').value = t.body;
+  const a = S.applications.find(function(x){ return x.id === S.openAppId; });
+  if(t) document.getElementById('replyBody').value = fillTemplate(t.body, a);
 }
 window.applyTemplate = applyTemplate;
 
@@ -2284,7 +2344,7 @@ function renderFilesTab(a){
       + '<div style="flex:1;min-width:0">'
       + '<div class="file-name">' + escapeHtml(f.file_name)
         + (f.revision_number ? ' <span class="pill pill-muted">rev ' + f.revision_number + '</span>' : '')
-        + ' <span class="pill ' + (isTune?'pill-teal':(f.file_type==='log'?'pill-orange':'pill-muted')) + '">' + escapeHtml(f.file_type||'file') + '</span>'
+        + ' <span class="pill ' + (isTune?'pill-teal':(f.file_type==='log'?'pill-orange':(f.file_type==='dyno'?'pill-green':'pill-muted'))) + '">' + escapeHtml(f.file_type||'file') + '</span>'
         + (isTune && f.fuel ? ' <span class="pill pill-muted">' + escapeHtml(f.fuel) + '</span>' : '')
         + (isTune && f.is_current ? ' <span class="pill pill-green">Currently flashed</span>' : '')
       + '</div>'
@@ -2407,6 +2467,8 @@ function describeActivity(l){
   else if(l.field_changed === 'assigned_tuner') desc = l.new_value && l.new_value !== 'Unassigned' ? 'Reassigned to ' + l.new_value : 'Unassigned';
   else if(l.field_changed === 'invoice_sent') desc = 'Invoice sent for ' + (l.new_value || 'an amount');
   else if(l.field_changed === 'invoice_paid') desc = 'Invoice marked paid' + (l.new_value ? ' (' + l.new_value + ')' : '');
+  else if(l.field_changed === 'review_submitted') desc = 'Customer left a review: ' + (l.new_value || '');
+  else if(l.field_changed === 'log_guide') desc = 'Logging guide set: ' + (l.new_value || 'None');
   else if(l.field_changed === 'current_tune') desc = 'Marked currently flashed: ' + (l.new_value || '');
   else if(l.field_changed === 'mods_updated') desc = 'Customer updated their mods';
   else if(l.field_changed === 'invoice_reminder') desc = 'Payment reminder sent' + (l.new_value ? ' (' + l.new_value + ')' : '');
@@ -2430,6 +2492,8 @@ function activityAccent(l){
   if(l.field_changed === 'invoice_cancelled') return 'red';
   if(l.field_changed === 'invoice_reminder') return 'yellow';
   if(l.field_changed === 'current_tune') return 'teal';
+  if(l.field_changed === 'log_guide') return 'muted';
+  if(l.field_changed === 'review_submitted') return 'teal';
   if(l.field_changed === 'mods_updated') return 'orange';
   return 'muted';
 }
@@ -2701,6 +2765,229 @@ async function saveLibraryEntry(){
 }
 window.saveLibraryEntry = saveLibraryEntry;
 
+/* ================= BOARD (kanban) ================= */
+// One column per active stage. Drag a card to another column to change
+// its status - that goes through updateStatus(), so the same prompts,
+// customer notification, baseline-log check, and undo all apply.
+const BOARD_COLUMNS = ['submitted','under_review','needs_info','accepted','active','tune_sent','revision_requested'];
+// Days in a stage before a card turns yellow / red. Stages where the
+// customer holds the ball (needs_info, tune_sent) get more slack.
+const BOARD_AGING = {
+  submitted:[1,3], under_review:[2,4], needs_info:[4,8], accepted:[3,7],
+  active:[4,8], tune_sent:[7,14], revision_requested:[2,4]
+};
+
+function stageDays(a){ return daysSince(a.status_changed_at || a.updated_at) || 0; }
+
+function renderBoard(){
+  let html = '<div class="board-hint file-meta">Drag a card to change its status. Cards turn yellow, then red, the longer they sit in a stage.</div>';
+  html += '<div class="board">';
+  BOARD_COLUMNS.forEach(function(st){
+    const cards = S.applications.filter(function(a){ return a.status === st; })
+      .sort(function(x, y){ return stageDays(y) - stageDays(x); });
+    html += '<div class="board-col" data-status="' + st + '" ondragover="boardDragOver(event)" ondragleave="boardDragLeave(event)" ondrop="boardDrop(event,\'' + st + '\')">'
+      + '<div class="board-col-head"><span>' + escapeHtml(STATUS_LABEL[st] || st) + '</span><span class="nav-badge">' + cards.length + '</span></div>';
+    cards.forEach(function(a){
+      const d = stageDays(a);
+      const lim = BOARD_AGING[st] || [3,7];
+      const age = d >= lim[1] ? 'age-late' : (d >= lim[0] ? 'age-warn' : '');
+      html += '<div class="board-card ' + age + '" draggable="true" ondragstart="boardDragStart(event,\'' + a.id + '\')" onclick="openApplication(\'' + a.id + '\')">'
+        + '<div style="display:flex;justify-content:space-between;gap:6px"><strong>#' + a.application_number + (a.has_unread ? ' <span class="unread-dot"></span>' : '') + '</strong>'
+        + '<span class="board-age ' + age + '">' + d + 'd</span></div>'
+        + '<div class="board-name">' + escapeHtml(a.customer_name) + '</div>'
+        + '<div class="file-meta">' + escapeHtml([a.car_year, a.car_make, a.car_model].filter(Boolean).join(' ')) + '</div>'
+        + (invoiceChip(a) ? '<div style="margin-top:4px;margin-left:-6px">' + invoiceChip(a) + '</div>' : '')
+        + '</div>';
+    });
+    if(!cards.length) html += '<div class="board-empty">-</div>';
+    html += '</div>';
+  });
+  html += '</div>';
+  return html;
+}
+
+function boardDragStart(ev, appId){ ev.dataTransfer.setData('text/plain', appId); ev.dataTransfer.effectAllowed = 'move'; }
+window.boardDragStart = boardDragStart;
+function boardDragOver(ev){ ev.preventDefault(); ev.currentTarget.classList.add('drag-over'); }
+window.boardDragOver = boardDragOver;
+function boardDragLeave(ev){ ev.currentTarget.classList.remove('drag-over'); }
+window.boardDragLeave = boardDragLeave;
+async function boardDrop(ev, status){
+  ev.preventDefault();
+  ev.currentTarget.classList.remove('drag-over');
+  const appId = ev.dataTransfer.getData('text/plain');
+  const a = S.applications.find(function(x){ return x.id === appId; });
+  if(!a || a.status === status) return;
+  await updateStatus(appId, status);
+  renderPage();
+}
+window.boardDrop = boardDrop;
+
+function renderReviewSection(a){
+  if(!a.review_rating) return '';
+  const stars = [1,2,3,4,5].map(function(n){ return '<span style="color:' + (n <= a.review_rating ? '#f59e0b' : 'var(--border2)') + ';font-size:18px">&#9733;</span>'; }).join('');
+  return '<div class="section-title">Customer Review</div>'
+    + '<div style="margin:0 0 20px">' + stars + ' <span class="file-meta">' + a.review_rating + '/5 &middot; ' + fmtDate(a.review_submitted_at) + '</span>'
+    + (a.review_comment ? '<div style="margin-top:6px;white-space:pre-wrap;font-size:var(--t-sm)">' + escapeHtml(a.review_comment) + '</div>' : '')
+    + '</div>';
+}
+
+/* ================= LOGGING GUIDES ================= */
+async function loadLogGuides(){
+  try{
+    const { data, error } = await sb.from('tuning_log_guides').select('*').eq('is_archived', false).order('name', { ascending:true });
+    if(error) throw error;
+    S.logGuides = data || [];
+  }catch(e){ /* non-critical */ }
+}
+
+async function countCustomerLogs(appId){
+  if(S.files[appId]) return S.files[appId].filter(function(f){ return f.uploaded_by === 'customer' && f.file_type === 'log'; }).length;
+  try{
+    const { count, error } = await sb.from('tuning_files').select('id', { count:'exact', head:true })
+      .eq('application_id', appId).eq('uploaded_by', 'customer').eq('file_type', 'log');
+    if(error) throw error;
+    return count || 0;
+  }catch(e){ return 0; }
+}
+
+// Suggests a guide by matching its keywords against the car. Longest
+// keyword wins, so "RS7" beats "S7" and "4.0T" beats "T".
+function suggestLogGuide(a){
+  const car = [a.car_year, a.car_make, a.car_model].filter(Boolean).join(' ').toLowerCase();
+  if(!car) return null;
+  let best = null, bestLen = 0;
+  S.logGuides.forEach(function(g){
+    (g.match_keywords || '').split(',').map(function(k){ return k.trim().toLowerCase(); }).filter(Boolean).forEach(function(k){
+      if(car.indexOf(k) !== -1 && k.length > bestLen){ best = g; bestLen = k.length; }
+    });
+  });
+  return best;
+}
+
+function renderLogGuideSection(a){
+  const files = S.files[a.id] || [];
+  const logs = files.filter(function(f){ return f.uploaded_by === 'customer' && f.file_type === 'log'; });
+  const current = S.logGuides.find(function(g){ return g.id === a.log_guide_id; });
+  const suggested = !current ? suggestLogGuide(a) : null;
+  const opts = '<option value="">- None -</option>' + S.logGuides.map(function(g){
+    return '<option value="' + g.id + '"' + (g.id === a.log_guide_id ? ' selected' : '') + '>' + escapeHtml(g.name) + (suggested && suggested.id === g.id ? ' (suggested)' : '') + '</option>';
+  }).join('');
+
+  let html = '<div class="section-title">Logging</div>';
+  html += '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px">'
+    + '<select class="form-input" style="width:auto;min-width:220px" onchange="assignLogGuide(\'' + a.id + '\', this.value)">' + opts + '</select>'
+    + (suggested ? '<button class="btn btn-sm" onclick="assignLogGuide(\'' + a.id + '\',\'' + suggested.id + '\')">Use suggested: ' + escapeHtml(suggested.name) + '</button>' : '')
+    + (!S.logGuides.length ? '<span class="file-meta">No guides yet - add one under Logging Guides.</span>' : '')
+    + '</div>';
+  html += '<div style="margin:0 0 20px">'
+    + (logs.length
+        ? '<span class="pill pill-green">Baseline log received</span> <span class="file-meta">' + logs.length + ' customer log' + (logs.length > 1 ? 's' : '') + ', latest ' + fmtDate(logs[0].created_at) + '</span>'
+        : '<span class="pill pill-orange">No customer log yet</span>' + (current ? ' <span class="file-meta">The customer can see the "' + escapeHtml(current.name) + '" instructions on their portal.</span>' : ' <span class="file-meta">Assign a guide so the customer knows how to log.</span>'))
+    + '</div>';
+  return html;
+}
+
+async function assignLogGuide(appId, guideId){
+  const app = S.applications.find(function(a){ return a.id === appId; });
+  if(!app) return;
+  const oldId = app.log_guide_id || null;
+  const newId = guideId || null;
+  if(oldId === newId) return;
+  try{
+    const { error } = await sb.from('tuning_applications').update({ log_guide_id: newId }).eq('id', appId);
+    if(error) throw error;
+    app.log_guide_id = newId;
+    const g = S.logGuides.find(function(x){ return x.id === newId; });
+    await logActivity(appId, 'log_guide', null, g ? g.name : 'None');
+    pingPortal(appId);
+    renderPanelBody();
+    toast(g ? 'Logging guide set: ' + g.name : 'Logging guide removed');
+  }catch(e){ toast('Failed to set guide: ' + e.message, true); }
+}
+window.assignLogGuide = assignLogGuide;
+
+function renderLogGuides(){
+  let html = '<div class="card">';
+  html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">';
+  html += '<h2 style="margin:0">Logging Guides</h2>';
+  html += '<button class="btn btn-sm" onclick="openLogGuideForm(null)">' + (S.logGuideFormOpen && !S.editingGuideId ? 'Cancel' : '+ Add Guide') + '</button>';
+  html += '</div>';
+  html += '<div style="color:var(--text3);font-size:var(--t-sm);margin-bottom:14px">Per-platform DS1 logging instructions. Assign one to an application and the customer sees it on their portal.</div>';
+  if(S.logGuideFormOpen && !S.editingGuideId) html += renderLogGuideForm(null);
+  if(!S.logGuides.length && !S.logGuideFormOpen) html += '<div class="empty-state">No logging guides yet.</div>';
+  S.logGuides.forEach(function(g){
+    if(S.logGuideFormOpen && S.editingGuideId === g.id){ html += renderLogGuideForm(g); return; }
+    const params = (g.parameters || '').split('\n').map(function(x){ return x.trim(); }).filter(Boolean);
+    html += '<div class="invoice-box" style="margin-bottom:12px">'
+      + '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">'
+        + '<div><strong>' + escapeHtml(g.name) + '</strong>' + (g.match_keywords ? '<div class="file-meta">Matches: ' + escapeHtml(g.match_keywords) + '</div>' : '') + '</div>'
+        + '<div style="display:flex;gap:6px;flex-shrink:0"><button class="btn btn-sm" onclick="openLogGuideForm(\'' + g.id + '\')">Edit</button><button class="btn btn-sm" onclick="archiveLogGuide(\'' + g.id + '\')">Archive</button></div>'
+      + '</div>'
+      + (params.length ? '<div class="file-meta" style="margin-top:8px"><strong>Parameters (' + params.length + '):</strong> ' + params.map(escapeHtml).join(', ') + '</div>' : '')
+      + (g.procedure ? '<div class="file-meta" style="margin-top:6px;white-space:pre-wrap">' + escapeHtml(g.procedure) + '</div>' : '')
+      + '</div>';
+  });
+  html += '</div>';
+  return html;
+}
+
+function renderLogGuideForm(g){
+  g = g || {};
+  return '<div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--r-lg);padding:16px;margin-bottom:16px">'
+    + '<div class="form-group"><label class="form-label">Guide name</label><input class="form-input" id="lgName" value="' + escapeHtml(g.name || '') + '" placeholder="e.g. C7 4.0T (S6 / S7 / RS7)"></div>'
+    + '<div class="form-group"><label class="form-label">Match keywords (comma separated, matched against the car)</label><input class="form-input" id="lgKeywords" value="' + escapeHtml(g.match_keywords || '') + '" placeholder="e.g. 4.0T, S6, S7, RS7"></div>'
+    + '<div class="form-group"><label class="form-label">DS1 parameters to log (one per line)</label><textarea class="form-input" id="lgParams" style="min-height:110px">' + escapeHtml(g.parameters || '') + '</textarea></div>'
+    + '<div class="form-group"><label class="form-label">Procedure</label><textarea class="form-input" id="lgProcedure" style="min-height:90px" placeholder="How to perform the log - gear, RPM range, conditions">' + escapeHtml(g.procedure || '') + '</textarea></div>'
+    + '<div style="display:flex;gap:8px"><button class="btn btn-primary" onclick="saveLogGuide()">Save Guide</button><button class="btn" onclick="closeLogGuideForm()">Cancel</button></div>'
+    + '</div>';
+}
+
+function openLogGuideForm(id){
+  if(S.logGuideFormOpen && !S.editingGuideId && !id){ closeLogGuideForm(); return; }
+  S.logGuideFormOpen = true; S.editingGuideId = id; renderPage();
+}
+window.openLogGuideForm = openLogGuideForm;
+function closeLogGuideForm(){ S.logGuideFormOpen = false; S.editingGuideId = null; renderPage(); }
+window.closeLogGuideForm = closeLogGuideForm;
+
+async function saveLogGuide(){
+  const name = document.getElementById('lgName').value.trim();
+  if(!name){ toast('Guide name is required', true); return; }
+  const row = {
+    name: name,
+    match_keywords: document.getElementById('lgKeywords').value.trim() || null,
+    parameters: document.getElementById('lgParams').value.trim() || null,
+    procedure: document.getElementById('lgProcedure').value.trim() || null,
+    updated_at: new Date().toISOString()
+  };
+  try{
+    let res;
+    if(S.editingGuideId) res = await sb.from('tuning_log_guides').update(row).eq('id', S.editingGuideId).select().single();
+    else res = await sb.from('tuning_log_guides').insert(Object.assign({ created_by: S.user.email }, row)).select().single();
+    if(res.error) throw res.error;
+    const idx = S.logGuides.findIndex(function(x){ return x.id === res.data.id; });
+    if(idx !== -1) S.logGuides[idx] = res.data; else S.logGuides.push(res.data);
+    S.logGuides.sort(function(a, b){ return a.name.localeCompare(b.name); });
+    closeLogGuideForm();
+    toast('Logging guide saved');
+  }catch(e){ toast('Failed to save: ' + e.message, true); }
+}
+window.saveLogGuide = saveLogGuide;
+
+async function archiveLogGuide(id){
+  const g = S.logGuides.find(function(x){ return x.id === id; });
+  if(!confirm('Archive "' + (g ? g.name : 'this guide') + '"? Applications using it will keep showing it until reassigned.')) return;
+  try{
+    const { error } = await sb.from('tuning_log_guides').update({ is_archived:true, updated_at:new Date().toISOString() }).eq('id', id);
+    if(error) throw error;
+    S.logGuides = S.logGuides.filter(function(x){ return x.id !== id; });
+    renderPage();
+    toast('Guide archived');
+  }catch(e){ toast('Failed to archive: ' + e.message, true); }
+}
+window.archiveLogGuide = archiveLogGuide;
+
 async function archiveLibraryEntry(id){
   if(!confirm('Archive this base map? It will be hidden from the library.')) return;
   try{
@@ -2811,7 +3098,9 @@ window.deleteEcuEntry = deleteEcuEntry;
 
 function renderTemplates(){
   let html = '<div class="card">';
-  html += '<h2>Canned Replies</h2><div style="color:var(--text3);font-size:var(--t-sm);margin-bottom:14px">Quick-insert templates available from the message reply box</div>';
+  html += '<h2>Canned Replies</h2><div style="color:var(--text3);font-size:var(--t-sm);margin-bottom:10px">Quick-insert templates available from the message reply box</div>';
+  html += '<div class="file-meta" style="margin-bottom:14px"><strong>Variables</strong> (filled in automatically when inserted): '
+    + TEMPLATE_VARS.map(function(v){ return '<code>{' + v.key + '}</code> ' + escapeHtml(v.desc); }).join(' &middot; ') + '</div>';
   html += '<div class="form-group"><label class="form-label">Name</label><input class="form-input" id="tplName"></div>';
   html += '<div class="form-group"><label class="form-label">Body</label><textarea class="form-input" id="tplBody"></textarea></div>';
   html += '<button class="btn btn-primary" onclick="addTemplate()">Add Template</button>';
