@@ -88,6 +88,15 @@ body{background-image:url('data:image/webp;base64,UklGRqIrAABXRUJQVlA4WAoAAAAQAA
 .revision-cta textarea.form-input{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.22);color:#fff}
 .revision-cta textarea.form-input::placeholder{color:#9CA6AF}
 .revision-cta textarea.form-input:focus{border-color:var(--teal)}
+.rev-label{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#9CA6AF;margin:4px 0 5px}
+.rev-grid{display:flex;flex-wrap:wrap;margin:0 -6px 12px}
+.rev-check{display:flex;align-items:center;gap:7px;font-size:13px;color:#D6DBE0;cursor:pointer;width:50%;box-sizing:border-box;padding:3px 6px}
+.rev-check input{accent-color:var(--teal);width:15px;height:15px}
+.rev-row{display:flex;gap:10px;margin-bottom:10px}
+.rev-row > div{flex:1;min-width:0}
+.revision-cta .rev-input{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.22);color:#fff;width:100%;box-sizing:border-box}
+.revision-cta select.rev-input option{color:#111}
+@media(max-width:480px){.rev-check{width:100%}.rev-row{flex-direction:column}}
 .btn.btn-ghost-light{background:transparent;border:1px solid rgba(255,255,255,.35);color:#fff}
 .btn.btn-ghost-light:hover{background:rgba(255,255,255,.1)}
 .tgk-tuning-portal h1{font-size:20px;font-weight:800;margin-bottom:2px;color:var(--navy)}
@@ -279,12 +288,42 @@ function renderRevisionCta(a){
     + '</div>';
 }
 
+const REVISION_COMPLAINTS = [
+  { id:'knock', label:'Knock / timing pulled' },
+  { id:'rich', label:'Running rich' },
+  { id:'lean', label:'Running lean' },
+  { id:'boost_low', label:'Boost too low' },
+  { id:'boost_high', label:'Boost spiky / too high' },
+  { id:'drivability', label:'Part-throttle drivability' },
+  { id:'idle', label:'Cold start / idle' },
+  { id:'other', label:'Other' }
+];
+const REVISION_FUELS = ['91 pump','93 pump','E30','E40','E50','E85','Race fuel','Other'];
+
+// Structured so the tuner gets usable information on the first pass instead
+// of a one-line "still slow" - and a datalog is required, since a revision
+// without a log is guesswork. The log goes through the same signed-upload
+// pipeline as the Files card, then its id is attached to the request.
 function showRevisionForm(){
   const el = document.getElementById('revisionCta');
   if(!el) return;
-  el.innerHTML = '<div class="sub" style="color:#D6DBE0;margin-bottom:8px">What would you like changed? (optional, but it helps your tuner get it right the first time)</div>'
-    + '<textarea class="form-input" id="revisionNotes" placeholder="e.g. feels rich at idle, would like a bit more low-end..." style="margin-bottom:10px"></textarea>'
-    + '<div style="display:flex;gap:8px">'
+  const checks = REVISION_COMPLAINTS.map(function(c){
+    return '<label class="rev-check"><input type="checkbox" name="revComplaint" value="' + c.id + '"> ' + c.label + '</label>';
+  }).join('');
+  const fuels = REVISION_FUELS.map(function(f){ return '<option>' + f + '</option>'; }).join('');
+  el.innerHTML = '<div class="rev-label">What\'s wrong? (pick all that apply)</div>'
+    + '<div class="rev-grid">' + checks + '</div>'
+    + '<div class="rev-row">'
+      + '<div><div class="rev-label">Fuel</div><select class="form-input rev-input" id="revFuel"><option value="">Select...</option>' + fuels + '</select></div>'
+      + '<div><div class="rev-label">Ethanol % (if known)</div><input class="form-input rev-input" id="revEthanol" type="number" min="0" max="100" placeholder="e.g. 42"></div>'
+    + '</div>'
+    + '<div class="rev-label">Conditions (gear, RPM range, weather)</div>'
+    + '<input class="form-input rev-input" id="revConditions" placeholder="e.g. 3rd gear pull from 2,500 RPM, 80F" style="margin-bottom:10px">'
+    + '<div class="rev-label">Anything else?</div>'
+    + '<textarea class="form-input rev-input" id="revisionNotes" placeholder="Describe what you\'re feeling..." style="margin-bottom:10px;min-height:60px"></textarea>'
+    + '<div class="rev-label">Datalog (required)</div>'
+    + '<input type="file" id="revLogFile" style="margin-bottom:12px;color:#D6DBE0;font-size:13px">'
+    + '<div style="display:flex;gap:8px;flex-wrap:wrap">'
     + '<button class="btn btn-sm" onclick="submitRevisionRequest()" id="revisionSubmitBtn">Submit Revision Request</button>'
     + '<button class="btn btn-ghost-light btn-sm" onclick="renderPortal()">Cancel</button>'
     + '</div>'
@@ -293,19 +332,43 @@ function showRevisionForm(){
 window.showRevisionForm = showRevisionForm;
 
 async function submitRevisionRequest(){
-  const notes = document.getElementById('revisionNotes').value.trim();
   const btn = document.getElementById('revisionSubmitBtn');
   const errEl = document.getElementById('revisionErr');
   errEl.className = 'status-msg'; errEl.textContent = '';
-  btn.disabled = true; btn.textContent = 'Submitting...';
+  function fail(msg){ errEl.className = 'status-msg err'; errEl.textContent = msg; }
+
+  const complaints = Array.prototype.slice.call(document.querySelectorAll('input[name="revComplaint"]:checked')).map(function(c){ return c.value; });
+  const fuel = document.getElementById('revFuel').value;
+  const ethanolRaw = document.getElementById('revEthanol').value;
+  const conditions = document.getElementById('revConditions').value.trim();
+  const notes = document.getElementById('revisionNotes').value.trim();
+  const file = document.getElementById('revLogFile').files[0];
+
+  if(!complaints.length) return fail('Pick at least one issue.');
+  if(!fuel) return fail('Select the fuel you\'re running.');
+  if(!file) return fail('Attach a datalog - your tuner needs it to diagnose the issue.');
+  const ethanol = ethanolRaw === '' ? null : Number(ethanolRaw);
+  if(ethanol !== null && (isNaN(ethanol) || ethanol < 0 || ethanol > 100)) return fail('Ethanol % must be between 0 and 100.');
+
+  btn.disabled = true; btn.textContent = 'Uploading log...';
   try{
-    const data = await callPortal('request_revision', { notes: notes });
+    const req = await callPortal('request_upload_url', { file_name: file.name });
+    const { error: upErr } = await sb.storage.from('tuning-files').uploadToSignedUrl(req.path, req.uploadToken, file);
+    if(upErr) throw upErr;
+    const up = await callPortal('confirm_upload', { path: req.path, file_name: file.name, file_type: 'log' });
+    if(up.file) STATE.files.unshift(up.file);
+
+    btn.textContent = 'Submitting...';
+    const data = await callPortal('request_revision', {
+      complaints: complaints, fuel: fuel, ethanol_pct: ethanol,
+      conditions: conditions, notes: notes, log_file_id: up.file ? up.file.id : null
+    });
     STATE.application = data.application;
     if(data.message) STATE.messages.push(data.message);
     renderPortal();
     toastLike('Revision request sent - your tuner has been notified.');
   }catch(e){
-    errEl.className = 'status-msg err'; errEl.textContent = 'Failed to submit: ' + e.message;
+    fail('Failed to submit: ' + e.message);
     btn.disabled = false; btn.textContent = 'Submit Revision Request';
   }
 }
