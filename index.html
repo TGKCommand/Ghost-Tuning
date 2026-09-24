@@ -730,7 +730,7 @@ tr.row-click:hover td{background:var(--bg3)}
         </div>
         <div class="sync-sub" onclick="doLogout()">Sign out</div>
         <div class="version-row">
-          <span>v1.79</span>
+          <span>v1.80</span>
           <span id="buildDate"></span>
         </div>
       </div>
@@ -2378,6 +2378,17 @@ function renderInvoicesSection(a){
         + '</div></div>';
     } else if(inv.status === 'paid'){
       primary = '<button class="btn btn-sm" id="checkRefundBtn-' + inv.id + '" onclick="checkInvoiceRefund(\'' + a.id + '\',\'' + inv.id + '\')">Check for Refund</button>';
+    } else if(inv.status === 'cancelled'){
+      // No live Shopify draft order left to edit or resend once cancelled -
+      // "Resend" and "Edit & resend" both create a brand NEW invoice (same
+      // pattern as "Send New Invoice"), pre-filled with this one's line
+      // items; the cancelled row itself is untouched unless deleted.
+      primary = '<button class="btn btn-sm" id="resendInvoiceBtn-' + inv.id + '" onclick="resendCancelledInvoice(\'' + a.id + '\',\'' + inv.id + '\')">Resend</button>';
+      menu = '<div class="more-wrap"><button class="btn btn-sm more-btn" onclick="toggleMoreMenu(this)">More &#9662;</button>'
+        + '<div class="more-menu">'
+        + '<a onclick="openResendInvoiceModal(\'' + a.id + '\',\'' + inv.id + '\')">Edit &amp; resend</a>'
+        + '<a id="deleteInvoiceBtn-' + inv.id + '" class="danger" onclick="deleteInvoice(\'' + a.id + '\',\'' + inv.id + '\')">Delete</a>'
+        + '</div></div>';
     }
 
     const linesHtml = lines.length ? lines.map(function(l){
@@ -2474,6 +2485,73 @@ async function openEditInvoiceModal(appId, invoiceId){
   openModal(renderInvoiceModalHtml(appId, invoice.notes || ''));
 }
 window.openEditInvoiceModal = openEditInvoiceModal;
+
+// Cancelled invoices have no live Shopify draft order left to edit - so
+// "editing" one means building a brand NEW invoice pre-filled with its old
+// line items (S.modalInvoiceId stays null, so Save creates rather than
+// updates); the old cancelled row is left exactly as it is.
+async function openResendInvoiceModal(appId, invoiceId){
+  const invoice = (S.invoices[appId] || []).find(function(i){ return i.id === invoiceId; });
+  if(!invoice) return;
+  S.modalInvoiceId = null;
+  S.modalInvoiceLines = Array.isArray(invoice.line_items) ? JSON.parse(JSON.stringify(invoice.line_items)) : [];
+  S.invAppId = appId; S.invPickQuery = ''; S.invInvalid = {};
+  openModal('<div class="modal inv-modal"><div class="modal-title">Loading products from Shopify&hellip;</div></div>');
+  await loadInvoiceCatalog();
+  openModal(renderInvoiceModalHtml(appId, invoice.notes || ''));
+}
+window.openResendInvoiceModal = openResendInvoiceModal;
+
+// One-click version of the above - no modal, just re-sends the exact same
+// line items as a fresh invoice. Same sendInvoiceLines() the undo/redo
+// system already uses to redo a cancelled invoice.
+async function resendCancelledInvoice(appId, invoiceId){
+  const invoice = (S.invoices[appId] || []).find(function(i){ return i.id === invoiceId; });
+  if(!invoice) return;
+  const btn = document.getElementById('resendInvoiceBtn-' + invoiceId);
+  if(btn){ btn.disabled = true; btn.textContent = 'Sending...'; }
+  try{
+    await sendInvoiceLines(appId, invoice.line_items, invoice.notes);
+    toast('Sent as a new invoice with the same line items');
+    return;
+  }catch(e){
+    toast('Failed to resend: ' + e.message, true);
+  }
+  if(btn){ btn.disabled = false; btn.textContent = 'Resend'; }
+}
+window.resendCancelledInvoice = resendCancelledInvoice;
+
+// Permanently removes a cancelled invoice's record - unlike Cancel, which
+// deliberately keeps the row for history, this actually deletes it. Routed
+// through the edge function (service role) rather than a direct client
+// delete, so the server can enforce that only a cancelled invoice - never
+// a paid, refunded, or still-unpaid one - can ever be removed this way.
+async function deleteInvoice(appId, invoiceId){
+  if(!confirm('Permanently delete this cancelled invoice? This removes it from history for good and cannot be undone.')) return;
+  const btn = document.getElementById('deleteInvoiceBtn-' + invoiceId);
+  if(btn) btn.textContent = 'Deleting...';
+  try{
+    const { data: sess } = await sb.auth.getSession();
+    const token = sess && sess.session && sess.session.access_token;
+    if(!token) throw new Error('Not signed in');
+    const resp = await fetch(SUPABASE_URL + '/functions/v1/tuning-invoice', {
+      method: 'POST',
+      headers: { 'Content-Type':'application/json', 'Authorization':'Bearer ' + token, 'apikey': SUPABASE_ANON_KEY },
+      body: JSON.stringify({ action: 'delete', invoice_id: invoiceId })
+    });
+    const result = await resp.json();
+    if(!result.success) throw new Error(result.error || 'Delete failed');
+    const list = S.invoices[appId];
+    if(list){ const idx = list.findIndex(function(i){ return i.id === invoiceId; }); if(idx !== -1) list.splice(idx, 1); }
+    if(S.openAppId === appId) renderPanelBody();
+    toast('Invoice deleted');
+    return;
+  }catch(e){
+    toast('Failed to delete invoice: ' + e.message, true);
+  }
+  if(btn) btn.textContent = 'Delete';
+}
+window.deleteInvoice = deleteInvoice;
 
 // Invoice builder: an invoice-style line table (SKU first), a searchable
 // product picker, and editable custom lines. Typing in a qty/price/
@@ -5081,6 +5159,7 @@ function describeActivity(l){
   else if(l.field_changed === 'invoice_cancelled') desc = 'Invoice cancelled' + (l.old_value ? ' (was ' + l.old_value + ')' : '');
   else if(l.field_changed === 'invoice_refunded') desc = 'Invoice refunded by Shopify' + (l.new_value ? ' (' + l.new_value + ')' : '');
   else if(l.field_changed === 'profile_edited') desc = 'Profile edited: ' + (l.new_value || '');
+  else if(l.field_changed === 'invoice_deleted') desc = 'Invoice deleted' + (l.old_value ? ' (was ' + l.old_value + ')' : '');
   return desc;
 }
 
@@ -5100,6 +5179,7 @@ function activityAccent(l){
   if(l.field_changed === 'invoice_cancelled') return 'red';
   if(l.field_changed === 'invoice_refunded') return 'red';
   if(l.field_changed === 'profile_edited') return 'yellow';
+  if(l.field_changed === 'invoice_deleted') return 'red';
   if(l.field_changed === 'invoice_reminder') return 'yellow';
   if(l.field_changed === 'current_tune') return 'teal';
   if(l.field_changed === 'log_guide') return 'muted';
