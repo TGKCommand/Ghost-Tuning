@@ -794,7 +794,8 @@ const NAV = [
 const S = { user:null, page:'dashboard', applications:[], openAppId:null, messages:{}, files:{}, activity:{}, recentActivity:[], templates:[], activeTab:'overview', filter:'active', search:'',
   pendingLogs:[], platformLibrary:[], ecuReference:[], revisionCount:0, lookupQuery:'', libraryFormOpen:false, ecuFormOpen:false, tuners:[], selectedIds:new Set(),
   fullActivity:[], fullActivityOffset:0, fullActivityHasMore:true, fullActivityLoading:false,
-  invoiceCatalog:null, invoiceCatalogLoading:false, modalInvoiceLines:[], modalInvoiceId:null, invoices:{}, unpaidInvoices:[], settings:{}, logGuides:[], logGuideFormOpen:false, editingGuideId:null };
+  invoiceCatalog:null, invoiceCatalogLoading:false, modalInvoiceLines:[], modalInvoiceId:null, invoices:{}, unpaidInvoices:[], settings:{}, logGuides:[], logGuideFormOpen:false, editingGuideId:null,
+  editingOverview:false };
 
 function escapeHtml(s){
   return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){
@@ -1925,6 +1926,7 @@ window.cycleGhostPanelWidth = cycleGhostPanelWidth;
 async function openApplication(id){
   S.openAppId = id;
   S.activeTab = 'overview';
+  S.editingOverview = false;
   const app = S.applications.find(function(a){ return a.id === id; });
   if(!app) return;
 
@@ -1952,6 +1954,7 @@ function closePanel(){
   document.getElementById('tk-overlay').classList.remove('open');
   document.getElementById('tk-panel').classList.remove('open');
   S.openAppId = null;
+  S.editingOverview = false;
   unsubscribeAppRealtime();
 }
 window.closePanel = closePanel;
@@ -2160,7 +2163,7 @@ function renderPanelBody(){
   if(!app) return;
   const el = document.getElementById('panelBody');
   if(!el) return;
-  if(S.activeTab === 'overview') el.innerHTML = renderOverview(app);
+  if(S.activeTab === 'overview') el.innerHTML = S.editingOverview ? renderOverviewEdit(app) : renderOverview(app);
   else if(S.activeTab === 'messages') el.innerHTML = renderMessagesTab(app);
   else if(S.activeTab === 'files') el.innerHTML = renderFilesTab(app);
   else if(S.activeTab === 'invoices') el.innerHTML = renderInvoicesSection(app);
@@ -2850,7 +2853,7 @@ function renderOverviewSummary(a){
 }
 
 function renderOverview(a){
-  let html = '';
+  let html = '<div style="display:flex;justify-content:flex-end;margin-bottom:2px"><button class="btn btn-sm" onclick="startEditOverview()">Edit Profile</button></div>';
 
   const repeats = findRepeatApplications(a);
   if(repeats.length){
@@ -2921,6 +2924,182 @@ function renderOverview(a){
   }
   return html;
 }
+
+/* ---- Overview tab, edit mode ----
+   Toggled by the "Edit Profile" button - swaps the whole read-only Overview
+   body for a form covering every field on the application, and swaps back
+   on Save or Cancel. Status and Assigned Tuner aren't included here - those
+   already save immediately from their own dropdowns in the panel header. */
+function ovfText(id, label, value, full){
+  return '<div class="dl-item' + (full ? ' full' : '') + '"><div class="dl-label">' + escapeHtml(label) + '</div>'
+    + '<input class="form-input" id="' + id + '" value="' + escapeHtml(value != null ? String(value) : '') + '"></div>';
+}
+function ovfTextarea(id, label, value){
+  return '<div class="dl-item full"><div class="dl-label">' + escapeHtml(label) + '</div>'
+    + '<textarea class="form-input" id="' + id + '">' + escapeHtml(value || '') + '</textarea></div>';
+}
+function ovfBool(id, label, value){
+  return '<div class="dl-item"><div class="dl-label">' + escapeHtml(label) + '</div>'
+    + '<select class="form-input" id="' + id + '">'
+    + '<option value=""' + (value === true || value === false ? '' : ' selected') + '>-</option>'
+    + '<option value="yes"' + (value === true ? ' selected' : '') + '>Yes</option>'
+    + '<option value="no"' + (value === false ? ' selected' : '') + '>No</option>'
+    + '</select></div>';
+}
+
+function renderOverviewEdit(a){
+  let html = '<div style="display:flex;justify-content:flex-end;gap:8px;margin-bottom:12px">'
+    + '<button class="btn btn-sm" onclick="cancelEditOverview()">Cancel</button>'
+    + '<button class="btn btn-sm btn-primary" id="ovfSaveBtn" onclick="saveOverviewEdit(\'' + a.id + '\')">Save</button>'
+    + '</div>';
+
+  html += ovSection('Customer', true, '<div class="dl-grid">'
+    + ovfText('ovf_customer_name', 'Name', a.customer_name)
+    + ovfText('ovf_customer_email', 'Email', a.customer_email)
+    + '</div>');
+
+  html += ovSection('Car Information', true, '<div class="dl-grid">'
+    + ovfText('ovf_car_year', 'Year', a.car_year) + ovfText('ovf_car_make', 'Make', a.car_make)
+    + ovfText('ovf_car_model', 'Model', a.car_model) + ovfText('ovf_car_mileage', 'Mileage', a.car_mileage)
+    + '</div>');
+
+  html += ovSection('Owner', true, '<div class="dl-grid">'
+    + ovfText('ovf_existing_customer', 'Already a TGK customer?', a.existing_customer, true)
+    + ovfTextarea('ovf_tuning_reason', 'Why seeking custom tuning', a.tuning_reason)
+    + '</div>');
+
+  html += ovSection('Modifications', true, '<div class="dl-grid">'
+    + ovfText('ovf_mod_intake', 'Intake', a.mod_intake) + ovfText('ovf_mod_turbos', 'Turbos', a.mod_turbos)
+    + ovfText('ovf_mod_cooling', 'Cooling', a.mod_cooling) + ovfText('ovf_mod_wastegates', 'Wastegates', a.mod_wastegates)
+    + ovfText('ovf_mod_map_sensors', 'Map Sensors', a.mod_map_sensors) + ovfText('ovf_mod_downpipes_exhaust', 'Downpipes/Exhaust', a.mod_downpipes_exhaust)
+    + ovfText('ovf_mod_transmission_tune', 'Transmission/Tune', a.mod_transmission_tune) + ovfText('ovf_mod_fueling', 'Fueling', a.mod_fueling)
+    + ovfBool('ovf_has_water_meth', 'Water Methanol', a.has_water_meth) + ovfBool('ovf_plan_ethanol', 'Plan to Run Ethanol', a.plan_ethanol)
+    + ovfBool('ovf_has_ds1', 'Has Dyno Spectrum DS1', a.has_ds1) + ovfBool('ovf_purchasing_ds1_through_us', 'Purchasing DS1 Through Us', a.purchasing_ds1_through_us)
+    + ovfTextarea('ovf_other_mods', 'Other Modifications', a.other_mods)
+    + '</div>');
+
+  html += ovSection('Maintenance', true, '<div class="dl-grid">'
+    + ovfText('ovf_spark_plug_date', 'Spark Plug Date', a.spark_plug_date) + ovfText('ovf_spark_plug_mileage', 'Spark Plug Mileage', a.spark_plug_mileage)
+    + ovfText('ovf_spark_plug_brand', 'Spark Plug Brand', a.spark_plug_brand) + ovfText('ovf_spark_plug_gap', 'Spark Plug Gap', a.spark_plug_gap)
+    + ovfText('ovf_oil_change_date', 'Oil Change Date', a.oil_change_date) + ovfText('ovf_oil_change_mileage', 'Oil Change Mileage', a.oil_change_mileage)
+    + ovfText('ovf_oil_brand_weight', 'Oil Brand and Weight', a.oil_brand_weight, true)
+    + ovfText('ovf_trans_service_date', 'Trans Service Date', a.trans_service_date) + ovfText('ovf_trans_service_mileage', 'Trans Service Mileage', a.trans_service_mileage)
+    + ovfText('ovf_air_filter_date', 'Air Filter Date', a.air_filter_date) + ovfText('ovf_air_filter_mileage', 'Air Filter Mileage', a.air_filter_mileage)
+    + ovfBool('ovf_maintenance_self_performed', 'Self Performed', a.maintenance_self_performed)
+    + ovfText('ovf_maintenance_shop_name', 'Shop Name', a.maintenance_shop_name)
+    + '</div>');
+
+  html += ovSection('Contact &amp; Legal', true, '<div class="dl-grid">'
+    + ovfText('ovf_customer_country', 'Country', a.customer_country)
+    + dl('Legal Policy Agreed', yn(a.legal_agree))
+    + dlFull('Policy Agreement Signature', a.policy_agreement_signature)
+    + dlFull('Legal Signature', a.legal_signature)
+    + '</div>');
+  html += '<div class="file-meta" style="margin-top:-8px;margin-bottom:8px">Legal agreement and signatures are read-only here - they record what the customer actually consented to and aren\'t editable.</div>';
+
+  html += ovSection('Internal Notes', true, '<div class="dl-grid">'
+    + ovfTextarea('ovf_decision_notes', 'Decision Notes', a.decision_notes)
+    + ovfTextarea('ovf_declined_reason', 'Declined / Needs Info Reason', a.declined_reason)
+    + '</div>');
+
+  return html;
+}
+
+function startEditOverview(){
+  S.editingOverview = true;
+  renderPanelBody();
+}
+window.startEditOverview = startEditOverview;
+
+function cancelEditOverview(){
+  S.editingOverview = false;
+  renderPanelBody();
+}
+window.cancelEditOverview = cancelEditOverview;
+
+async function saveOverviewEdit(appId){
+  const app = S.applications.find(function(x){ return x.id === appId; });
+  if(!app) return;
+
+  const val = function(id){ const el = document.getElementById(id); return el ? el.value.trim() : ''; };
+  const boolVal = function(id){ const v = val(id); return v === 'yes' ? true : (v === 'no' ? false : null); };
+  const numOrText = function(v){ if(!v) return null; return isNaN(Number(v)) ? v : Number(v); };
+  const textOrNull = function(v){ return v ? v : null; };
+
+  const patch = {
+    customer_name: val('ovf_customer_name'),
+    customer_email: val('ovf_customer_email'),
+    car_year: numOrText(val('ovf_car_year')),
+    car_make: textOrNull(val('ovf_car_make')),
+    car_model: textOrNull(val('ovf_car_model')),
+    car_mileage: numOrText(val('ovf_car_mileage')),
+    existing_customer: textOrNull(val('ovf_existing_customer')),
+    tuning_reason: textOrNull(val('ovf_tuning_reason')),
+    mod_intake: textOrNull(val('ovf_mod_intake')),
+    mod_turbos: textOrNull(val('ovf_mod_turbos')),
+    mod_cooling: textOrNull(val('ovf_mod_cooling')),
+    mod_wastegates: textOrNull(val('ovf_mod_wastegates')),
+    mod_map_sensors: textOrNull(val('ovf_mod_map_sensors')),
+    mod_downpipes_exhaust: textOrNull(val('ovf_mod_downpipes_exhaust')),
+    mod_transmission_tune: textOrNull(val('ovf_mod_transmission_tune')),
+    mod_fueling: textOrNull(val('ovf_mod_fueling')),
+    has_water_meth: boolVal('ovf_has_water_meth'),
+    plan_ethanol: boolVal('ovf_plan_ethanol'),
+    has_ds1: boolVal('ovf_has_ds1'),
+    purchasing_ds1_through_us: boolVal('ovf_purchasing_ds1_through_us'),
+    other_mods: textOrNull(val('ovf_other_mods')),
+    spark_plug_date: textOrNull(val('ovf_spark_plug_date')),
+    spark_plug_mileage: numOrText(val('ovf_spark_plug_mileage')),
+    spark_plug_brand: textOrNull(val('ovf_spark_plug_brand')),
+    spark_plug_gap: textOrNull(val('ovf_spark_plug_gap')),
+    oil_change_date: textOrNull(val('ovf_oil_change_date')),
+    oil_change_mileage: numOrText(val('ovf_oil_change_mileage')),
+    oil_brand_weight: textOrNull(val('ovf_oil_brand_weight')),
+    trans_service_date: textOrNull(val('ovf_trans_service_date')),
+    trans_service_mileage: numOrText(val('ovf_trans_service_mileage')),
+    air_filter_date: textOrNull(val('ovf_air_filter_date')),
+    air_filter_mileage: numOrText(val('ovf_air_filter_mileage')),
+    maintenance_self_performed: boolVal('ovf_maintenance_self_performed'),
+    maintenance_shop_name: textOrNull(val('ovf_maintenance_shop_name')),
+    customer_country: textOrNull(val('ovf_customer_country')),
+    decision_notes: textOrNull(val('ovf_decision_notes')),
+    declined_reason: textOrNull(val('ovf_declined_reason'))
+  };
+
+  if(!patch.customer_name){ toast('Customer name is required', true); return; }
+  if(!patch.customer_email){ toast('Customer email is required', true); return; }
+
+  const btn = document.getElementById('ovfSaveBtn');
+  if(btn){ btn.disabled = true; btn.textContent = 'Saving...'; }
+  try{
+    const { data, error } = await sb.from('tuning_applications').update(patch).eq('id', appId).select().single();
+    if(error) throw error;
+
+    // Only log fields that actually changed, so the Activity tab reads as
+    // a real changelog rather than a wall of every field on every save.
+    const changedFields = Object.keys(patch).filter(function(k){ return String(app[k] == null ? '' : app[k]) !== String(patch[k] == null ? '' : patch[k]); });
+    if(changedFields.length){
+      await sb.from('tuning_activity_log').insert({
+        application_id: appId,
+        field_changed: 'profile_edited',
+        old_value: null,
+        new_value: changedFields.join(', '),
+        changed_by: (S.user && S.user.email) || 'Unknown'
+      });
+    }
+
+    const idx = S.applications.findIndex(function(x){ return x.id === appId; });
+    if(idx !== -1) S.applications[idx] = data;
+    S.editingOverview = false;
+    renderNav();
+    renderPanelShell_refresh(data);
+    toast('Profile updated');
+  }catch(e){
+    toast('Failed to save: ' + e.message, true);
+    if(btn){ btn.disabled = false; btn.textContent = 'Save'; }
+  }
+}
+window.saveOverviewEdit = saveOverviewEdit;
 
 /* ---- messages tab ---- */
 function renderMessagesTab(a){
@@ -4870,6 +5049,7 @@ function describeActivity(l){
   else if(l.field_changed === 'invoice_reminder') desc = 'Payment reminder sent' + (l.new_value ? ' (' + l.new_value + ')' : '');
   else if(l.field_changed === 'invoice_cancelled') desc = 'Invoice cancelled' + (l.old_value ? ' (was ' + l.old_value + ')' : '');
   else if(l.field_changed === 'invoice_refunded') desc = 'Invoice refunded by Shopify' + (l.new_value ? ' (' + l.new_value + ')' : '');
+  else if(l.field_changed === 'profile_edited') desc = 'Profile edited: ' + (l.new_value || '');
   return desc;
 }
 
@@ -4888,6 +5068,7 @@ function activityAccent(l){
   if(l.field_changed === 'invoice_paid') return 'teal';
   if(l.field_changed === 'invoice_cancelled') return 'red';
   if(l.field_changed === 'invoice_refunded') return 'red';
+  if(l.field_changed === 'profile_edited') return 'yellow';
   if(l.field_changed === 'invoice_reminder') return 'yellow';
   if(l.field_changed === 'current_tune') return 'teal';
   if(l.field_changed === 'log_guide') return 'muted';
