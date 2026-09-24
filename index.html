@@ -2376,6 +2376,8 @@ function renderInvoicesSection(a){
         + (inv.invoice_url ? '<a onclick="copyInvoiceLink(\'' + escapeHtml(inv.invoice_url) + '\')">Copy payment link</a><a href="' + escapeHtml(inv.invoice_url) + '" target="_blank" rel="noopener">Open payment page</a>' : '')
         + '<a id="cancelInvoiceBtn-' + inv.id + '" class="danger" onclick="cancelInvoice(\'' + a.id + '\',\'' + inv.id + '\')">Cancel invoice</a>'
         + '</div></div>';
+    } else if(inv.status === 'paid'){
+      primary = '<button class="btn btn-sm" id="checkRefundBtn-' + inv.id + '" onclick="checkInvoiceRefund(\'' + a.id + '\',\'' + inv.id + '\')">Check for Refund</button>';
     }
 
     const linesHtml = lines.length ? lines.map(function(l){
@@ -2824,6 +2826,35 @@ async function refreshInvoiceStatus(appId, invoiceId){
   if(btn){ btn.disabled = false; btn.textContent = 'Check payment in Shopify'; }
 }
 window.refreshInvoiceStatus = refreshInvoiceStatus;
+
+// Manual pull for the case a webhook already fired into a void - the order
+// was cancelled/refunded before this invoice had shopify_order_id backfilled,
+// or the webhook subscriptions simply weren't set up yet at the time. Asks
+// Shopify for the order's current financial_status directly, right now,
+// instead of waiting on an event that already happened and won't repeat.
+async function checkInvoiceRefund(appId, invoiceId){
+  const btn = document.getElementById('checkRefundBtn-' + invoiceId);
+  if(btn){ btn.disabled = true; btn.textContent = 'Checking...'; }
+  try{
+    const { data: sess } = await sb.auth.getSession();
+    const token = sess && sess.session && sess.session.access_token;
+    if(!token) throw new Error('Not signed in');
+    const resp = await fetch(SUPABASE_URL + '/functions/v1/tuning-invoice', {
+      method: 'POST',
+      headers: { 'Content-Type':'application/json', 'Authorization':'Bearer ' + token, 'apikey': SUPABASE_ANON_KEY },
+      body: JSON.stringify({ action: 'check_refund', invoice_id: invoiceId })
+    });
+    const result = await resp.json();
+    if(!result.success) throw new Error(result.error || 'Check failed');
+    if(result.invoice) replaceInvoiceInState(appId, result.invoice);
+    toast(result.changed ? 'Refund found - invoice marked refunded' : 'Still shows paid - no refund found in Shopify');
+    return;
+  }catch(e){
+    toast('Shopify check failed: ' + e.message, true);
+  }
+  if(btn){ btn.disabled = false; btn.textContent = 'Check for Refund'; }
+}
+window.checkInvoiceRefund = checkInvoiceRefund;
 
 
 // Collapsible Overview section. Only Car Information is open by default -
