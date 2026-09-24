@@ -5109,6 +5109,11 @@ function renderHealth(){
       + (c.fix ? '<div class="hl-fix">' + escapeHtml(c.fix) + '</div>' : '') + '</div></div>';
   }).join('') + '</div>';
 
+  html += '<div class="hl-check"><span class="hl-dot hl-warn"></span><div class="hl-body">'
+    + '<div class="hl-title">Backfill Shopify order IDs</div>'
+    + '<div class="hl-detail">Invoices marked paid before refund/cancellation tracking was added are missing the Shopify order id that a later refund or cancellation gets matched against - so those older invoices won\'t update automatically until this runs once.</div>'
+    + '</div><button class="btn btn-sm" id="backfillOrderIdsBtn" style="align-self:center" onclick="runBackfillOrderIds()">Run Backfill</button></div>';
+
   const filt = S.healthFilter || 'problems';
   const events = (S.healthEvents || []).filter(function(e){ return filt === 'all' || e.level !== 'info'; });
   html += '<div class="dash-head"><div><div class="section-title" style="margin:0">Recent events</div>'
@@ -5151,6 +5156,34 @@ async function clearHealthEvents(){
   }catch(e){ toast('Could not clear: ' + e.message, true); }
 }
 window.clearHealthEvents = clearHealthEvents;
+
+// One-off maintenance action (see tuning-backfill-order-ids) - fills in
+// shopify_order_id on paid invoices that predate refund/cancellation
+// tracking, so those older invoices start reacting to Shopify refunds too.
+// Safe to click more than once; already-backfilled invoices are skipped.
+async function runBackfillOrderIds(){
+  if(!confirm('Fetch each paid invoice\'s Shopify order id from Shopify? This only touches invoices that don\'t have one yet.')) return;
+  const btn = document.getElementById('backfillOrderIdsBtn');
+  if(btn){ btn.disabled = true; btn.textContent = 'Running...'; }
+  try{
+    const { data: sess } = await sb.auth.getSession();
+    const token = sess && sess.session && sess.session.access_token;
+    if(!token) throw new Error('Not signed in');
+    const resp = await fetch(SUPABASE_URL + '/functions/v1/tuning-backfill-order-ids', {
+      method: 'POST',
+      headers: { 'Content-Type':'application/json', 'Authorization':'Bearer ' + token, 'apikey': SUPABASE_ANON_KEY },
+      body: JSON.stringify({})
+    });
+    const result = await resp.json();
+    if(!result.success) throw new Error(result.error || 'Backfill failed');
+    toast('Backfilled ' + result.updated + ', skipped ' + result.skipped + (result.failed ? ', ' + result.failed + ' failed' : '')
+      + (result.more ? ' - more remain, click Run Backfill again' : ''));
+  }catch(e){
+    toast('Backfill failed: ' + e.message, true);
+  }
+  if(btn){ btn.disabled = false; btn.textContent = 'Run Backfill'; }
+}
+window.runBackfillOrderIds = runBackfillOrderIds;
 
 /* ================= SETTINGS + TEAM ================= */
 async function loadSettings(){
