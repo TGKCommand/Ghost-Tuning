@@ -337,18 +337,38 @@ tr.row-click:hover td{background:var(--bg3)}
 .lc-tools{display:flex;align-items:center;gap:6px;flex-shrink:0}
 .lc-add{border:1px solid var(--border);border-radius:6px;background:var(--bg2);font-size:var(--t-xs);padding:3px 4px;color:var(--text2);max-width:150px;font-family:inherit}
 .lc-body{display:flex}
-.lc-y{position:relative;width:52px;flex-shrink:0;height:170px}
+.lc-y{position:relative;width:52px;flex-shrink:0;height:var(--lc-h,170px)}
 .lc-y span{position:absolute;right:8px;transform:translateY(-50%);font-size:10.5px;color:var(--text3);font-variant-numeric:tabular-nums;white-space:nowrap}
-.lv-svg{flex:1;min-width:0;height:170px;display:block;cursor:crosshair;touch-action:pan-y;user-select:none}
+.lv-svg{flex:1;min-width:0;height:var(--lc-h,170px);display:block;cursor:crosshair;touch-action:pan-y;user-select:none}
 .lv-grid{stroke:var(--border);stroke-width:1;vector-effect:non-scaling-stroke}
-.lv-line{fill:none;stroke-width:1.6;vector-effect:non-scaling-stroke;stroke-linejoin:round}
-.lv-dash{stroke-dasharray:5 3;opacity:.75}
+.lv-line{fill:none;stroke-width:1.6;vector-effect:non-scaling-stroke;stroke-linejoin:round;stroke-linecap:round}
+.lv-dash{stroke-dasharray:5 3;opacity:.75;stroke-linecap:butt}
 .lv-sel{fill:rgba(13,148,136,.12);stroke:var(--teal);stroke-width:1;vector-effect:non-scaling-stroke}
 .lc-x{display:flex;margin-top:2px}
 .lc-y-sp{width:52px;flex-shrink:0}
 .lc-x-track{position:relative;flex:1;height:16px;margin-right:10px}
 .lc-x-track span{position:absolute;transform:translateX(-50%);font-size:10.5px;color:var(--text3);font-variant-numeric:tabular-nums}
 .lc-x-title{text-align:center;font-size:var(--t-xs);color:var(--text3);margin-top:2px}
+.lv-pull{fill:rgba(13,148,136,.08)}
+.lc-pulls{position:relative;flex:1;height:20px;margin-right:10px}
+.lc-pm{position:absolute;top:2px;transform:translateX(-50%);background:var(--bg);border:1px solid var(--border2);border-radius:999px;padding:0 8px;font-size:10.5px;font-weight:700;color:var(--teal-d);cursor:pointer;line-height:16px}
+.lc-pm:hover{border-color:var(--teal)}
+.lg-idle{font-weight:500;color:var(--text3);font-size:11px}
+.lv-note{margin-top:8px;padding:6px 10px;border-radius:6px;background:rgba(234,179,8,.12);border:1px solid rgba(234,179,8,.3);color:#a16207;font-size:var(--t-xs);font-weight:600}
+.lv-amb{width:76px !important;padding:3px 6px !important;font-size:var(--t-sm) !important;text-align:right}
+.lv-auto{color:var(--teal-d);font-weight:700;cursor:pointer;font-size:var(--t-xs)}
+.lv-segs{display:flex;gap:8px;margin-left:auto;flex-wrap:wrap}
+.lv-segs .lv-seg{margin-left:0}
+.an-links{margin-left:auto;display:flex;gap:14px}
+.an-links .an-th-link{margin-left:0}
+details.an-pd{background:var(--bg);border:1px solid var(--border);border-radius:var(--r-md);margin-top:6px}
+details.an-pd>summary{list-style:none;cursor:pointer;display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;padding:8px 12px}
+details.an-pd>summary::-webkit-details-marker{display:none}
+details.an-pd>summary::before{content:'\25B8';color:var(--text3);font-size:11px;width:10px;flex-shrink:0}
+details.an-pd[open]>summary::before{content:'\25BE'}
+details.an-pd .an-sumf{display:flex;flex-wrap:wrap;gap:6px;flex:1 1 auto}
+details.an-pd .an-f{padding:2px 8px}
+.an-pull-body{padding:2px 12px 10px}
 @media(max-width:720px){
   .lc-y,.lc-y-sp{width:40px}.lg-raw{display:none}.lv-seg{margin-left:0}
   /* Overlay/remove controls get their own row above the legend so they
@@ -357,7 +377,7 @@ tr.row-click:hover td{background:var(--bg3)}
   .lc-tools{order:-1;justify-content:flex-end}
   .lc-legend{gap:3px 10px}
   .lg-name{font-size:12px}
-  .lv-svg{height:170px}
+  .lv-svg{height:var(--lc-h,170px)}
   .log-modal{padding:14px 12px !important}
   .lv-bar{gap:8px}
   .lv-presets{width:100%;flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:2px}
@@ -730,7 +750,7 @@ tr.row-click:hover td{background:var(--bg3)}
         </div>
         <div class="sync-sub" onclick="doLogout()">Sign out</div>
         <div class="version-row">
-          <span>v1.80</span>
+          <span>v1.82</span>
           <span id="buildDate"></span>
         </div>
       </div>
@@ -3594,7 +3614,32 @@ function toNum(v, commaDecimal){
   return Number(commaDecimal ? String(v).replace(',', '.') : v);
 }
 
+// Rows may differ from the header's width only in harmless ways - a delimiter
+// at the end of every data row, or the last cell or two left off. Anything
+// else is a damaged line and is skipped rather than shifting every column.
+function fitCells(cells, W){
+  const n = cells.length;
+  if(n === W) return cells;
+  if(n > W){ for(let i = W; i < n; i++) if(cells[i] !== '') return null; return cells.slice(0, W); }
+  if(W - n <= 2){ const out = cells.slice(); while(out.length < W) out.push(''); return out; }
+  return null;
+}
+
+// Time stamps that aren't plain numbers: "14:03:22.250", "03:22.250" (mm:ss)
+// and "2026-09-24 14:03:22.250". Returns seconds, or NaN when it isn't one.
+function parseTimeCell(s){
+  let m = /^(\d{4})[-\/](\d{2})[-\/](\d{2})[T ](\d{1,2}):(\d{2}):(\d{2}(?:\.\d+)?)(?:Z|[+-]\d{2}:?\d{2})?$/.exec(s);
+  if(m) return Date.UTC(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], 0) / 1000 + parseFloat(m[6]);
+  m = /^(\d{1,2}):(\d{2}):(\d{2}(?:\.\d+)?)$/.exec(s);
+  if(m) return +m[1] * 3600 + +m[2] * 60 + parseFloat(m[3]);
+  m = /^(\d{1,3}):(\d{2}(?:\.\d+)?)$/.exec(s);
+  if(m) return +m[1] * 60 + parseFloat(m[2]);
+  return NaN;
+}
+const TIME_HDR = /time|sec|stamp|\bdate\b|clock|elapsed/i;
+
 function parseLog(text){
+  text = String(text).replace(/^\uFEFF/, '');   // byte-order mark from Excel / Windows exports
   const lines = text.split(/\r?\n/).filter(function(l){ return l.trim() !== ''; });
   if(lines.length < 3) throw new Error('This file does not look like a datalog (too few lines).');
   // Delimiter: whichever of , ; tab appears most consistently in the first lines.
@@ -3609,24 +3654,26 @@ function parseLog(text){
     const n = cells.filter(function(c){ return c !== '' && !isNaN(toNum(c, commaDecimal)); }).length;
     return cells.length ? n / cells.length : 0;
   };
-  // Filled-cell numeric ratio: DS1 writes a near-empty marker row ("0,,,,")
-  // right under the header, so empty cells must not count against a row.
+  // Filled-cell ratio: DS1 writes a near-empty marker row ("0,,,,") right
+  // under the header, so empty cells must not count against a row.
   const filledRatio = function(cells){
     const filled = cells.filter(function(c){ return c !== ''; });
     return filled.length / Math.max(1, cells.length);
   };
+  const trimEnd = function(cells){ let n = cells.length; while(n > 2 && cells[n - 1] === '') n--; return n === cells.length ? cells : cells.slice(0, n); };
   // Header = the text row followed by the LONGEST run of equal-width,
   // mostly-numeric rows. Taking the first candidate isn't enough: loggers
   // like JB4 start with settings blocks (a name row + a value row) that
   // look like a tiny table, and the real data only starts after them.
+  // A header is also never a near-empty marker row like DS1's "0,,,,".
   let headerIdx = -1, bestRun = 0;
   for(let i = 0; i < Math.min(200, lines.length - 1); i++){
-    const a = splitLogLine(lines[i], delim);
-    if(a.length < 2 || numRatio(a) >= 0.5) continue;
+    const a = trimEnd(splitLogLine(lines[i], delim));
+    if(a.length < 2 || numRatio(a) >= 0.5 || filledRatio(a) < 0.5) continue;
     let run = 0;
     for(let j = i + 1; j < lines.length && run < 500; j++){
-      const b = splitLogLine(lines[j], delim);
-      if(b.length !== a.length) break;
+      const b = fitCells(splitLogLine(lines[j], delim), a.length);
+      if(!b) break;
       if(filledRatio(b) < 0.5) continue;
       if(numRatio(b) >= 0.6) run++; else break;
     }
@@ -3642,24 +3689,63 @@ function parseLog(text){
     kr.forEach(function(k, x){ if(k && vr[x] !== '' && vr[x] !== undefined) preamble.push({ k: k, v: vr[x] }); });
     r++;
   }
-  const headers = splitLogLine(lines[headerIdx], delim).map(function(h, i){ return h || ('Column ' + (i + 1)); });
+  const rawHeaders = trimEnd(splitLogLine(lines[headerIdx], delim)).map(function(h, i){ return h || ('Column ' + (i + 1)); });
+  // Two columns with the same name would share one set of roles, rules and
+  // comparisons, so repeats get a "~2" suffix (ahead of any unit, so the
+  // unit still parses).
+  const seen = {};
+  const headers = rawHeaders.map(function(h){
+    seen[h] = (seen[h] || 0) + 1;
+    if(seen[h] === 1) return h;
+    const u = chUnitRaw(h), bs = chBase(h);
+    return bs + ' ~' + seen[h] + (u ? ' [' + u + ']' : '');
+  });
+  const W = headers.length;
   const cols = headers.map(function(){ return []; });
+  const filledN = new Array(W).fill(0);
+  const rawT = headers.map(function(h){ return TIME_HDR.test(h) ? [] : null; });
   for(let r = headerIdx + 1; r < lines.length; r++){
-    const cells = splitLogLine(lines[r], delim);
-    if(cells.length !== headers.length) continue;
+    const cells = fitCells(splitLogLine(lines[r], delim), W);
+    if(!cells) continue;
     if(filledRatio(cells) < 0.5) continue; // marker / padding rows
-    for(let c = 0; c < headers.length; c++) cols[c].push(toNum(cells[c], commaDecimal));
+    for(let c = 0; c < W; c++){
+      if(cells[c] !== '') filledN[c]++;
+      cols[c].push(toNum(cells[c], commaDecimal));
+      if(rawT[c]) rawT[c].push(cells[c]);
+    }
   }
   const rowCount = cols[0].length;
   if(!rowCount) throw new Error('No data rows found under the header.');
+  // A channel is numeric when most of what it HOLDS is numeric - a slow
+  // channel that is blank on most rows is still a real channel.
+  const minFilled = Math.max(2, Math.ceil(rowCount * 0.05));
   const numeric = headers.map(function(h, c){
-    const ok = cols[c].filter(function(v){ return !isNaN(v); }).length;
-    return ok / rowCount >= 0.8;
+    if(filledN[c] < minFilled) return false;
+    let ok = 0; const col = cols[c];
+    for(let i = 0; i < rowCount; i++) if(!isNaN(col[i])) ok++;
+    return ok / filledN[c] >= 0.8;
+  });
+  // Time columns written as clock times / date-times rather than numbers.
+  const textTime = {};
+  headers.forEach(function(h, c){
+    if(numeric[c] || !rawT[c]) return;
+    const nonEmpty = rawT[c].filter(function(s){ return s !== ''; }).length;
+    if(!nonEmpty) return;
+    const vals = rawT[c].map(function(s){ return s === '' ? NaN : parseTimeCell(s); });
+    if(vals.filter(function(v){ return !isNaN(v); }).length / nonEmpty < 0.95) return;
+    let off = 0, prev = NaN;   // clock time with no date: a big drop means it passed midnight
+    for(let i = 0; i < vals.length; i++){
+      if(isNaN(vals[i])) continue;
+      let v = vals[i] + off;
+      if(!isNaN(prev) && v < prev - 43200){ off += 86400; v += 86400; }
+      vals[i] = v; prev = v;
+    }
+    cols[c] = vals; numeric[c] = true; textTime[c] = true;
   });
   // Time axis: a time-like header that mostly increases; otherwise sample index.
   let timeIdx = -1;
   headers.forEach(function(h, c){
-    if(timeIdx !== -1 || !numeric[c] || !/time|sec|stamp/i.test(h)) return;
+    if(timeIdx !== -1 || !numeric[c] || !TIME_HDR.test(h)) return;
     let up = 0;
     for(let i = 1; i < rowCount; i++) if(cols[c][i] >= cols[c][i - 1]) up++;
     if(up / Math.max(1, rowCount - 1) > 0.95) timeIdx = c;
@@ -3669,11 +3755,24 @@ function parseLog(text){
   let timeScale = 1, timeUnit = '';
   if(timeIdx !== -1){
     const h = headers[timeIdx];
-    if(/[\[(]\s*ms\s*[\])]|\bms\b/i.test(h)){ timeScale = 1000; timeUnit = 's'; }
+    if(textTime[timeIdx]) timeUnit = 's';
+    else if(/[\[(]\s*ms\s*[\])]|\bms\b/i.test(h)){ timeScale = 1000; timeUnit = 's'; }
     else if(/[\[(]\s*s(ec(onds?)?)?\s*[\])]/i.test(h)) timeUnit = 's';
   }
+  let t0 = 0;
+  if(timeIdx !== -1){ for(let i = 0; i < rowCount; i++){ if(!isNaN(cols[timeIdx][i])){ t0 = cols[timeIdx][i]; break; } } }
+  // Sample rate (median step), so the viewer can say how much detail the
+  // log really holds - 1 Hz logs can't show a half-second knock event.
+  let hz = 0;
+  if(timeIdx !== -1 && rowCount > 2){
+    const tc = cols[timeIdx], step = Math.max(1, Math.floor(rowCount / 2000)), d = [];
+    for(let i = step; i < rowCount; i += step){ const dd = (tc[i] - tc[i - step]) / step; if(dd > 0) d.push(dd); }
+    d.sort(function(x, y){ return x - y; });
+    const med = d.length ? d[d.length >> 1] / timeScale : 0;
+    hz = med > 0 ? 1 / med : 0;
+  }
   return applyLogProfile({ headers: headers, cols: cols, numeric: numeric, timeIdx: timeIdx, rows: rowCount, delim: delim,
-    t0: timeIdx !== -1 ? cols[timeIdx][0] : 0, timeScale: timeScale, timeUnit: timeUnit, preamble: preamble });
+    t0: t0, timeScale: timeScale, timeUnit: timeUnit, preamble: preamble, hz: hz });
 }
 
 function logSignature(headers){ return 'tgk-logview:' + headers.join('|').slice(0, 400); }
@@ -3731,7 +3830,8 @@ function evaluateRules(log){
   });
 }
 
-function xValue(log, i){ return log.timeIdx !== -1 ? (log.cols[log.timeIdx][i] - log.t0) / log.timeScale : i; }
+// log.xShift lines a compared log up with this one (see logApplyAlign); 0 otherwise.
+function xValue(log, i){ return (log.timeIdx !== -1 ? (log.cols[log.timeIdx][i] - log.t0) / log.timeScale : i) - (log.xShift || 0); }
 
 // Fuel cut / overrun: on lift-off the ECU stops injecting and lambda
 // channels jump to their maximum (16 on DS1/Bosch), passing through values
@@ -3798,6 +3898,16 @@ function compareCol(c){
 }
 function timeLabel(log){ return log.timeIdx === -1 ? 'Sample' : (log.timeUnit ? 'Time (' + log.timeUnit + ')' : log.headers[log.timeIdx]); }
 function fmtNum(v){ if(v === null || isNaN(v)) return '-'; const a = Math.abs(v); return a >= 1000 ? v.toFixed(0) : (a >= 10 ? v.toFixed(1) : v.toFixed(2)); }
+// Per-channel precision: lambda is read to the third decimal (0.853 vs 0.850
+// is a real difference), everything else keeps fmtNum's 3-significant style.
+function fmtV(log, c, v){
+  if(v === null || v === undefined || isNaN(v)) return '-';
+  const m = log.meta && log.meta[c];
+  if(m && (m.role === 'lambda' || m.role === 'lambda_target')) return v.toFixed(3);
+  return fmtNum(v);
+}
+function fmtHz(hz){ return (hz >= 10 ? Math.round(hz) : hz.toFixed(1)) + ' Hz'; }
+function logChartHeight(){ try{ const v = Number(localStorage.getItem('tgk-logview-h')); return [120, 170, 260].indexOf(v) !== -1 ? v : 170; }catch(e){ return 170; } }
 
 async function fetchLog(path){
   const { data, error } = await sb.storage.from('tuning-files').createSignedUrl(path, 600);
@@ -3853,6 +3963,8 @@ async function setLogCompare(fileId){
   toast('Loading ' + f.file_name + '...');
   try{
     V.compare = { fileId: f.id, fileName: f.file_name, log: await fetchLog(f.file_path) };
+    V.align = V.align || 'start';
+    logApplyAlign();
     renderLogViewer();
   }catch(e){ toast('Could not load comparison log: ' + e.message, true); }
 }
@@ -3933,7 +4045,7 @@ const LOG_ROLES = {
   hpfp:{label:'Rail pressure (actual)'}, hpfp_target:{label:'Rail pressure (setpoint)'}, lpfp:{label:'Low-pressure fuel'},
   inj_time:{label:'Injection time'}, fuel_trim:{label:'Fuel trim'}, ethanol:{label:'Ethanol content'},
   iat:{label:'Intake air temp'}, coolant:{label:'Coolant temp'}, oil_temp:{label:'Oil temp'}, trans_temp:{label:'Trans temp'},
-  maf:{label:'Mass airflow'}
+  maf:{label:'Mass airflow'}, ambient:{label:'Ambient pressure', allowFlat:true}
 };
 
 // map entries: [role, regex on the column name (unit stripped), options]
@@ -3946,13 +4058,13 @@ const LOG_PROFILES = [
       ['gear',/^CoEng_nrActGearHem$/i], ['load',/^rl_w$/i], ['iat',/^tans/i], ['coolant',/^tmot/i],
       ['oil_temp',/^SLmpCtl_tOilSwmp/i], ['knock_cyl',/^IKCtl_agKnkInt/i,{sign:-1}], ['ign_cyl',/^zwoutzyl/i],
       ['inj_time',/^InjSys_tiInjSum$/i], ['lpfp',/^FuelP_pAct$/i], ['hpfp',/^prist_w/i], ['hpfp_target',/^prsoll_w/i],
-      ['boost',/^pvdr_w/i], ['boost_target',/^pvds_w/i], ['lambda',/^lam/i] ] },
+      ['boost',/^pvdr_w/i,{abs:true}], ['boost_target',/^pvds_w/i,{abs:true}], ['ambient',/^pu_w$/i], ['lambda',/^lam/i] ] },
   { id:'jb4', name:'JB4', timeUnit:'s',
     detect: function(h, pre){ return pre.some(function(p){ return /JB4_MAC_Address/i.test(p.k); }) || (h.indexOf('WGDC_FF') !== -1 && h.indexOf('ECU Boost') !== -1); },
-    note: 'JB4 files carry no units or channel descriptions. Ign_2 to Ign_8 are treated as per-cylinder timing corrections (degrees pulled) because that is how they behave in the logs checked. "Target" is not treated as boost target because it does not track boost. Reassign anything under Channel roles if needed.',
+    note: 'JB4 files carry no units or channel descriptions. Ign_2 to Ign_8 are treated as per-cylinder timing corrections (degrees pulled) because that is how they behave in the logs checked. "Target" is not treated as boost target because it does not track boost. Boost vs target compares the ECU\'s own boost reading with the ECU\'s own target, so both numbers come from the same source; the JB4 sensor\'s peak is reported next to it. Reassign anything under Channel roles if needed.',
     map: [ ['rpm',/^RPM$/i], ['pedal',/^Pedal$/i], ['throttle',/^Throttle$/i], ['speed',/^Speed$/i,{unit:'mph'}], ['gear',/^GEAR$/i],
-      ['boost',/^Boost$/i,{unit:'psi'}], ['boost2',/^Boost2$/i,{unit:'psi'}], ['boost_ecu',/^ECU Boost$/i,{unit:'psi'}],
-      ['boost_target_ecu',/^ECU Target$/i,{unit:'psi'}], ['wgdc',/^WGDC$/i,{unit:'%'}], ['timing',/^Timing$/i,{unit:'deg'}],
+      ['boost',/^Boost$/i,{unit:'psi',abs:false}], ['boost2',/^Boost2$/i,{unit:'psi',abs:false}], ['boost_ecu',/^ECU Boost$/i,{unit:'psi',abs:false}],
+      ['boost_target_ecu',/^ECU Target$/i,{unit:'psi',abs:false}], ['wgdc',/^WGDC$/i,{unit:'%'}], ['timing',/^Timing$/i,{unit:'deg'}],
       ['knock_cyl',/^Ign_(\d+)$/i,{sign:1, unit:'deg'}], ['afr',/^AFR$/i], ['afr2',/^AFR2$/i], ['hpfp',/^FuelP High$/i],
       ['lpfp',/^FuelP Low$/i], ['fuel_trim',/^Fuel Trims$/i], ['ethanol',/^E85$/i,{unit:'%'}], ['iat',/^IAT$/i,{unit:'deg F'}],
       ['coolant',/^Water Temp$/i,{unit:'deg F'}], ['oil_temp',/^Oil Temp$/i,{unit:'deg F'}], ['trans_temp',/^Trans Temp$/i,{unit:'deg F'}],
@@ -3963,7 +4075,7 @@ const LOG_PROFILES = [
     map: [ ['rpm',/^(rpm|engine ?(speed|rpm)|eng ?spd)/i], ['pedal',/(accel|pedal)/i], ['throttle',/(throttle|tps)/i],
       ['gear',/^(gear|current ?gear)/i], ['speed',/(vehicle ?speed|^speed$|^vss|^mph|km\/?h)/i],
       ['boost_target',/(boost|map).*(target|request|set|desired|cmd)|(target|requested|desired).*(boost|pressure)/i],
-      ['boost',/^(boost|boost ?pressure|map|manifold ?(abs|pressure)?)/i],
+      ['boost',/^(boost|boost ?pressure|map|manifold ?(abs|pressure)?)/i], ['ambient',/(ambient|baro\w*).*(press|pres)|^baro/i],
       ['knock_cyl',/(knock|kr|kc|timing ?corr|ign\w* ?corr)\D*(\d)/i,{sign:0}],
       ['ign_cyl',/(ign\w*|timing|spark)\D*cyl\D*(\d)|^(ign|timing)[ _-]?(\d)$/i],
       ['timing',/^(ign(ition)?( ?timing| ?advance)?|timing( ?advance)?|spark ?adv\w*)$/i],
@@ -4007,9 +4119,9 @@ function applyLogProfile(log){
       const m = prof.map[k];
       if(!m[1].test(chBase(h))) continue;
       const role = m[0], def = LOG_ROLES[role] || {}, opt = m[2] || {};
-      if(flat && !def.group) break;
+      if(flat && !def.group && !def.allowFlat) break;
       if(!def.group && usedSingle[role]) continue;   // singles: first match wins
-      log.meta[c] = { role: role, idx: def.group ? groupIdxFromName(h) : null, unit: opt.unit || '', sign: opt.sign };
+      log.meta[c] = { role: role, idx: def.group ? groupIdxFromName(h) : null, unit: opt.unit || '', sign: opt.sign, abs: opt.abs };
       usedSingle[role] = true;
       break;
     }
@@ -4023,7 +4135,7 @@ function applyLogProfile(log){
     if(r === 'none'){ delete log.meta[c]; return; }
     const def = LOG_ROLES[r]; if(!def) return;
     const prev = log.meta[c] || {};
-    log.meta[c] = { role: r, idx: def.group ? groupIdxFromName(name) : null, unit: prev.unit || '', sign: r === 'knock_cyl' ? (prev.sign !== undefined ? prev.sign : 0) : undefined };
+    log.meta[c] = { role: r, idx: def.group ? groupIdxFromName(name) : null, unit: prev.unit || '', sign: r === 'knock_cyl' ? (prev.sign !== undefined ? prev.sign : 0) : undefined, abs: prev.abs };
   });
   log.roles = {};
   Object.keys(log.meta).forEach(function(k){ const m = log.meta[k]; (log.roles[m.role] = log.roles[m.role] || []).push(Number(k)); });
@@ -4031,7 +4143,7 @@ function applyLogProfile(log){
     if(LOG_ROLES[r] && LOG_ROLES[r].group) log.roles[r].sort(function(a, b){ return (Number(log.meta[a].idx) || 0) - (Number(log.meta[b].idx) || 0); });
   });
   log.headers.forEach(function(h, c){ if(log.meta[c]) HEADER_META[h] = log.meta[c]; else delete HEADER_META[h]; });
-  log._fc = null; log._fcMask = null; log._disp = null;
+  log._fc = null; log._fcMask = null; log._disp = null; log._abs = null; log._amb = null; log._hasAbs = null;
   return log;
 }
 function roleCols(log, role){ return (log.roles && log.roles[role]) ? log.roles[role].slice() : []; }
@@ -4050,7 +4162,123 @@ function knockSign(log, cols){
   cols.forEach(function(c){ log.cols[c].forEach(function(v){ if(v > 0) pos++; else if(v < 0) neg++; }); });
   return pos > neg ? 1 : -1;
 }
-function unitOf(log, c){ return c === undefined ? '' : chConv(log.headers[c]).unit; }
+function unitOf(log, c){ return c === undefined ? '' : chConv(log.headers[c], log).unit; }
+// The unit the log file itself uses - NOT the display unit. unitOf() follows the
+// psi/F/mph toggle, which must never change what the analysis concludes.
+function nativeUnit(log, c){
+  if(c === undefined) return '';
+  const h = log.headers[c];
+  let u = chUnitRaw(h).toLowerCase();
+  if(!u){ const mt = chMeta(h); if(mt && mt.unit) u = mt.unit.toLowerCase(); }
+  return u;
+}
+// ---- Gauge boost ------------------------------------------------------------
+// Some loggers (DS1) log boost as ABSOLUTE pressure - about 1 atmosphere when
+// the engine is idling or lifting - while tuners think in gauge boost (0 at
+// idle). Gauge view subtracts ambient pressure from the boost channels. The
+// analysis always works in native (absolute) numbers, so toggling the view
+// can never change a verdict.
+const PRESSURE_HPA = { hpa:1, mbar:1, kpa:10, mpa:10000, bar:1000, psi:68.9476 };
+const STD_ATM_HPA = 1013.25;
+const BOOST_ROLES = ['boost', 'boost_target', 'boost2', 'boost_ecu', 'boost_target_ecu'];
+
+function logGaugeOn(){
+  const V = S.logView;
+  if(V && V.gauge !== undefined) return !!V.gauge;
+  try{ return localStorage.getItem('tgk-logview-gauge') !== '0'; }catch(e){ return true; }
+}
+function logColIndex(log, h){
+  if(!log._hidx){ log._hidx = {}; log.headers.forEach(function(x, i){ if(log._hidx[x] === undefined) log._hidx[x] = i; }); }
+  return log._hidx[h];
+}
+// Is this column an absolute-pressure boost channel? Profiles say so
+// outright for known loggers; otherwise absolute pressure is recognizable by
+// its lowest value sitting near one atmosphere.
+function isAbsBoost(log, c){
+  log._abs = log._abs || {};
+  if(log._abs[c] !== undefined) return log._abs[c];
+  let res = false;
+  const m = log.meta && log.meta[c];
+  const f = PRESSURE_HPA[nativeUnit(log, c)];
+  if(m && f && BOOST_ROLES.indexOf(m.role) !== -1){
+    if(m.abs === true) res = true;
+    else if(m.abs === false) res = false;
+    else {
+      let lo = Infinity; const d = log.cols[c];
+      for(let i = 0; i < d.length; i++) if(d[i] < lo) lo = d[i];
+      res = lo * f >= 400 && lo * f <= 1150;
+    }
+  }
+  log._abs[c] = res;
+  return res;
+}
+function logHasAbsBoost(log){
+  if(log._hasAbs === null || log._hasAbs === undefined){
+    log._hasAbs = log.headers.some(function(h, c){ return log.numeric[c] && isAbsBoost(log, c); });
+  }
+  return log._hasAbs;
+}
+// Ambient pressure in hPa: a manual value if set, else a logged ambient
+// channel (when it agrees with the boost sensor's idle reading), else the
+// idle/lift plateau of the boost sensor itself, else a standard atmosphere.
+function logAmbient(log){
+  const key = log.ambOverride || 0;
+  if(log._amb && log._ambKey === key) return log._amb;
+  let out = null;
+  if(key > 0) out = { hpa: key, src: 'manual' };
+  if(!out){
+    const ac = roleCols(log, 'ambient')[0];
+    if(ac !== undefined){
+      const v = log.cols[ac].filter(function(x){ return !isNaN(x); });
+      const med = v.length ? aMedian(v) * (PRESSURE_HPA[nativeUnit(log, ac)] || 1) : NaN;
+      if(med >= 650 && med <= 1100){
+        const est = estimateAmbientFromBoost(log);
+        if(est === null || Math.abs(est - med) <= 60) out = { hpa: med, src: 'channel', chan: log.headers[ac] };
+      }
+    }
+  }
+  if(!out){ const est = estimateAmbientFromBoost(log); if(est !== null) out = { hpa: est, src: 'estimated' }; }
+  if(!out) out = { hpa: STD_ATM_HPA, src: 'standard' };
+  log._amb = out; log._ambKey = key;
+  return out;
+}
+function estimateAmbientFromBoost(log){
+  let bc;
+  ['boost', 'boost_ecu', 'boost2'].some(function(role){
+    return roleCols(log, role).some(function(c){ if(isAbsBoost(log, c)){ bc = c; return true; } return false; });
+  });
+  if(bc === undefined) return null;
+  const f = PRESSURE_HPA[nativeUnit(log, bc)], d = log.cols[bc], n = d.length;
+  const pc = roleCols(log, 'pedal')[0], Pd = pc !== undefined ? log.cols[pc] : null;
+  const step = Math.max(1, Math.floor(n / 20000));
+  const pick = function(closedOnly){
+    const out = [];
+    for(let i = 0; i < n; i += step){
+      const v = d[i] * f;
+      if(isNaN(v) || v < 650 || v > 1150) continue;      // not a plausible ambient reading
+      if(closedOnly && !(Pd[i] < 5)) continue;           // pedal off: idle / lift, no boost
+      out.push(v);
+    }
+    return out;
+  };
+  let cand = Pd ? pick(true) : [], q = 0.2;
+  if(cand.length < 10){ cand = pick(false); q = 0.1; }
+  if(cand.length < 5) return null;
+  cand.sort(function(x, y){ return x - y; });
+  const near = function(center, w){ return cand.filter(function(x){ return Math.abs(x - center) <= w; }); };
+  const m1 = aMedian(near(cand[Math.floor(cand.length * q)], 20));
+  return aMedian(near(m1, 12));
+}
+// Ambient pressure in the channel's own unit, when that channel is absolute
+// (so "boost above ambient" = value - boostBase); 0 for gauge channels.
+function boostBase(log, c){
+  if(!isAbsBoost(log, c)) return 0;
+  return logAmbient(log).hpa / PRESSURE_HPA[nativeUnit(log, c)];
+}
+function logAmbientNote(log){
+  const a = logAmbient(log);
+  return a.src === 'manual' ? 'set by you' : (a.src === 'channel' ? 'from ' + a.chan : (a.src === 'estimated' ? 'estimated from idle' : 'standard atmosphere - no idle found'));
+}
 // Pressure differences to hPa, so thresholds work whatever unit a log uses.
 function hpaFactor(unit){
   const u = String(unit || '').toLowerCase();
@@ -4077,26 +4305,32 @@ function chName(h){
 // Unit handling. "native" keeps the log's units; "us" converts pressure to
 // psi, temperature to F and speed to mph. Flag rules always evaluate in
 // the log's native units.
-function chConv(h){
+function chConv(h, log){
   let u = chUnitRaw(h).toLowerCase();
   if(!u){ const mt = chMeta(h); if(mt && mt.unit) u = mt.unit.toLowerCase(); }
   const us = S.logView && S.logView.units === 'us';
   const nice = { 'grad kw':'deg CA', 'grad c':'deg C', 'deg c':'deg C', 'deg f':'deg F', '1/min':'rpm', 'psi':'psi', 'mph':'mph', 'deg':'deg', '%':'%', '-':'', '':'' };
-  if(us){
-    if(u === 'hpa') return { f:function(v){ return v * 0.0145038; }, unit:'psi' };
-    if(u === 'kpa') return { f:function(v){ return v * 0.145038; }, unit:'psi' };
-    if(u === 'mpa') return { f:function(v){ return v * 145.038; }, unit:'psi' };
-    if(u === 'bar') return { f:function(v){ return v * 14.5038; }, unit:'psi' };
-    if(u === 'grad c' || u === 'deg c') return { f:function(v){ return v * 9 / 5 + 32; }, unit:'deg F' };
-    if(u === 'km/h') return { f:function(v){ return v * 0.621371; }, unit:'mph' };
+  const unit0 = Object.prototype.hasOwnProperty.call(nice, u) ? nice[u] : chUnitRaw(h);
+  // Gauge view: absolute boost channels read ambient lower (native units).
+  let shift = 0;
+  if(log && logGaugeOn()){
+    const c = logColIndex(log, h);
+    if(c !== undefined && isAbsBoost(log, c)) shift = boostBase(log, c);
   }
-  return { f:null, unit: Object.prototype.hasOwnProperty.call(nice, u) ? nice[u] : chUnitRaw(h) };
+  let k = 1, unit = unit0;
+  if(us && PRESSURE_HPA[u] && u !== 'psi'){ k = PRESSURE_HPA[u] / 68.9476; unit = 'psi'; }
+  if(shift || k !== 1) return { f:function(v){ return (v - shift) * k; }, unit:unit, gauge: !!shift, key: unit + ':' + shift.toFixed(3) };
+  if(us){
+    if(u === 'grad c' || u === 'deg c') return { f:function(v){ return v * 9 / 5 + 32; }, unit:'deg F', key:'F' };
+    if(u === 'km/h') return { f:function(v){ return v * 0.621371; }, unit:'mph', key:'mph' };
+  }
+  return { f:null, unit: unit0 };
 }
 function displayData(log, c){
-  const conv = chConv(log.headers[c]);
+  const conv = chConv(log.headers[c], log);
   const base = colData(log, c);
   if(!conv.f) return base;
-  const key = (S.logView && S.logView.hideFuelCut !== false ? 'f' : 'r') + c;
+  const key = (S.logView && S.logView.hideFuelCut !== false ? 'f' : 'r') + c + '|' + conv.key;
   log._disp = log._disp || {};
   if(!log._disp[key]) log._disp[key] = base.map(function(v){ return isNaN(v) ? NaN : conv.f(v); });
   return log._disp[key];
@@ -4181,22 +4415,29 @@ function seriesPath(log, c, W, H, pad, r, yMin, yMax){
   const data = displayData(log, c), n = data.length;
   const y = function(v){ return pad + (H - 2 * pad) * (1 - (v - yMin) / (yMax - yMin)); };
   const lo = [], hi = [], brk = [];
-  let saw = false, pending = false;
+  // A hole in the time stamps (logger dropout) is a gap, not data: don't
+  // draw a straight line across it.
+  const gapLimit = log.hz ? Math.max(1, 5 / log.hz) : Infinity;
+  let saw = false, pending = false, lastT = null, lastB = -1;
   for(let i = 0; i < n; i++){
     const t = xValue(log, i);
     if(t < r.a || t > r.b){ continue; }
     const v = data[i];
     if(isNaN(v)){ if(saw) pending = true; continue; }
     const b = Math.min(W - 1, Math.max(0, Math.round(((t - r.a) / (r.b - r.a)) * (W - 1))));
-    if(pending){ brk[b] = true; pending = false; }
-    saw = true;
+    if(lastT !== null && t - lastT > gapLimit) pending = true;
+    if(pending){ if(b !== lastB) brk[b] = true; pending = false; }
+    saw = true; lastT = t; lastB = b;
     if(lo[b] === undefined || v < lo[b]) lo[b] = v;
     if(hi[b] === undefined || v > hi[b]) hi[b] = v;
   }
   let d = '', first = true;
   for(let b = 0; b < W; b++){
     if(lo[b] === undefined) continue;
-    d += ((first || brk[b]) ? 'M' : 'L') + b + ' ' + y(lo[b]).toFixed(1);
+    const yl = y(lo[b]).toFixed(1);
+    // Every new segment starts with a zero-length line so a lone sample
+    // (neighbours missing) still draws as a dot with the round line caps.
+    if(first || brk[b]) d += 'M' + b + ' ' + yl + 'L' + b + ' ' + yl; else d += 'L' + b + ' ' + yl;
     if(hi[b] !== lo[b]) d += 'L' + b + ' ' + y(hi[b]).toFixed(1);
     first = false;
   }
@@ -4236,13 +4477,21 @@ function renderLogViewer(){
   const r = logRange();
   const W = 1000, H = LOG_CH;
   const fc = fuelCutCount(log);
+  const A = analyzeLog(log), AB = B ? analyzeLog(B) : null;
+  const chartH = V.chartH || logChartHeight();
+  const canAlign = !!(B && A.pulls.length && AB.pulls.length);
+  const hasAbs = logHasAbsBoost(log), gaugeOn = logGaugeOn();
 
   let html = '<div class="modal log-modal">';
   // Header
   html += '<div class="lv-top"><div><div class="modal-title" style="margin-bottom:2px">' + escapeHtml(V.fileName || 'Datalog') + '</div>'
     + '<div class="file-meta">' + escapeHtml(log.profile ? log.profile.name : 'Log') + ' &middot; ' + log.rows.toLocaleString() + ' samples &middot; ' + log.headers.length + ' channels'
-    + (log.timeIdx !== -1 ? ' &middot; ' + fmtNum(logSpan(log)) + ' s' : ' &middot; no time column (x-axis is sample number)') + '</div></div>'
+    + (log.timeIdx !== -1 ? ' &middot; ' + fmtNum(logSpan(log)) + ' s' + (log.hz ? ' &middot; ' + fmtHz(log.hz) : '') : ' &middot; no time column (x-axis is sample number)') + '</div></div>'
     + '<div style="display:flex;gap:6px">' + (V.fileId ? '<button class="btn btn-sm" onclick="downloadFile(\'' + V.fileId + '\',\'' + V.path + '\')">Download</button>' : '') + '<button class="btn btn-sm" onclick="closeModal();S.logView=null">Close</button></div></div>';
+
+  if(log.timeIdx !== -1 && log.hz && log.hz < 5){
+    html += '<div class="lv-note">Low sample rate (' + fmtHz(log.hz) + '): anything shorter than about ' + fmtNum(1 / log.hz) + ' s - a brief knock event or boost spike - can fall between samples and not show here.</div>';
+  }
 
   // Toolbar
   const others = (S.files[V.appId] || []).filter(function(f){ return f.id !== V.fileId && isLogFile(f); });
@@ -4250,18 +4499,30 @@ function renderLogViewer(){
     + '<div class="lv-presets"><span class="lv-lbl">Layout</span>' + Object.keys(LOG_PRESETS).map(function(p){
         return buildPreset(log, p).length ? '<button class="lv-chip" onclick="logApplyPreset(\'' + p + '\')">' + p + '</button>' : '';
       }).join('') + '</div>'
-    + '<div class="lv-seg" title="Units"><button class="' + (V.units !== 'us' ? 'on' : '') + '" onclick="logSetUnits(\'native\')">Native</button><button class="' + (V.units === 'us' ? 'on' : '') + '" onclick="logSetUnits(\'us\')">psi / F / mph</button></div>'
+    + '<div class="lv-segs"><div class="lv-seg" title="Chart height">' + [[120, 'Compact'], [170, 'Normal'], [260, 'Tall']].map(function(o){
+        return '<button class="' + (chartH === o[0] ? 'on' : '') + '" onclick="logSetHeight(' + o[0] + ')">' + o[1] + '</button>';
+      }).join('') + '</div>'
+    + (hasAbs ? '<div class="lv-seg" title="Boost pressure reference: absolute (about 1 atmosphere at idle) or gauge (0 at idle)"><button class="' + (!gaugeOn ? 'on' : '') + '" onclick="logSetGauge(false)">Boost: Absolute</button><button class="' + (gaugeOn ? 'on' : '') + '" onclick="logSetGauge(true)">Gauge</button></div>' : '')
+    + '<div class="lv-seg" title="Units"><button class="' + (V.units !== 'us' ? 'on' : '') + '" onclick="logSetUnits(\'native\')">Native</button><button class="' + (V.units === 'us' ? 'on' : '') + '" onclick="logSetUnits(\'us\')">psi / F / mph</button></div></div>'
     + '</div>';
   html += '<div class="lv-bar">'
     + '<label class="lv-tool"><span class="lv-lbl">Compare</span><select class="form-input" onchange="setLogCompare(this.value)"><option value="">None</option>'
     + others.map(function(f){ return '<option value="' + f.id + '"' + (V.compare && V.compare.fileId === f.id ? ' selected' : '') + '>' + escapeHtml(f.file_name) + ' (' + fmtDate(f.created_at) + ')</option>'; }).join('')
     + '</select></label>'
+    + (hasAbs && gaugeOn ? (function(){
+        const am = logAmbient(log);
+        return '<label class="lv-tool" title="Ambient (barometric) pressure subtracted from the boost channels. Estimated automatically - type a value to override it (' + (am.hpa * 0.0145038).toFixed(2) + ' psi / ' + (am.hpa * 0.02953).toFixed(2) + ' inHg)."><span class="lv-lbl">Ambient</span>'
+          + '<input class="form-input lv-amb" type="number" step="1" min="600" max="1100" value="' + Math.round(am.hpa) + '" onchange="logSetAmbient(this.value)"> hPa'
+          + '<span class="file-meta">' + escapeHtml(logAmbientNote(log)) + (B && logHasAbsBoost(B) ? ' &middot; compared log ' + Math.round(logAmbient(B).hpa) : '') + '</span>'
+          + (am.src === 'manual' ? '<a class="lv-auto" onclick="logSetAmbient(\'\')">Auto</a>' : '') + '</label>';
+      })() : '')
+    + (canAlign ? '<div class="lv-tool"><span class="lv-lbl">Align</span><div class="lv-seg" style="margin-left:0"><button class="' + (V.align !== 'pull' ? 'on' : '') + '" onclick="logSetAlign(\'start\')">Log start</button><button class="' + (V.align === 'pull' ? 'on' : '') + '" onclick="logSetAlign(\'pull\')">Pull 1</button></div></div>' : '')
     + (fc ? '<label class="lv-tool"><input type="checkbox" ' + (V.hideFuelCut ? 'checked' : '') + ' onchange="toggleFuelCut(this.checked)"> Hide fuel cut on lambda/AFR <span class="file-meta">(' + fc + ')</span></label>' : '')
     + '<span class="lv-zoom">' + (V.range ? 'Zoom ' + fmtNum(r.a) + '-' + fmtNum(r.b) + ' s <a onclick="logResetZoom()">Reset</a>' : (logIsCoarse() ? 'Pinch a chart to zoom' : 'Drag across a chart to zoom')) + '</span>'
     + (logWotRange(log) ? '<button class="lv-chip" onclick="logZoomWot()">Zoom to WOT</button>' : '')
     + '</div>';
   if(B){
-    html += '<div class="lv-legend-note"><span class="lg-solid"></span>' + escapeHtml(V.fileName) + '<span class="lg-dash"></span>' + escapeHtml(V.compare.fileName) + ' <span class="file-meta">aligned from the start of each log</span></div>';
+    html += '<div class="lv-legend-note"><span class="lg-solid"></span>' + escapeHtml(V.fileName) + '<span class="lg-dash"></span>' + escapeHtml(V.compare.fileName) + ' <span class="file-meta">' + (V.align === 'pull' && canAlign ? 'aligned on the start of pull 1 in each log' : 'aligned from the start of each log') + '</span></div>';
   }
 
   // Flags
@@ -4280,7 +4541,7 @@ function renderLogViewer(){
   html += '</div>';
 
   // Automatic pull analysis (and the compared log's, for "vs" values)
-  html += renderAnalysisPanel(log, analyzeLog(log), B, B ? analyzeLog(B) : null);
+  html += renderAnalysisPanel(log, A, B, AB);
 
   // Time readout
   html += '<div class="lv-readout" id="logReadout"><span class="file-meta">' + logHint() + '</span></div>';
@@ -4288,7 +4549,7 @@ function renderLogViewer(){
   // Charts
   const xt = niceTicks(r.a, r.b, 9);
   const xPct = function(t){ return ((t - r.a) / (r.b - r.a)) * 100; };
-  html += '<div id="logCharts">';
+  html += '<div id="logCharts" style="--lc-h:' + chartH + 'px">';
   if(!V.charts.length) html += '<div class="empty-state">Pick a layout above or add channels below.</div>';
   V.charts.forEach(function(cols, k){
     let yMin = Infinity, yMax = -Infinity;
@@ -4303,6 +4564,12 @@ function renderLogViewer(){
     const yy = function(v){ return LOG_PAD + (H - 2 * LOG_PAD) * (1 - (v - yMin) / (yMax - yMin)); };
 
     let grid = '';
+    // Full-throttle pulls shaded behind the traces.
+    A.pulls.forEach(function(p){
+      const px0 = Math.max(0, xPct(p.t0)), px1 = Math.min(100, xPct(p.t1));
+      if(px1 <= px0) return;
+      grid += '<rect class="lv-pull" x="' + (px0 * (W - 1) / 100).toFixed(1) + '" y="0" width="' + ((px1 - px0) * (W - 1) / 100).toFixed(1) + '" height="' + H + '"/>';
+    });
     yt.ticks.forEach(function(v){ grid += '<line x1="0" x2="' + W + '" y1="' + yy(v).toFixed(1) + '" y2="' + yy(v).toFixed(1) + '" class="lv-grid"/>'; });
     xt.ticks.forEach(function(t){ if(t < r.a || t > r.b) return; const x = (xPct(t) * (W - 1) / 100).toFixed(1); grid += '<line x1="' + x + '" x2="' + x + '" y1="0" y2="' + H + '" class="lv-grid"/>'; });
 
@@ -4315,7 +4582,7 @@ function renderLogViewer(){
           const x = (xPct(t) * (W - 1) / 100).toFixed(1);
           marks += '<line x1="' + x + '" x2="' + x + '" y1="0" y2="' + H + '" class="log-hitline"/>';
         });
-        const conv = chConv(log.headers[c]);
+        const conv = chConv(log.headers[c], log);
         const th = conv.f ? conv.f(Number(res.rule.threshold)) : Number(res.rule.threshold);
         if(th >= yMin && th <= yMax) marks += '<line x1="0" x2="' + W + '" y1="' + yy(th).toFixed(1) + '" y2="' + yy(th).toFixed(1) + '" class="log-threshold"/>';
       });
@@ -4335,17 +4602,20 @@ function renderLogViewer(){
     const oneGroup = cols.length > 1 && cols.every(function(c){ return chIndex(log.headers[c]) !== null && chGroupKey(log.headers[c]) === chGroupKey(log.headers[cols[0]]); });
     const groupHead = oneGroup
       ? '<span class="lg-group">' + escapeHtml(chFriendly(log.headers[cols[0]]) || chGroupRaw(log.headers[cols[0]]))
-        + (chConv(log.headers[cols[0]]).unit ? ' <span class="lg-unit">' + escapeHtml(chConv(log.headers[cols[0]]).unit) + '</span>' : '')
+        + (chConv(log.headers[cols[0]], log).unit ? ' <span class="lg-unit">' + escapeHtml(chConv(log.headers[cols[0]], log).unit) + '</span>' : '')
         + (chFriendly(log.headers[cols[0]]) ? ' <span class="lg-raw">' + escapeHtml(chGroupRaw(log.headers[cols[0]])) + '</span>' : '') + '</span>'
       : '';
     const legend = groupHead + cols.map(function(c, i){
       const h = log.headers[c], color = LOG_COLORS[i % LOG_COLORS.length];
-      const st = seriesStats(log, c, r), unit = oneGroup ? '' : chConv(h).unit;
-      const tip = h + (st ? ' | min ' + fmtNum(st.min) + ' avg ' + fmtNum(st.avg) + ' max ' + fmtNum(st.max) : '');
+      const st = seriesStats(log, c, r), cv = chConv(h, log), unit = oneGroup ? '' : cv.unit + (cv.gauge ? ' gauge' : '');
+      const tip = h + (st ? ' | min ' + fmtV(log, c, st.min) + ' avg ' + fmtV(log, c, st.avg) + ' max ' + fmtV(log, c, st.max) : '');
+      // Until the cursor is on the chart, each series shows its min-max over
+      // the visible window (so the numbers are there without hovering).
+      const idle = st ? fmtV(log, c, st.min) + (fmtV(log, c, st.min) !== fmtV(log, c, st.max) ? '\u2013' + fmtV(log, c, st.max) : '') : '';
       return '<span class="lg-item' + (oneGroup ? ' lg-compact' : '') + '" title="' + escapeHtml(tip) + '"><i style="background:' + color + '"></i>'
         + '<span class="lg-name">' + escapeHtml(oneGroup ? '[' + chIndex(h) + ']' : chName(h)) + '</span>'
         + (!oneGroup && chFriendly(h) ? '<span class="lg-raw">' + escapeHtml(chBase(h)) + '</span>' : '')
-        + '<span class="lg-val" id="lv-' + k + '-' + i + '"></span>'
+        + '<span class="lg-val' + (idle ? ' lg-idle' : '') + '" id="lv-' + k + '-' + i + '"' + (idle ? ' data-idle="' + escapeHtml(idle) + '"' : '') + '>' + escapeHtml(idle) + '</span>'
         + (B && compareCol(c) !== -1 ? '<span class="lg-valb" id="lvb-' + k + '-' + i + '"></span>' : '')
         + (unit ? '<span class="lg-unit">' + escapeHtml(unit) + '</span>' : '')
         + (cols.length > 1 ? '<a class="lg-x" onclick="logRemoveSeries(' + k + ',' + c + ')" title="Remove from chart">&times;</a>' : '')
@@ -4368,7 +4638,12 @@ function renderLogViewer(){
   if(V.charts.length){
     html += '<div class="lc-x"><div class="lc-y-sp"></div><div class="lc-x-track">'
       + xt.ticks.filter(function(t){ return t >= r.a && t <= r.b; }).map(function(t){ return '<span style="left:' + xPct(t).toFixed(2) + '%">' + fmtTick(t, xt.step) + '</span>'; }).join('')
-      + '</div></div><div class="lc-x-title">' + escapeHtml(log.timeIdx !== -1 ? 'Time (s)' : 'Sample') + '</div>';
+      + '</div></div>'
+      + (A.pulls.length ? '<div class="lc-x"><div class="lc-y-sp"></div><div class="lc-pulls">' + A.pulls.map(function(p, n){
+          const mid = (xPct(p.t0) + xPct(p.t1)) / 2;
+          return (mid < 0 || mid > 100) ? '' : '<span class="lc-pm" style="left:' + mid.toFixed(2) + '%" onclick="logZoomPull(' + n + ')" title="Zoom to pull ' + (n + 1) + '">P' + (n + 1) + '</span>';
+        }).join('') + '</div></div>' : '')
+      + '<div class="lc-x-title">' + escapeHtml(log.timeIdx !== -1 ? 'Time (s)' : 'Sample') + (A.pulls.length ? ' <span class="file-meta">&middot; shaded = full-throttle pulls</span>' : '') + '</div>';
   }
   html += '</div>';
 
@@ -4458,6 +4733,48 @@ window.logRemoveChart = logRemoveChart;
 function logApplyPreset(name){ S.logView.charts = buildPreset(S.logView.log, name); logSaveSelection(); renderLogViewer(); }
 window.logApplyPreset = logApplyPreset;
 function logSetUnits(u){ S.logView.units = u; logSaveSelection(); renderLogViewer(); }
+function logSetGauge(on){
+  const V = S.logView; if(!V) return;
+  V.gauge = !!on;
+  try{ localStorage.setItem('tgk-logview-gauge', on ? '1' : '0'); }catch(e){ /* storage unavailable */ }
+  renderLogViewer();
+}
+window.logSetGauge = logSetGauge;
+// Manual ambient pressure (hPa) for the open log; empty goes back to automatic.
+function logSetAmbient(val){
+  const V = S.logView; if(!V) return;
+  const n = parseFloat(val);
+  if(String(val).trim() === '' || isNaN(n)) V.log.ambOverride = 0;
+  else if(n < 600 || n > 1100){ toast('Ambient pressure should be between 600 and 1100 hPa', true); renderLogViewer(); return; }
+  else V.log.ambOverride = n;
+  renderLogViewer();
+}
+window.logSetAmbient = logSetAmbient;
+function logSetHeight(h){ const V = S.logView; if(!V) return; V.chartH = h; try{ localStorage.setItem('tgk-logview-h', String(h)); }catch(e){ /* storage unavailable */ } renderLogViewer(); }
+window.logSetHeight = logSetHeight;
+// Compare alignment. "start" lines both logs up at t=0; "pull" shifts the
+// compared log so its first full-throttle pull begins when this log's does -
+// the like-for-like view for before/after tune comparisons.
+function logApplyAlign(){
+  const V = S.logView; if(!V || !V.compare) return;
+  const B = V.compare.log; B.xShift = 0;
+  if(V.align === 'pull'){
+    const pa = findPulls(V.log)[0], pb = findPulls(B)[0];
+    if(pa && pb) B.xShift = xValue(B, pb[0]) - xValue(V.log, pa[0]);
+  }
+}
+function logSetAlign(mode){ const V = S.logView; if(!V) return; V.align = mode; logApplyAlign(); renderLogViewer(); }
+window.logSetAlign = logSetAlign;
+function logPullToggle(n, isOpen){ const V = S.logView; if(!V) return; V.openPulls = V.openPulls || {}; V.openPulls[n] = !!isOpen; }
+window.logPullToggle = logPullToggle;
+function logPullsToggleAll(){
+  const V = S.logView; if(!V) return;
+  const n = analyzeLog(V.log).pulls.length; V.openPulls = V.openPulls || {};
+  let allOpen = true; for(let i = 0; i < n; i++) if(!V.openPulls[i]) allOpen = false;
+  for(let i = 0; i < n; i++) V.openPulls[i] = !allOpen;
+  renderLogViewer();
+}
+window.logPullsToggleAll = logPullsToggleAll;
 window.logSetUnits = logSetUnits;
 // Flag chip click: make sure the tripped channel (its whole cylinder group)
 // is charted, at the top.
@@ -4620,6 +4937,11 @@ window.logUp = logUp;
 function logLeave(ev){
   if(ev && logIsTouch(ev)) return;
   document.querySelectorAll('#logCharts .log-cursor').forEach(function(l){ l.setAttribute('x1', -10); l.setAttribute('x2', -10); });
+  // Back to each series' min-max for the visible window.
+  document.querySelectorAll('#logCharts .lg-val[data-idle]').forEach(function(el){ el.textContent = el.getAttribute('data-idle'); el.classList.add('lg-idle'); });
+  document.querySelectorAll('#logCharts .lg-valb').forEach(function(el){ el.textContent = ''; });
+  const ro = document.getElementById('logReadout');
+  if(ro) ro.innerHTML = '<span class="file-meta">' + logHint() + '</span>';
 }
 window.logLeave = logLeave;
 
@@ -4638,10 +4960,10 @@ function logShowCursor(f){
   V.charts.forEach(function(cols, k){
     cols.forEach(function(c, i){
       const el = document.getElementById('lv-' + k + '-' + i);
-      if(el) el.textContent = fmtNum(displayData(log, c)[ia]);
+      if(el){ el.textContent = fmtV(log, c, displayData(log, c)[ia]); el.classList.remove('lg-idle'); }
       const cb = B ? compareCol(c) : -1;
       const eb = document.getElementById('lvb-' + k + '-' + i);
-      if(eb && cb !== -1) eb.textContent = '/ ' + fmtNum(displayData(B, cb)[ib]);
+      if(eb && cb !== -1) eb.textContent = '/ ' + fmtV(B, cb, displayData(B, cb)[ib]);
     });
   });
   const ro = document.getElementById('logReadout');
@@ -4683,22 +5005,24 @@ function aAvg(a){ return a.length ? a.reduce(function(x, y){ return x + y; }, 0)
 function aMedian(a){ if(!a.length) return null; const s = a.slice().sort(function(x, y){ return x - y; }); const m = s.length >> 1; return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2; }
 
 // Full-throttle pulls: runs of pedal >= 95% (throttle >= 90% if there's no
-// pedal channel), at least 1 s long. Short gaps (<= 2 samples, e.g. a
-// shift) are bridged so one pull isn't split in two.
+// pedal channel), at least 1 s long. Short dips (a shift, pedal flutter) are
+// bridged so one pull isn't split in two - judged by TIME, so the result is
+// the same at DS1's ~16 samples/s and JB4's ~1: up to 0.4 s, and never less
+// than one missing sample.
 function findPulls(log){
   let c = aCol(log, /^AccP_r_VW$/i), th = 95;
   if(c === undefined){ c = aCol(log, /^wdk_w/i); th = 90; }
   if(c === undefined) return [];
   const d = log.cols[c], runs = [];
-  let start = -1, gap = 0;
-  for(let i = 0; i <= d.length; i++){
-    const on = i < d.length && d[i] >= th;
-    if(on){ if(start === -1) start = i; gap = 0; }
-    else if(start !== -1){
-      gap++;
-      if(gap > 2 || i === d.length){ runs.push([start, i - gap]); start = -1; gap = 0; }
-    }
+  const bridge = Math.max(0.4, 1.5 * (log.hz ? 1 / log.hz : 1));
+  let start = -1, last = -1;
+  for(let i = 0; i < d.length; i++){
+    if(!(d[i] >= th)) continue;
+    if(start === -1) start = i;
+    else if(xValue(log, i) - xValue(log, last) > bridge){ runs.push([start, last]); start = i; }
+    last = i;
   }
+  if(start !== -1) runs.push([start, last]);
   return runs.filter(function(r){ return xValue(log, r[1]) - xValue(log, r[0]) >= 1.0; });
 }
 
@@ -4726,6 +5050,21 @@ function shiftMask(log, i0, i1){
   return mask;
 }
 
+// Which channels form the "boost vs target" comparison. Standard roles first
+// (DS1: measured boost vs boost setpoint). Failing that, the ECU's own boost
+// reading against the ECU's own target (JB4) - same source on both sides, so
+// the comparison is like-for-like - with the logger's separate sensor
+// reported as its own peak.
+function boostPair(log){
+  const pick = function(role){ return roleCols(log, role)[0]; };
+  const a = pick('boost'), t = pick('boost_target'), ea = pick('boost_ecu'), et = pick('boost_target_ecu');
+  if(a !== undefined && t !== undefined) return { a:a, t:t, roleA:'boost', roleT:'boost_target', label:'Boost' };
+  if(ea !== undefined && et !== undefined) return { a:ea, t:et, roleA:'boost_ecu', roleT:'boost_target_ecu', label:'ECU boost', alt:a, roleAlt:'boost' };
+  if(a !== undefined) return { a:a, roleA:'boost', label:'Boost' };
+  if(ea !== undefined) return { a:ea, roleA:'boost_ecu', label:'ECU boost' };
+  return null;
+}
+
 function analyzePull(log, r, th){
   const i0 = r[0], i1 = r[1];
   const P = { i0:i0, i1:i1, t0:xValue(log, i0), t1:xValue(log, i1), findings:[] };
@@ -4737,23 +5076,31 @@ function analyzePull(log, r, th){
     if(g.length){ P.gearFrom = Math.round(aMin(g)); P.gearTo = Math.round(aMax(g)); }
   }
 
-  // Boost vs target. "After spool" = from the first sample where actual
-  // reaches 90% of target onward, so turbo lag isn't counted as a shortfall.
-  const ba = aCol(log, /^pvdr_w/i), bs = aCol(log, /^pvds_w/i);
-  if(ba !== undefined){
+  // Boost vs target. "After spool" = from the first sample where actual is
+  // within 10% of the target boost (the pressure ABOVE ambient - 90% of an
+  // absolute 2250 hPa would still be 225 hPa short), so turbo lag isn't
+  // counted as a shortfall.
+  const bp = boostPair(log);
+  if(bp){
+    const ba = bp.a, bs = bp.t;
+    const bBase = boostBase(log, ba);
     const A = colData(log, ba);
+    P.boostRole = bp.roleA; P.boostTRole = bp.roleT; P.boostLabel = bp.label; P.boostHasTarget = bs !== undefined;
     P.boostPeak = aMax(aVals(log, ba, i0, i1));
+    if(bp.alt !== undefined){ P.boostAltPeak = aMax(aVals(log, bp.alt, i0, i1)); P.boostAltRole = bp.roleAlt; }
     if(bs !== undefined){
       const T = colData(log, bs);
       let spool = -1;
-      for(let i = i0; i <= i1; i++) if(!isNaN(A[i]) && !isNaN(T[i]) && A[i] >= T[i] * 0.9){ spool = i; break; }
+      for(let i = i0; i <= i1; i++) if(!isNaN(A[i]) && !isNaN(T[i]) && A[i] >= T[i] - 0.10 * Math.max(0, T[i] - bBase)){ spool = i; break; }
       P.boostTarget = aMedian(aVals(log, bs, i0, i1));
       const shifting = shiftMask(log, i0, i1);
       let over = null, short = null;
       // Overshoot counts everywhere (a spike on a shift is exactly what to
       // catch); shortfall ignores shift dips, which are normal.
       let overAtShift = false;
-      for(let i = (spool === -1 ? i1 + 1 : spool); i <= i1; i++){
+      // If boost never got near target, measure the last 60% of the pull so
+      // the report still says HOW far short it ran.
+      for(let i = (spool !== -1 ? spool : i0 + Math.floor((i1 - i0) * 0.4)); i <= i1; i++){
         if(isNaN(A[i]) || isNaN(T[i])) continue;
         const dlt = A[i] - T[i];
         if(over === null || dlt > over){ over = dlt; overAtShift = !!shifting[i]; }
@@ -4763,10 +5110,10 @@ function analyzePull(log, r, th){
       P.boostOver = over !== null ? Math.max(0, over) : null;
       P.boostShort = short !== null ? Math.max(0, short) : null;
       P.spoolAt = spool !== -1 ? xValue(log, spool) - P.t0 : null;
-      const bf = hpaFactor(unitOf(log, ba));
-      if(P.boostShort !== null && P.boostShort * bf >= th.boost_short_warn) P.findings.push({ sev:'warn', text:'Boost ' + aFmtDelta(log, /^pvdr_w/i, P.boostShort) + ' under target (outside shifts)' });
-      if(P.boostOver !== null && P.boostOver * bf >= th.boost_over_warn) P.findings.push({ sev:'warn', text:'Boost overshoot ' + aFmtDelta(log, /^pvdr_w/i, P.boostOver) + ' over target' + (P.boostOverAtShift ? ' (on a shift)' : '') });
-      if(spool === -1) P.findings.push({ sev:'warn', text:'Boost never reached 90% of target' });
+      const bf = hpaFactor(nativeUnit(log, ba));
+      if(spool !== -1 && P.boostShort !== null && P.boostShort * bf >= th.boost_short_warn) P.findings.push({ sev:'warn', text: bp.label + ' ' + aFmtDeltaC(log, ba, P.boostShort) + ' under target (outside shifts)' });
+      if(P.boostOver !== null && P.boostOver * bf >= th.boost_over_warn) P.findings.push({ sev:'warn', text: bp.label + ' overshoot ' + aFmtDeltaC(log, ba, P.boostOver) + ' over target' + (P.boostOverAtShift ? ' (on a shift)' : '') });
+      if(spool === -1) P.findings.push({ sev:'warn', text: bp.label + ' never got within 10% of target' + (P.boostShort ? ' (up to ' + aFmtDeltaC(log, ba, P.boostShort) + ' under)' : '') });
     }
   }
 
@@ -4824,7 +5171,7 @@ function analyzePull(log, r, th){
 
   const lam = findCols(log, /^lam/i);
   if(lam.length){
-    P.lambda = lam.map(function(c){ const v = aVals(log, c, i0, i1); return { name: chBase(log.headers[c]), min: aMin(v), max: aMax(v) }; });
+    P.lambda = lam.map(function(c){ const v = aVals(log, c, i0, i1); return { c: c, name: chBase(log.headers[c]), min: aMin(v), max: aMax(v) }; });
   }
   const afrc = roleCols(log, 'afr').concat(roleCols(log, 'afr2'));
   if(afrc.length){
@@ -4835,9 +5182,9 @@ function analyzePull(log, r, th){
   if(iat !== undefined){
     const v = aVals(log, iat, i0, i1);
     P.iatStart = v[0]; P.iatMax = aMax(v);
-    const iu = unitOf(log, iat), rise = P.iatMax - P.iatStart;
+    const iu = nativeUnit(log, iat), rise = P.iatMax - P.iatStart;
     const riseC = /f$/i.test(iu) ? rise * 5 / 9 : rise;       // threshold is in deg C
-    if(v.length && riseC >= th.iat_rise_warn) P.findings.push({ sev:'warn', text:'Intake temp rose ' + fmtNum(rise) + ' ' + (iu || 'deg') });
+    if(v.length && riseC >= th.iat_rise_warn) P.findings.push({ sev:'warn', text:'Intake temp rose ' + aFmtDelta(log, /^tans/i, rise) });
   }
   return P;
 }
@@ -4856,21 +5203,24 @@ function analyzeLog(log){
 }
 
 // ---- Analysis panel in the viewer
-function aFmt(log, re, v, withUnit){
+function aFmtC(log, c, v, withUnit){
   if(v === null || v === undefined || isNaN(v)) return '-';
-  const c = aCol(log, re);
-  const conv = c !== undefined ? chConv(log.headers[c]) : { f:null, unit:'' };
+  const conv = c !== undefined ? chConv(log.headers[c], log) : { f:null, unit:'' };
   const val = conv.f ? conv.f(v) : v;
   return fmtNum(val) + (withUnit && conv.unit ? ' ' + conv.unit : '');
 }
-// Differences (e.g. a boost shortfall) convert by scale only - no offset.
-function aFmtDelta(log, re, v){
+// Differences (e.g. a boost shortfall) convert by scale only - no offset, and
+// no ambient shift.
+function aFmtDeltaC(log, c, v){
   if(v === null || v === undefined || isNaN(v)) return '-';
-  const c = aCol(log, re);
-  const conv = c !== undefined ? chConv(log.headers[c]) : { f:null, unit:'' };
+  const conv = c !== undefined ? chConv(log.headers[c], log) : { f:null, unit:'' };
   const val = conv.f ? conv.f(v) - conv.f(0) : v;
   return fmtNum(val) + (conv.unit ? ' ' + conv.unit : '');
 }
+function aFmt(log, re, v, withUnit){ return aFmtC(log, aCol(log, re), v, withUnit); }
+function aFmtDelta(log, re, v){ return aFmtDeltaC(log, aCol(log, re), v); }
+function aFmtR(log, role, v, withUnit){ return aFmtC(log, roleCols(log, role)[0], v, withUnit); }
+function aFmtDeltaR(log, role, v){ return aFmtDeltaC(log, roleCols(log, role)[0], v); }
 
 function renderAnalysisPanel(log, A, B, AB){
   const th = A.thresholds;
@@ -4883,27 +5233,38 @@ function renderAnalysisPanel(log, A, B, AB){
   let html = '<div class="an-panel"><div class="an-head"><span class="an-title">Pull analysis</span>'
     + '<span class="file-meta">' + A.pulls.length + ' full-throttle pull' + (A.pulls.length === 1 ? '' : 's')
     + ' &middot; ' + (issues ? issues + ' to review' : 'nothing flagged') + '</span>'
-    + '<a class="an-th-link" onclick="toggleThresholdEditor()">Thresholds</a></div>';
+    + '<span class="an-links"><a class="an-th-link" onclick="logPullsToggleAll()">Expand / collapse all</a><a class="an-th-link" onclick="toggleThresholdEditor()">Thresholds</a></span></div>';
   if(S.showThresholds) html += renderThresholdEditor(th);
+  // First view: pulls with a serious finding start open, the rest stay a
+  // one-line summary so the charts aren't pushed off the screen.
+  const V = S.logView;
+  if(!V.openPulls){
+    V.openPulls = {};
+    A.pulls.forEach(function(p, n){ if(p.findings.some(function(f){ return f.sev === 'bad'; })) V.openPulls[n] = true; });
+  }
 
   A.pulls.forEach(function(p, n){
     const q = B && AB && AB.pulls[n] ? AB.pulls[n] : null;   // same-numbered pull in the compared log
     const cmp = function(v){ return q ? '<span class="an-vs">vs ' + v + '</span>' : ''; };
-    html += '<div class="an-pull">';
-    html += '<div class="an-pull-head"><strong>Pull ' + (n + 1) + '</strong>'
+    html += '<details class="an-pd"' + (V.openPulls[n] ? ' open' : '') + ' ontoggle="logPullToggle(' + n + ', this.open)"><summary>'
+      + '<strong>Pull ' + (n + 1) + '</strong>'
       + '<span class="file-meta">' + fmtNum(p.t0) + '-' + fmtNum(p.t1) + ' s'
       + (p.gearFrom ? ' &middot; gear ' + p.gearFrom + (p.gearTo !== p.gearFrom ? '-' + p.gearTo : '') : '')
       + (p.rpmStart !== undefined ? ' &middot; ' + fmtNum(p.rpmStart) + ' to ' + fmtNum(p.rpmMax) + ' rpm' : '') + '</span>'
-      + '<button class="lv-chip" onclick="logZoomPull(' + n + ')">Zoom</button></div>';
-    html += '<div class="an-findings">' + (p.findings.length
-      ? p.findings.map(function(f){ return '<span class="an-f an-' + f.sev + '">' + escapeHtml(f.text) + '</span>'; }).join('')
-      : '<span class="an-f an-ok">Nothing flagged</span>') + '</div>';
+      + '<span class="an-sumf">' + (p.findings.length
+        ? p.findings.map(function(f){ return '<span class="an-f an-' + f.sev + '">' + escapeHtml(f.text) + '</span>'; }).join('')
+        : '<span class="an-f an-ok">Nothing flagged</span>') + '</span>'
+      + '<button class="lv-chip" onclick="event.preventDefault();event.stopPropagation();logZoomPull(' + n + ')">Zoom</button></summary><div class="an-pull-body">';
 
     const cells = [];
     if(p.boostPeak !== undefined){
-      cells.push(['Boost', aFmt(log, /^pvdr_w/i, p.boostPeak, true) + (p.boostTarget !== undefined ? ' <span class="an-sub">target ' + aFmt(log, /^pvds_w/i, p.boostTarget) + '</span>' : '')
-        + (p.boostOver !== undefined && p.boostOver !== null ? '<div class="an-sub">over ' + aFmtDelta(log, /^pvdr_w/i, p.boostOver) + (p.boostOverAtShift ? ' (shift)' : '') + ' &middot; under ' + aFmtDelta(log, /^pvdr_w/i, p.boostShort) + '</div>' : '')
-        + cmp(q && q.boostPeak !== undefined ? aFmt(B, /^pvdr_w/i, q.boostPeak) : '-')]);
+      const bc0 = roleCols(log, p.boostRole)[0];
+      const gnote = bc0 !== undefined && isAbsBoost(log, bc0) ? (logGaugeOn() ? ' (gauge)' : ' (absolute)') : '';
+      const blabel = (p.boostLabel === 'Boost' ? 'Boost' : p.boostLabel + (p.boostHasTarget ? ' vs target' : '')) + gnote;
+      cells.push([blabel, aFmtR(log, p.boostRole, p.boostPeak, true) + (p.boostTarget !== undefined ? ' <span class="an-sub">target ' + aFmtR(log, p.boostTRole, p.boostTarget) + '</span>' : '')
+        + (p.boostOver !== undefined && p.boostOver !== null ? '<div class="an-sub">over ' + aFmtDeltaR(log, p.boostRole, p.boostOver) + (p.boostOverAtShift ? ' (shift)' : '') + ' &middot; under ' + aFmtDeltaR(log, p.boostRole, p.boostShort) + '</div>' : '')
+        + (p.boostAltPeak !== undefined ? '<div class="an-sub">' + escapeHtml(log.profile.name) + ' sensor peak ' + aFmtR(log, p.boostAltRole, p.boostAltPeak, true) + '</div>' : '')
+        + cmp(q && q.boostPeak !== undefined ? aFmtR(B, q.boostRole || p.boostRole, q.boostPeak) : '-')]);
     }
     if(p.knock){
       const k = p.knock.map(function(c){
@@ -4917,11 +5278,11 @@ function renderAnalysisPanel(log, A, B, AB){
     if(p.railMin !== undefined && p.railShortPct === undefined) cells.push(['Rail pressure', 'min ' + aFmt(log, /^prist_w/i, p.railMin, true) + ' <span class="an-sub">no setpoint logged</span>']);
     if(p.railShortPct !== undefined) cells.push(['Rail pressure', (p.railShortPct >= 0.5 ? p.railShortPct.toFixed(1) + '% under setpoint' : 'on setpoint') + cmp(q && q.railShortPct !== undefined ? q.railShortPct.toFixed(1) + '%' : '-')]);
     if(p.lpfpMin !== undefined) cells.push(['Low-pressure fuel', 'min ' + aFmt(log, /^FuelP_pAct$/i, p.lpfpMin, true) + (p.lpfpDropPct >= 0.05 ? ' <span class="an-sub">-' + p.lpfpDropPct.toFixed(1) + '%</span>' : '') + cmp(q && q.lpfpMin !== undefined ? aFmt(B, /^FuelP_pAct$/i, q.lpfpMin) : '-')]);
-    if(p.lambda) cells.push(['Lambda (under load)', p.lambda.map(function(l){ return '<div><span class="lg-raw">' + escapeHtml(l.name) + '</span> ' + fmtNum(l.min) + '-' + fmtNum(l.max) + '</div>'; }).join('')]);
+    if(p.lambda) cells.push(['Lambda (under load)', p.lambda.map(function(l){ return '<div><span class="lg-raw">' + escapeHtml(l.name) + '</span> ' + fmtV(log, l.c, l.min) + '-' + fmtV(log, l.c, l.max) + '</div>'; }).join('')]);
     if(p.afr) cells.push(['AFR (under load)', p.afr.map(function(l){ return '<div><span class="lg-raw">' + escapeHtml(l.name) + '</span> ' + fmtNum(l.min) + '-' + fmtNum(l.max) + '</div>'; }).join('')]);
     if(p.iatStart !== undefined) cells.push(['Intake air temp', aFmt(log, /^tans/i, p.iatStart) + ' to ' + aFmt(log, /^tans/i, p.iatMax, true) + cmp(q && q.iatMax !== undefined ? aFmt(B, /^tans/i, q.iatMax) : '-')]);
     html += '<div class="an-grid">' + cells.map(function(c){ return '<div class="an-cell"><div class="an-label">' + c[0] + '</div><div class="an-val">' + c[1] + '</div></div>'; }).join('') + '</div>';
-    html += '</div>';
+    html += '</div></details>';
   });
   const extra = [];
   if(A.coolantMax !== undefined) extra.push('Coolant max ' + aFmt(log, /^tmot/i, A.coolantMax, true));
