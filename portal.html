@@ -1024,11 +1024,33 @@ function isCustomerEditing(){
   return false;
 }
 
+// The conversation is "at the bottom" when the newest message is in view -
+// only then should a refresh scroll it down to show new messages. Someone
+// scrolled up reading older messages stays where they are.
+function msgListAtBottom(list){
+  return !list || list.scrollHeight - list.scrollTop - list.clientHeight < 40;
+}
+
+// Swap in the latest messages without touching anything else on the page -
+// used while the customer is typing, so the message box keeps its focus,
+// cursor and text (and a phone keyboard stays open).
+function refreshMessageListInPlace(){
+  const list = document.getElementById('msgList');
+  if(!list) return;
+  const html = renderMessages();
+  if(list.innerHTML === html) return;
+  const atBottom = msgListAtBottom(list), top = list.scrollTop;
+  list.innerHTML = html;
+  list.scrollTop = atBottom ? list.scrollHeight : top;
+}
+
 async function loadStatus(silent){
   try{
     const data = await callPortal('get_status', {});
+    // Read what the customer is doing right before deciding how to redraw.
     const draftEl = document.getElementById('msgInput');
     const draft = draftEl ? draftEl.value : '';
+    const typing = !!draftEl && document.activeElement === draftEl;
     STATE.application = data.application;
     STATE.messages = data.messages;
     STATE.files = data.files;
@@ -1040,9 +1062,23 @@ async function loadStatus(silent){
     // either way; the re-render just waits until they submit or cancel,
     // both of which re-render on their own.
     if(silent && isCustomerEditing()){ subscribeRealtime(); return; }
+    // Typing a message: rebuilding the page would throw them out of the box
+    // mid-sentence (and close a phone keyboard). Show new messages in place
+    // instead; the full refresh happens on the first one after they leave it.
+    if(silent && typing){ refreshMessageListInPlace(); subscribeRealtime(); return; }
+    const oldList = document.getElementById('msgList');
+    const listAtBottom = msgListAtBottom(oldList), listTop = oldList ? oldList.scrollTop : 0;
+    const pageY = window.scrollY;
     renderPortal();
     const newDraftEl = document.getElementById('msgInput');
     if(newDraftEl && draft) newDraftEl.value = draft;
+    if(silent){
+      // Leave the reader where they were: page position, and the conversation
+      // too unless they were already looking at the newest message.
+      const newList = document.getElementById('msgList');
+      if(newList && oldList && !listAtBottom) newList.scrollTop = listTop;
+      if(Math.abs(window.scrollY - pageY) > 1) window.scrollTo(0, pageY);
+    }
     subscribeRealtime();
   }catch(e){
     if(!silent) renderInvalid(e.message || "This link isn't valid.");
