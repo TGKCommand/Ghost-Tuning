@@ -483,7 +483,7 @@
 <li><b>We reply by email</b>If you are a good candidate, we send you a link to purchase the tune. That link is only ever sent by us, directly.</li>
 <li><b>Changes may be needed</b>If something has to change before we can tune your car, our team will reach out and tell you what.</li>
 </ol>
-<a class="btn" href="https://tgkmotorsport.com">Back to TGK Motorsport</a>
+<a class="btn" href="https://tgkmotorsport.com" target="_top">Back to TGK Motorsport</a>
           </div>
         </div>
         <p class="footer-note">TGK Motorsport - Ghost Tuning</p>
@@ -565,7 +565,7 @@ function showStep(step){
   const banner = document.getElementById('draftBanner');
   if(banner && step !== '1') banner.hidden = true;
   renderStepper();
-  window.scrollTo(0,0);
+  if(shownOnce || !EMBEDDED) scrollToPage(0);
   if(step === '4') ensureTurnstile();
   if(shownOnce){   // move keyboard / screen-reader focus to the new step's title (not on the first load)
     const t = document.querySelector('.step.active .ph-t, #successTitle');
@@ -595,7 +595,7 @@ function clearErr(step){
 function fail(step, msg, firstBadEl){
   const el = document.getElementById('err-' + step);
   el.className = 'status-msg err'; el.style.display='block'; el.textContent = msg;
-  if(firstBadEl) firstBadEl.scrollIntoView({behavior:'smooth', block:'center'});
+  if(firstBadEl) scrollElementIntoView(firstBadEl);
   return false;
 }
 
@@ -765,16 +765,17 @@ async function submitApplication(){
     const trap = document.getElementById('f_hp_site');
     if(trap && trap.value.trim()){ showReceived(null); return; }
 
-    let saved = null;
-    const viaServer = await probeServerCheck();
-    if(viaServer){
+    let saved = null, done = false;
+    if(await probeServerCheck()){
       // Preferred path: the server verifies the security check, then saves through the same database function.
       const r = await fetch(APPLY_ENDPOINT, { method:'POST', headers:API_HEADERS,
         body: JSON.stringify({ action:'submit', payload:payload, honeypot:'', turnstile_token:tsToken }) });
       let j = {}; try{ j = await r.json(); }catch(e){}
-      if(!r.ok || !j.ok){ resetTurnstile(); const err = new Error(j.message || 'The application could not be sent.'); err.plain = true; throw err; }
-      saved = j.saved || null;
-    } else {
+      if(r.ok && j.ok){ saved = j.saved || null; done = true; }
+      else if(j.error === 'not_configured'){ serverCheck = false; console.warn('[tuning] the submit-tuning-application function has no Turnstile secret; using the original save path'); }   // a set-up mistake on the server must never turn applicants away
+      else { resetTurnstile(); const err = new Error(j.message || 'The application could not be sent.'); err.plain = true; throw err; }
+    }
+    if(!done){
       const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
       // Saved through the submit_tuning_application database function, which
       // returns only the new application's id and number. Customers have no read
@@ -823,6 +824,43 @@ function escapeHtml(s){
   return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){
     return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
   });
+}
+
+/* =========================================================================================
+   Embedded in the shop page (an iframe): tell the page how tall the form is, so the page can size the frame to fit and
+   only the PAGE scrolls (no scrollbar inside a scrollbar). Also asks the page to scroll when a step changes or a field
+   needs attention. Does nothing when the form is opened on its own.
+   ========================================================================================= */
+const EMBEDDED = window.parent !== window;
+const PARENT_ORIGIN = (function(){
+  try{
+    if(location.ancestorOrigins && location.ancestorOrigins.length) return location.ancestorOrigins[0];
+    if(document.referrer) return new URL(document.referrer).origin;
+  }catch(e){}
+  return '*';
+})();
+let lastHeight = 0, heightTimer = null;
+function postParent(msg){ try{ window.parent.postMessage(Object.assign({ source:'tgk-tuning' }, msg), PARENT_ORIGIN); }catch(e){} }
+function reportHeight(){
+  if(!EMBEDDED) return;
+  const h = Math.ceil(document.documentElement.getBoundingClientRect().height);   // the content's own height, not the frame's
+  if(h > 0 && h !== lastHeight){ lastHeight = h; postParent({ type:'height', height:h }); }
+}
+function scrollToPage(y){ if(EMBEDDED) postParent({ type:'scroll', y:Math.max(0, Math.round(y)) }); else window.scrollTo(0, y); }
+function scrollElementIntoView(el){
+  if(!EMBEDDED){ el.scrollIntoView({ behavior:'smooth', block:'center' }); return; }
+  scrollToPage(el.getBoundingClientRect().top + window.pageYOffset - 140);
+}
+function initEmbed(){
+  if(!EMBEDDED) return;
+  document.documentElement.classList.add('is-embedded');
+  if(window.ResizeObserver) new ResizeObserver(function(){ clearTimeout(heightTimer); heightTimer = setTimeout(reportHeight, 30); }).observe(document.documentElement);
+  window.addEventListener('load', reportHeight);
+  window.addEventListener('resize', reportHeight);
+  window.addEventListener('message', function(e){   // the page can ask for the height again (for example if the frame loaded before its script)
+    if(e.source === window.parent && e.data && e.data.source === 'tgk-parent' && e.data.type === 'resend'){ lastHeight = 0; reportHeight(); }
+  });
+  reportHeight();
 }
 
 /* =========================================================================================
@@ -1000,7 +1038,7 @@ function probeServerCheck(){
   if(serverCheck !== null) return Promise.resolve(serverCheck);
   return fetch(APPLY_ENDPOINT, { method:'POST', headers:API_HEADERS, body: JSON.stringify({ action:'ping' }) })
     .then(function(r){ return r.ok ? r.json() : null; })
-    .then(function(j){ serverCheck = !!(j && j.ok); return serverCheck; })
+    .then(function(j){ serverCheck = !!(j && j.ok && j.turnstile); return serverCheck; })   // deployed AND configured
     .catch(function(){ serverCheck = false; return false; });
 }
 function loadTurnstileScript(){
@@ -1064,6 +1102,7 @@ enhanceForm();
 showStep(currentStep);
 initDraft();
 initCarPicker();
+initEmbed();
 </script>
 </body>
 </html>
