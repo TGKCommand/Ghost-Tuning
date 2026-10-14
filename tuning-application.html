@@ -672,6 +672,7 @@ async function submitApplication(){
     if(saved && saved.id){
       fetch(SUPABASE_URL + '/functions/v1/tuning-notify', {
         method: 'POST',
+        keepalive: true, // finish sending even if the customer closes the tab right away
         headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY, 'apikey': SUPABASE_ANON_KEY },
         body: JSON.stringify({ action: 'application_received', application_id: saved.id })
       }).catch(function(){ /* non-critical: confirmation email failing should not affect the submission */ });
