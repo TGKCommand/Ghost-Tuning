@@ -644,21 +644,38 @@ async function submitApplication(){
   try{
     const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     const payload = Object.assign({}, APP, { source: 'website' });
-    const { data, error } = await sb.from('tuning_applications').insert(payload).select().single();
-    if(error) throw error;
+    // Saved through the submit_tuning_application database function, which
+    // returns only the new application's id and number. Customers have no read
+    // access to tuning_applications (correctly), so inserting and reading the
+    // row back - the old .insert().select() - was refused with "new row
+    // violates row-level security policy".
+    let saved = null;
+    const res = await sb.rpc('submit_tuning_application', { app: payload });
+    if(res.error){
+      const missingFn = res.error.code === 'PGRST202' || res.error.code === '42883' || /could not find the function|does not exist/i.test(res.error.message || '');
+      if(!missingFn) throw res.error;
+      // Function not installed yet: still save the application (a plain insert
+      // needs no read access), just without the number and confirmation email.
+      const ins = await sb.from('tuning_applications').insert(payload);
+      if(ins.error) throw ins.error;
+    } else {
+      saved = res.data;
+    }
 
     document.getElementById('successMsg').innerHTML =
-      'Thank you, ' + escapeHtml(APP.customer_name.split(' ')[0] || '') + '. Your Ghost Tuning application (#' + escapeHtml(String(data.application_number)) + ') has been received.<br><br>' +
+      'Thank you, ' + escapeHtml(APP.customer_name.split(' ')[0] || '') + '. Your Ghost Tuning application' + (saved && saved.application_number != null ? ' (#' + escapeHtml(String(saved.application_number)) + ')' : '') + ' has been received.<br><br>' +
       'Our tuning department will review it and follow up at <strong>' + escapeHtml(APP.customer_email) + '</strong> within 7 business days.';
     currentStep = 'success';
     showStep('success');
 
     // Confirmation email - fire and forget, never block the success screen on this
-    fetch(SUPABASE_URL + '/functions/v1/tuning-notify', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY, 'apikey': SUPABASE_ANON_KEY },
-      body: JSON.stringify({ action: 'application_received', application_id: data.id })
-    }).catch(function(){ /* non-critical: confirmation email failing should not affect the submission */ });
+    if(saved && saved.id){
+      fetch(SUPABASE_URL + '/functions/v1/tuning-notify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY, 'apikey': SUPABASE_ANON_KEY },
+        body: JSON.stringify({ action: 'application_received', application_id: saved.id })
+      }).catch(function(){ /* non-critical: confirmation email failing should not affect the submission */ });
+    }
   }catch(e){
     btn.disabled = false; btn.textContent = 'Submit';
     fail('4', 'Something went wrong: ' + (e.message || 'unknown error') + '. Please try again.', null);
