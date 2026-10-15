@@ -37,9 +37,9 @@ html,body{margin:0;padding:0;background:#fff}
 .tgk-tuning-portal h1,.tgk-tuning-portal h2,.tgk-tuning-portal h3,.tgk-tuning-portal p{margin:0;padding:0}
 .tgk-tuning-portal [hidden]{display:none!important}
 /* light text on the dark bands: a layer of its own gives clean grey-scale text smoothing instead of coloured fringes */
-.tgk-tuning-portal .site-head,.tgk-tuning-portal .site-nav,.tgk-tuning-portal .pit,.tgk-tuning-portal .site-foot{will-change:opacity}
+.tgk-tuning-portal .site-head,.tgk-tuning-portal .pit,.tgk-tuning-portal .site-foot{will-change:opacity}
 
-/* ===== the site's header, menu bar and footer ===== */
+/* ===== the site's header and footer (no website menu in the portal) ===== */
 .tgk-tuning-portal .site-head{background:var(--head);color:#fff}
 .tgk-tuning-portal .site-head-in{max-width:1320px;margin:0 auto;padding:0 18px;min-height:76px;display:flex;align-items:center;gap:16px}
 .tgk-tuning-portal .site-head .logo{height:34px;width:auto;display:block}
@@ -48,10 +48,6 @@ html,body{margin:0;padding:0;background:#fff}
 .tgk-tuning-portal .brand-sub .ghost-icon{width:28px;height:28px;display:block}
 .tgk-tuning-portal .head-link{margin-left:auto;color:#d3dbde;font:700 15px var(--bf);text-decoration:none}
 .tgk-tuning-portal .head-link:hover{color:#fff;text-decoration:underline}
-.tgk-tuning-portal .site-nav{background:var(--slate)}
-.tgk-tuning-portal .site-nav-in{max-width:1320px;margin:0 auto;padding:0 18px;display:flex;justify-content:center;gap:6px;flex-wrap:wrap}
-.tgk-tuning-portal .site-nav a{display:inline-flex;align-items:center;min-height:46px;padding:0 16px;color:#fff;font:700 16px var(--bf);text-decoration:none}
-.tgk-tuning-portal .site-nav a:hover{text-decoration:underline;text-underline-offset:5px}
 .tgk-tuning-portal .site-foot{background:var(--head);color:#c3ccd0;margin-top:30px}
 .tgk-tuning-portal .site-foot-in{max-width:1320px;margin:0 auto;padding:18px;display:flex;justify-content:space-between;gap:8px 16px;flex-wrap:wrap;font-size:15px}
 .tgk-tuning-portal .site-foot .footer-note{margin:0;text-align:left;font-size:15px;color:#c3ccd0}
@@ -60,7 +56,7 @@ html,body{margin:0;padding:0;background:#fff}
 .tgk-tuning-portal .wrap{max-width:1320px;margin:0 auto;padding:22px 18px 8px}
 .tgk-tuning-portal .skeleton{padding:50px 10px;text-align:center;color:var(--text3);font-size:15px}
 
-/* ===== "your car" bar, title, stats ===== */
+/* ===== "your car" bar (display-only) ===== */
 .tgk-tuning-portal .pit{position:relative;display:flex;align-items:center;gap:10px 26px;flex-wrap:wrap;background:var(--ink2);color:#fff;padding:10px 18px;margin:0 0 24px}
 .tgk-tuning-portal .pit::before,.tgk-tuning-portal .pit::after{content:"";position:absolute;bottom:-4px;height:4px}
 .tgk-tuning-portal .pit::before{left:0;width:24%;background:var(--orange)}
@@ -74,32 +70,36 @@ html,body{margin:0;padding:0;background:#fff}
 .tgk-tuning-portal .pit-state{margin-left:auto;display:inline-flex;align-items:center;gap:9px;color:#fff;font:700 14px var(--bf);letter-spacing:.1em;text-transform:uppercase;white-space:nowrap}
 .tgk-tuning-portal .pit-state i{width:11px;height:11px;flex:none;background:var(--status-accent,var(--orange))}
 .tgk-tuning-portal .hero-live{margin-left:4px;font:700 11px var(--bf);letter-spacing:.14em;text-transform:uppercase;color:#9fb4b8}
-.tgk-tuning-portal .pg-title{display:flex;justify-content:space-between;align-items:flex-end;gap:10px 16px;flex-wrap:wrap;padding-bottom:14px;border-bottom:1px solid #e3e5e8}
-.tgk-tuning-portal .pg-h1{font:700 clamp(26px,2.7vw,36px)/1.08 var(--hf);text-transform:uppercase;color:var(--text)}
-.tgk-tuning-portal .pg-h1 em{font-style:normal;color:var(--orange)}
-.tgk-tuning-portal .pg-sub{font-size:16px;color:var(--muted);margin-top:3px}
-.tgk-tuning-portal .pg-link{font:700 12.5px var(--bf);letter-spacing:.15em;text-transform:uppercase;color:var(--text);text-decoration:none;border-bottom:2px solid var(--ink);padding-bottom:1px}
-.tgk-tuning-portal .pg-link:hover{color:var(--orange-dim);border-bottom-color:var(--orange)}
-.tgk-tuning-portal .pg-stats{display:flex;flex-wrap:wrap;align-items:center;gap:4px 0;margin-top:8px}
-.tgk-tuning-portal .rd{display:inline-flex;align-items:baseline;gap:7px;padding:0 14px 0 0;margin:0 14px 0 0;border:0;border-right:1px solid var(--line2);border-radius:0;background:none;cursor:pointer;font:inherit;color:var(--text)}
-.tgk-tuning-portal .rd:last-child{border-right:0;margin-right:0;padding-right:0}
-.tgk-tuning-portal .rd:hover .rd-k{color:var(--orange-dim);text-decoration:underline}
-.tgk-tuning-portal .rd:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
-.tgk-tuning-portal .rd-v{font:700 25px/1 var(--hf);color:var(--text);white-space:nowrap}
-.tgk-tuning-portal .rd-v small{font:700 12px var(--bf);letter-spacing:.06em;color:var(--muted)}
-.tgk-tuning-portal .rd-k{font:700 12.5px var(--bf);letter-spacing:.15em;text-transform:uppercase;color:var(--muted)}
-.tgk-tuning-portal .rd.warn .rd-v{color:var(--orange-dim)}
-.tgk-tuning-portal .rd.good .rd-v{color:var(--teal-t)}
-
-/* ===== page chips (the menu): angled, grey, orange when open ===== */
-.tgk-tuning-portal .ptabs{display:flex;flex-wrap:wrap;gap:8px;margin:16px 0 18px}
-.tgk-tuning-portal .ptab{display:inline-flex;align-items:center;gap:4px;height:36px;padding:0 17px;border:0;border-radius:0;background:var(--page);color:var(--text);font:700 13px var(--bf);letter-spacing:.09em;text-transform:uppercase;white-space:nowrap;cursor:pointer;clip-path:var(--chip);transition:background-color .12s}
-.tgk-tuning-portal .ptab:hover{background:#d3d8dd}
-.tgk-tuning-portal .ptab.active{background:var(--orange);color:var(--text)}
+/* ===== dashboard: side menu + content ===== */
+.tgk-tuning-portal .dash{display:grid;grid-template-columns:236px minmax(0,1fr);gap:22px;align-items:start}
+.tgk-tuning-portal .side{align-self:start;border:1px solid var(--line2);background:var(--surface2)}
+.tgk-tuning-portal .ident{padding:13px 16px 12px;background:var(--ink);border-left:6px solid var(--orange);color:#fff}
+.tgk-tuning-portal .id-h1{font:400 15px var(--bf);margin:0}
+.tgk-tuning-portal .id-k{display:block;font:700 11px var(--bf);letter-spacing:.15em;text-transform:uppercase;color:#9fabb1}
+.tgk-tuning-portal .id-n{display:block;font:700 36px/1.05 var(--hf);letter-spacing:.02em;color:#fff}
+.tgk-tuning-portal .id-sub{font-size:15px;color:#c9d0d6;margin-top:4px}
+.tgk-tuning-portal .ptabs{display:flex;flex-direction:column;padding:6px 0 8px}
+.tgk-tuning-portal .ptab{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:42px;padding:0 16px 0 12px;border:0;border-left:6px solid transparent;border-radius:0;background:none;color:var(--text);font:700 15.5px var(--bf);letter-spacing:.02em;text-align:left;cursor:pointer}
+.tgk-tuning-portal .ptab:hover{background:#e4e7ea}
+.tgk-tuning-portal .ptab.active{background:#fff;border-left-color:var(--orange)}
 .tgk-tuning-portal .ptab:focus-visible{background:var(--ink);color:#fff;outline:none}
-.tgk-tuning-portal .ptab-badge{margin-left:2px;font-weight:700;opacity:.7}
+.tgk-tuning-portal .ptab-badge{font-weight:700;color:var(--orange-dim)}
+.tgk-tuning-portal .ptab:focus-visible .ptab-badge{color:#ffb36b}
 .tgk-tuning-portal .ptab-badge::before{content:"("}
 .tgk-tuning-portal .ptab-badge::after{content:")"}
+.tgk-tuning-portal .nav-sep{height:1px;background:var(--line2);margin:6px 12px}
+/* readout tiles (Overview): each is a shortcut to its page */
+.tgk-tuning-portal .readouts{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));border:1px solid var(--line2);margin-top:20px}
+.tgk-tuning-portal .rd{display:flex;flex-direction:column;align-items:flex-start;min-width:0;padding:11px 16px 12px;border:0;border-right:1px solid var(--line);border-radius:0;background:#fff;text-align:left;cursor:pointer;font:inherit;color:var(--text)}
+.tgk-tuning-portal .rd:last-child{border-right:0}
+.tgk-tuning-portal .rd:hover{background:var(--surface2)}
+.tgk-tuning-portal .rd:focus-visible{outline:2px solid var(--ink);outline-offset:-2px}
+.tgk-tuning-portal .rd-k{font:700 12px var(--bf);letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.tgk-tuning-portal .rd-v{font:700 30px/1.1 var(--hf);color:var(--text);margin-top:2px;white-space:nowrap}
+.tgk-tuning-portal .rd-v small{font:700 13px var(--bf);letter-spacing:.05em;color:var(--muted)}
+.tgk-tuning-portal .rd-s{font-size:14.5px;color:var(--muted);margin-top:1px}
+.tgk-tuning-portal .rd.warn .rd-v{color:var(--orange-dim)}
+.tgk-tuning-portal .rd.good .rd-v{color:var(--teal-t)}
 
 /* ===== section bars (dark, orange left edge, angled end with the two stripes) ===== */
 .tgk-tuning-portal .main{min-width:0}
@@ -300,6 +300,7 @@ html,body{margin:0;padding:0;background:#fff}
 .tgk-tuning-portal .dz-clear:hover{color:var(--red-t)}
 .tgk-tuning-portal .dropzone.dark{margin-bottom:8px}
 
+.tgk-tuning-portal .fk-tune{background:var(--ink);color:#fff;border-color:var(--ink)}
 .tgk-tuning-portal .seg{display:inline-flex;gap:6px}
 .tgk-tuning-portal .seg-btn{height:34px;padding:0 17px;border:0;border-radius:0;background:var(--page);color:var(--text);font:700 12.5px var(--bf);letter-spacing:.09em;text-transform:uppercase;cursor:pointer;clip-path:var(--chip)}
 .tgk-tuning-portal .seg-btn:hover{background:#d3d8dd}
@@ -366,6 +367,20 @@ html,body{margin:0;padding:0;background:#fff}
 /* ===== tablets and phones ===== */
 @media(max-width:900px){
   .tgk-tuning-portal .cells{grid-template-columns:minmax(0,1fr)}
+  .tgk-tuning-portal .dash{grid-template-columns:minmax(0,1fr);gap:14px}
+  .tgk-tuning-portal .ident{display:flex;align-items:baseline;flex-wrap:wrap;gap:2px 14px;padding:10px 14px}
+  .tgk-tuning-portal .id-h1{display:flex;align-items:baseline;gap:10px}
+  .tgk-tuning-portal .id-n{font-size:26px}
+  .tgk-tuning-portal .id-sub{margin-top:0}
+  .tgk-tuning-portal .side{overflow-x:auto}
+  .tgk-tuning-portal .ptabs{flex-direction:row;padding:0;-webkit-overflow-scrolling:touch}
+  .tgk-tuning-portal .ptab{flex:none;min-height:46px;padding:0 14px;border-left:0;border-bottom:4px solid transparent;white-space:nowrap;gap:4px}
+  .tgk-tuning-portal .ptab.active{background:#fff;border-bottom-color:var(--orange)}
+  .tgk-tuning-portal .nav-sep{display:none}
+  .tgk-tuning-portal .readouts{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .tgk-tuning-portal .rd{border-bottom:1px solid var(--line)}
+  .tgk-tuning-portal .rd:nth-child(2n){border-right:0}
+  .tgk-tuning-portal .rd:last-child{grid-column:1/-1;border-bottom:0}
 }
 @media(max-width:700px){
   .tgk-tuning-portal .wrap{padding:16px 12px 6px}
@@ -374,8 +389,6 @@ html,body{margin:0;padding:0;background:#fff}
   .tgk-tuning-portal .brand-sub{font-size:19px}
   .tgk-tuning-portal .brand-sub .ghost-icon{width:24px;height:24px}
   .tgk-tuning-portal .head-link{display:none}
-  .tgk-tuning-portal .site-nav-in{padding:0 4px;gap:0}
-  .tgk-tuning-portal .site-nav a{padding:0 11px;min-height:44px;font-size:15px}
   .tgk-tuning-portal .site-foot-in{padding:14px 12px}
   .tgk-tuning-portal .pit{padding:10px 12px;gap:10px 12px;margin-bottom:22px}
   .tgk-tuning-portal .pit-lab{order:1;flex:1 1 auto}
@@ -383,11 +396,6 @@ html,body{margin:0;padding:0;background:#fff}
   .tgk-tuning-portal .pit-items{order:3;flex:1 0 100%;display:grid;grid-template-columns:repeat(4,minmax(0,1fr))}
   .tgk-tuning-portal .pit-item{padding:0 8px}
   .tgk-tuning-portal .pit-v{font-size:19px}
-  .tgk-tuning-portal .pg-link{display:none}
-  .tgk-tuning-portal .pg-stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 12px}
-  .tgk-tuning-portal .rd{flex-direction:column;align-items:flex-start;gap:2px;border-right:0;margin:0;padding:0}
-  .tgk-tuning-portal .ptabs{flex-wrap:nowrap;overflow-x:auto;margin:14px -12px 16px;padding:0 12px;-webkit-overflow-scrolling:touch;scrollbar-width:thin}
-  .tgk-tuning-portal .ptab{flex:none}
   .tgk-tuning-portal .sc{font-size:0;gap:0}
   .tgk-tuning-portal .sc.current{font-size:12px;gap:6px;overflow:visible;text-overflow:clip}
   .tgk-tuning-portal .sc:last-child.current{align-items:flex-end;text-align:right}
@@ -412,14 +420,14 @@ html,body{margin:0;padding:0;background:#fff}
 @media(max-width:460px){.tgk-tuning-portal .kv-grid{grid-template-columns:1fr}}
 @media(pointer:coarse){
   .tgk-tuning-portal .btn,.tgk-tuning-portal .btn-sm,.tgk-tuning-portal .action-chip,.tgk-tuning-portal .ns-btn,.tgk-tuning-portal .seg-btn,.tgk-tuning-portal .ptab{min-height:44px;height:auto}
-  .tgk-tuning-portal .site-nav a{min-height:48px}
   .tgk-tuning-portal .form-input{min-height:44px}
   .tgk-tuning-portal .rev-check{min-height:44px}
   .tgk-tuning-portal .pref-row{min-height:54px}
   .tgk-tuning-portal .paid-sum{min-height:44px}
   .tgk-tuning-portal .dz-clear{min-width:44px;min-height:44px}
   .tgk-tuning-portal .fs-history>summary{min-height:44px}
-  .tgk-tuning-portal .linkbtn,.tgk-tuning-portal .rcpt,.tgk-tuning-portal .cell-link,.tgk-tuning-portal .pg-link,.tgk-tuning-portal .rd{min-height:44px;display:inline-flex;align-items:center;padding-top:0;padding-bottom:0}
+  .tgk-tuning-portal .linkbtn,.tgk-tuning-portal .rcpt,.tgk-tuning-portal .cell-link{min-height:44px;display:inline-flex;align-items:center;padding-top:0;padding-bottom:0}
+  .tgk-tuning-portal .rd{min-height:64px}
 }
 </style>
 </head>
@@ -432,10 +440,6 @@ html,body{margin:0;padding:0;background:#fff}
     <div class="brand-sub"><img class="ghost-icon" src="data:image/png;base64,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" alt="" width="28" height="28">Ghost Tuning</div>
     <a class="head-link" href="https://tgkmotorsport.com/">Back to TGK Motorsport</a>
   </div></header>
-  <!-- the site's menu bar. Edit these four links here if a page address differs. -->
-  <nav class="site-nav" aria-label="TGK Motorsport"><div class="site-nav-in">
-    <a href="https://tgkmotorsport.com/">Home</a><a href="https://tgkmotorsport.com/collections">Catalog</a><a href="https://tgkmotorsport.com/pages/ghost-tuning">Ghost Tuning</a><a href="https://contact.tgkmotorsport.com">Support</a>
-  </div></nav>
   <div class="wrap" id="portalWrap">
     <div class="skeleton" id="loadingState">Loading your application...</div>
   </div>
@@ -486,7 +490,7 @@ const MAX_UPLOAD_MB = 50;            // keep in step with MAX_UPLOAD_BYTES in th
 const BASE_TITLE = document.title;
 function money(n){ return '$' + Number(n || 0).toFixed(2) + ' ' + CURRENCY_LABEL; }
 
-let STATE = { application:null, messages:[], files:[], invoices:[], logGuide:null, queue:null, timeline:[], flashGuide:null, revisions:null, tab:'overview', _channel:null };
+let STATE = { application:null, messages:[], files:[], invoices:[], logGuide:null, queue:null, timeline:[], flashGuide:null, revisions:null, tab:'overview', uploadType:'log', _channel:null };
 
 function escapeHtml(s){
   return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){
@@ -684,7 +688,7 @@ window.submitRevisionRequest = submitRevisionRequest;
 function toastLike(msg){
   const el = document.createElement('div');
   el.textContent = msg;
-  el.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#141b25;color:#fff;padding:10px 18px;border-radius:8px;font-size:13px;box-shadow:0 4px 16px rgba(0,0,0,.25);z-index:999';
+  el.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#22272b;color:#fff;padding:11px 18px;border-left:6px solid #e8731c;border-radius:0;font:700 15px Roboto Condensed,Arial Narrow,Arial,sans-serif;letter-spacing:.02em;max-width:calc(100vw - 32px);z-index:999';
   document.body.appendChild(el);
   setTimeout(function(){ el.remove(); }, 3200);
 }
@@ -747,9 +751,21 @@ function wireDropzones(){
     });
   });
 }
+// A customer can send a datalog, a dyno sheet, a tune of their own for the tuner to review, or any other file.
+const UPLOAD_TYPES = [['log','Datalog'],['dyno','Dyno sheet'],['tune','Tune'],['other','Other']];
+const TUNE_REVIEW_MARK = 'Tune for review';      // the server marks a customer's own tune with this; keep in step with CUSTOMER_TUNE_NOTE in the tuning-portal function
+function isTuneForReview(f){ return !!f && f.uploaded_by === 'customer' && f.description === TUNE_REVIEW_MARK; }
+function uploadHintText(type){
+  return type === 'tune' ? 'Send a tune you would like your tuner to review - up to ' + MAX_UPLOAD_MB + ' MB. Your tuner will look it over and reply in Messages.'
+                         : 'Datalogs, dyno sheets and other files - up to ' + MAX_UPLOAD_MB + ' MB each.';
+}
+function openUpload(type){ STATE.uploadType = type; setPortalTab('files'); }
 function setUploadType(btn){
+  const val = btn.getAttribute('data-val');
+  STATE.uploadType = val;                                   // remembered, so a page refresh keeps the choice
   btn.parentNode.querySelectorAll('.seg-btn').forEach(function(b){ b.classList.toggle('on', b === btn); });
-  document.getElementById('fileTypeSelect').value = btn.getAttribute('data-val');
+  document.getElementById('fileTypeSelect').value = val;
+  const hint = document.getElementById('uploadHint'); if(hint) hint.textContent = uploadHintText(val);
 }
 window.setUploadType = setUploadType;
 
@@ -808,9 +824,10 @@ function portalTabs(a){
     { id:'files', label:'Files' }
   ];
   if((STATE.invoices || []).length) tabs.push({ id:'invoices', label:'Invoices', badge: unpaidInvoices().length });
-  if(hasLoggingTab(a)) tabs.push({ id:'logging', label:'How to Log', badge: needsBaselineLog(a) ? '!' : 0 });
-  if(hasFlashGuide(a)) tabs.push({ id:'flash', label:'How to Flash' });
-  tabs.push({ id:'application', label:'Your Application' });
+  let guides = false;
+  if(hasLoggingTab(a)){ tabs.push({ id:'logging', label:'How to Log', badge: needsBaselineLog(a) ? '!' : 0, sep:true }); guides = true; }
+  if(hasFlashGuide(a)) tabs.push({ id:'flash', label:'How to Flash', sep: !guides });
+  tabs.push({ id:'application', label:'Your Application', sep:true });
   tabs.push({ id:'settings', label:'Email notifications' });
   tabs.push({ id:'help', label:'Help &amp; FAQ' });
   return tabs;
@@ -896,6 +913,7 @@ function renderHelp(){
     ['How long does review take?', 'Please allow up to 7 business days. We email you as soon as your status changes.'],
     ['What is a baseline log?', 'A datalog of your car as it is now, which your tuner needs before your tune can start. Follow the steps under "How to Log", then upload it in Files.'],
     ['How do I get my tune?', 'When your status shows "Tune Ready", open Files, download your tune and flash it, then tap "I\'ve flashed this" so we know which version is on your car.'],
+    ['Can I send you a tune to review?', 'Yes. Open Files, choose Tune, pick the file and send it. Your tuner will look it over and reply in Messages. Datalogs, dyno sheets and other files work the same way.'],
     ['Something feels wrong after flashing', 'Use "Request a Revision" on the Overview page and attach a datalog - your tuner needs it to work out what is happening.'],
     ['I did not get an email', 'Check your spam folder. Status updates, messages and files can each be switched on or off under Email notifications. Invoice emails come from our store and are always sent.'],
     ['I lost my portal link', 'Open <a href="' + escapeHtml(location.origin + location.pathname) + '">this page without your link</a> and use "Lost your link?" to have it emailed to you again.']
@@ -958,6 +976,7 @@ function renderMessagesTab(a){
 // Only the current tune's Download is a primary (orange) button.
 function tuneLabel(f){ return f.revision_number ? 'Revision ' + f.revision_number : f.file_name; }
 function fileKindBadge(f){
+  if(isTuneForReview(f)) return '<span class="fk-badge fk-tune">TUNE</span>';
   const k = f.file_type === 'log' ? ['LOG','fk-log'] : (f.file_type === 'dyno' ? ['DYNO','fk-dyno'] : ['FILE','fk-file']);
   return '<span class="fk-badge ' + k[1] + '">' + k[0] + '</span>';
 }
@@ -1009,12 +1028,12 @@ function renderFilesTab(){
   html += '<div class="fs-block">';
   html += '<div class="upload-head"><span class="fs-title" style="margin:0">Send a file to your tuner</span>'
     + '<div class="seg" role="group" aria-label="File type">'
-    + [['log','Datalog'],['dyno','Dyno sheet'],['other','Other']].map(function(t, i){
-        return '<button type="button" class="seg-btn' + (i === 0 ? ' on' : '') + '" data-val="' + t[0] + '" onclick="setUploadType(this)">' + t[1] + '</button>';
+    + UPLOAD_TYPES.map(function(t){
+        return '<button type="button" class="seg-btn' + (STATE.uploadType === t[0] ? ' on' : '') + '" data-val="' + t[0] + '" onclick="setUploadType(this)">' + t[1] + '</button>';
       }).join('')
-    + '</div><input type="hidden" id="fileTypeSelect" value="log"></div>';
+    + '</div><input type="hidden" id="fileTypeSelect" value="' + STATE.uploadType + '"></div>';
   html += fileDropHtml('fileInput', false, 'uploadBtn');
-  html += '<div class="dz-hint">Datalogs, dyno sheets and other files - up to ' + MAX_UPLOAD_MB + ' MB each.</div>';
+  html += '<div class="dz-hint" id="uploadHint">' + uploadHintText(STATE.uploadType) + '</div>';
   html += '<div class="up-progress" id="uploadProgress" hidden><div class="up-bar"><span></span></div><div class="up-text"></div></div>';
   html += '<div class="upload-actions"><button class="btn btn-sm" onclick="uploadLog()" id="uploadBtn" disabled>Upload</button></div>';
   html += '<div class="status-msg" id="uploadErr"></div>';
@@ -1026,7 +1045,7 @@ function renderFilesTab(){
     html += mine.map(function(f){
       return '<div class="fs-row">' + fileKindBadge(f)
         + '<div class="fs-info"><div class="fs-name">' + escapeHtml(f.file_name) + '</div>'
-        + '<div class="file-meta">' + fmtDate(f.created_at) + '</div></div></div>';
+        + '<div class="file-meta">' + fmtDate(f.created_at) + (isTuneForReview(f) ? ' &middot; sent to your tuner for review' : '') + '</div></div></div>';
     }).join('');
     html += '</div>';
   }
@@ -1070,19 +1089,19 @@ function pitHtml(a){
     + item('Year', a.car_year) + item('Make', a.car_make) + item('Model', a.car_model) + item('Mileage', a.car_mileage)
     + '</div><div class="pit-state"><i></i><span class="id-status">' + (STATUS_LABEL[a.status] || a.status) + '</span><span class="hero-live">Live</span></div></div>';
 }
-function titleHtml(a){
-  return '<div class="pg-title"><div><h1 class="pg-h1">Ghost Tuning Application <em>#' + a.application_number + '</em></h1>'
-    + '<div class="pg-sub">' + escapeHtml(a.customer_name) + ' &middot; ' + escapeHtml([a.car_year, a.car_make, a.car_model].filter(Boolean).join(' ')) + '</div>'
-    + renderReadouts(a) + '</div><a class="pg-link" href="' + escapeHtml(SUPPORT_URL) + '" target="_blank" rel="noopener">Support</a></div>';
+function identHtml(a){
+  return '<div class="ident"><h1 class="id-h1"><span class="id-k">Ghost Tuning Application</span> <span class="id-n">#' + a.application_number + '</span></h1>'
+    + '<div class="id-sub">' + escapeHtml(a.customer_name) + ' &middot; ' + escapeHtml([a.car_year, a.car_make, a.car_model].filter(Boolean).join(' ')) + '</div></div>';
 }
-function renderChips(tabs){
+function renderSide(tabs){
   let nav = '<nav class="ptabs" aria-label="Portal sections">';
   tabs.forEach(function(t){
+    if(t.sep) nav += '<div class="nav-sep" role="presentation"></div>';
     const on = STATE.tab === t.id;
     nav += '<button type="button" class="ptab' + (on ? ' active' : '') + '"' + (on ? ' aria-current="page"' : '') + ' onclick="setPortalTab(\'' + t.id + '\')"><span class="ptab-label">' + t.label + '</span>'
       + (t.badge ? '<span class="ptab-badge">' + t.badge + '</span>' : '') + '</button>';
   });
-  return nav + '</nav>';
+  return '<aside class="side">' + identHtml(STATE.application) + nav + '</nav></aside>';
 }
 const VIEW_TITLES = {
   messages:['Messages','Your conversation with your tuner'], files:['Files','Your tune, and the files you and your tuner share'],
@@ -1105,19 +1124,21 @@ function stageIndex(a){
   const OV = { needs_info:'under_review', declined:'under_review', revision_requested:'tune_sent', archived:'completed' };
   return IDS.indexOf(OV[a.status] || a.status);
 }
-function rd(key, val, tab, cls){
-  return '<button type="button" class="rd' + (cls ? ' ' + cls : '') + '" onclick="setPortalTab(\'' + tab + '\')"><span class="rd-v">' + val + '</span><span class="rd-k">' + key + '</span></button>';
+function rd(key, val, sub, tab, cls){
+  return '<button type="button" class="rd' + (cls ? ' ' + cls : '') + '" onclick="setPortalTab(\'' + tab + '\')"><span class="rd-k">' + key + '</span><span class="rd-v">' + val + '</span><span class="rd-s">' + sub + '</span></button>';
 }
 function renderReadouts(a){
   const idx = stageIndex(a), invoices = STATE.invoices || [], unpaid = unpaidInvoices(), unread = unreadMessageCount(), cur = currentTuneFile();
   const owed = unpaid.reduce(function(t, i){ return t + (Number(i.amount) || 0); }, 0);
   const days = a.created_at ? Math.max(0, Math.floor((Date.now() - new Date(a.created_at).getTime()) / 86400000)) : 0;
-  let h = '<div class="pg-stats">';
-  h += rd('Stage', idx >= 0 ? (idx + 1) + '/6' : '-', 'application');
-  h += STATE.queue ? rd('Queue', '#' + STATE.queue.position, 'application') : rd('Open for', days + ' <small>' + (days === 1 ? 'day' : 'days') + '</small>', 'application');
-  h += !invoices.length ? rd('Invoices', '-', 'overview') : (unpaid.length ? rd('Balance due', moneyHtml(owed), 'invoices', 'warn') : rd('Balance due', moneyHtml(0), 'invoices', 'good'));
-  h += rd('Unread', unread, 'messages', unread ? 'warn' : '');
-  h += rd('Current tune', cur ? (cur.revision_number ? 'Rev ' + cur.revision_number : 'File') : '-', 'files', cur && cur.is_current ? 'good' : '');
+  let h = '<div class="readouts">';
+  h += rd('Stage', idx >= 0 ? (idx + 1) + '/6' : '-', escapeHtml(STATUS_LABEL[a.status] || a.status), 'application');
+  h += STATE.queue ? rd('Queue', '#' + STATE.queue.position, 'In the build queue', 'application')
+                   : rd('Open for', days + ' <small>' + (days === 1 ? 'day' : 'days') + '</small>', 'Since ' + fmtDay(a.created_at), 'application');
+  h += !invoices.length ? rd('Invoices', '-', 'None yet', 'overview')
+     : (unpaid.length ? rd('Balance due', moneyHtml(owed), unpaid.length + ' unpaid invoice' + (unpaid.length > 1 ? 's' : ''), 'invoices', 'warn') : rd('Balance due', moneyHtml(0), 'All paid', 'invoices', 'good'));
+  h += rd('Unread', unread, unread ? 'New from your tuner' : 'All caught up', 'messages', unread ? 'warn' : '');
+  h += rd('Current tune', cur ? (cur.revision_number ? 'Rev ' + cur.revision_number : 'File') : '-', cur ? (cur.is_current ? 'Flashed' : 'Latest, not yet flashed') : 'None yet', 'files', cur && cur.is_current ? 'good' : '');
   return h + '</div>';
 }
 function cell(title, linkLabel, tab, body){
@@ -1157,7 +1178,7 @@ function filesCellBody(){
   const latest = files.slice().sort(function(x, y){ return new Date(y.created_at) - new Date(x.created_at); })[0];
   return '<div class="w-stats"><div><b>' + mine.length + '</b><span>Sent by you</span></div><div><b>' + fromTuner.length + '</b><span>From your tuner</span></div></div>'
     + (latest ? '<div class="w-meta">Latest: ' + escapeHtml(latest.file_name) + ' &middot; ' + fmtDate(latest.created_at) + '</div>' : '<div class="w-meta">No files yet.</div>')
-    + '<div class="w-btns"><button type="button" class="btn btn-sm btn-muted" onclick="setPortalTab(\'files\')">Send a file</button></div>';
+    + '<div class="w-btns"><button type="button" class="btn btn-sm" onclick="openUpload(\'tune\')">Send a tune for review</button><button type="button" class="btn btn-sm btn-muted" onclick="setPortalTab(\'files\')">Send a file</button></div>';
 }
 function carCellBody(a){
   return '<div class="kv-grid">' + kv('Year', a.car_year) + kv('Make', a.car_make) + kv('Model', a.car_model) + kv('Mileage', a.car_mileage)
@@ -1183,6 +1204,7 @@ function renderOverview(a){
   }
   h += '</div>' + renderNextStep(a) + renderRevisionCta(a) + '</div>';
   h += renderReviewCard(a);
+  h += renderReadouts(a);
   h += '<div class="cells">'
     + cell('Your tune', 'All files', 'files', renderCurrentTuneCard(tuneListSorted(), closed))
     + cell('Invoices', 'All invoices', 'invoices', invoiceCellBody())
@@ -1203,7 +1225,7 @@ function buildPortalHtml(){
   const tabs = portalTabs(a);
   if(!tabs.some(function(t){ return t.id === STATE.tab; })) STATE.tab = 'overview';
 
-  let html = '<div id="pgHead">' + pitHtml(a) + titleHtml(a) + '</div>' + renderChips(tabs) + '<main class="main" id="tabCard">';
+  let html = '<div id="pgHead">' + pitHtml(a) + '</div><div class="dash">' + renderSide(tabs) + '<main class="main" id="tabCard">';
   if(STATE.tab === 'overview'){
     html += renderOverview(a);
   } else {
@@ -1219,7 +1241,7 @@ function buildPortalHtml(){
     else if(STATE.tab === 'help') html += helpInner();
     html += '</div>';
   }
-  return html + '</main>';
+  return html + '</main></div>';
 }
 
 function renderPortal(){
@@ -1249,7 +1271,7 @@ function topFormOpen(){
 }
 
 // A refresh for someone on the Messages page: everything is brought up to date
-// (car bar, title and stats, the page chips and their counts, the "Next step"
+// (the car bar and status, the side menu and its counts, the "Next step"
 // bar, the conversation, the "changed your mods?" box) EXCEPT the message box
 // itself and a form open under it. Those are never rebuilt - on a phone,
 // destroying a focused box closes the keyboard (and code can't reopen it), and
@@ -1261,10 +1283,10 @@ function renderPortalKeepComposer(opts){
   const fresh = tmp.querySelector('#tabCard');
   if(!fresh || !fresh.querySelector('#msgInput')) return false;
   const pageY = window.scrollY;
-  const head = document.getElementById('pgHead'), fhead = tmp.querySelector('#pgHead');          // car bar, title, stats
+  const head = document.getElementById('pgHead'), fhead = tmp.querySelector('#pgHead');          // the "Your car" bar and status
   if(head && fhead) head.innerHTML = fhead.innerHTML;
-  const nav = document.querySelector('#portalWrap .ptabs'), fnav = tmp.querySelector('.ptabs');   // the page chips and their counts
-  if(nav && fnav) nav.innerHTML = fnav.innerHTML;
+  const side = document.querySelector('#portalWrap .side'), fside = tmp.querySelector('.side');   // the side menu, its counts and the application number
+  if(side && fside) side.innerHTML = fside.innerHTML;
   const bar = live.querySelector('.next-step'), fbar = fresh.querySelector('.next-step');         // the "Next step" bar
   if(bar && fbar){ bar.className = fbar.className; bar.innerHTML = fbar.innerHTML; }
   const list = live.querySelector('#msgList'), flist = fresh.querySelector('#msgList');
@@ -1627,7 +1649,7 @@ async function uploadLog(){
     // Full re-render so the logging card's baseline banner clears too.
     uploadEnd();
     renderPortal();
-    toastLike('Upload complete - your tuner has been notified.');
+    toastLike(typeEl && typeEl.value === 'tune' ? 'Tune sent - your tuner will review it and reply in Messages.' : 'Upload complete - your tuner has been notified.');
     return;
   }catch(e){
     uploadEnd();
