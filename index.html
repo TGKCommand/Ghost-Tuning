@@ -291,6 +291,22 @@ tr.row-click:hover td{background:var(--bg3)}
   .inv-foot .btn{flex:1;justify-content:center}
 }
 .log-modal{max-width:1100px !important;max-height:92vh;overflow-y:auto}
+.fv-wrap{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:16px}
+.fv-modal{max-width:1100px !important;width:100%;max-height:94vh;display:flex;flex-direction:column;padding:16px 18px !important}
+.fv-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+.fv-titles{min-width:0;flex:1 1 220px}
+.fv-title{font-weight:700;font-size:var(--t-lg);word-break:break-word}
+.fv-btns{display:flex;gap:6px;flex-wrap:wrap}
+.fv-btns a.btn{text-decoration:none}
+.fv-body{flex:1;min-height:200px;overflow:auto;display:flex;align-items:flex-start;justify-content:center;flex-wrap:wrap;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-lg);padding:10px}
+.fv-img{display:block;margin:auto;max-width:100%;max-height:calc(94vh - 160px);object-fit:contain;cursor:zoom-in}
+.fv-img.zoom{max-width:none;max-height:none;cursor:zoom-out;margin:0}
+.fv-frame{width:100%;height:calc(94vh - 160px);min-height:360px;border:0;background:#fff}
+.fv-media{max-width:100%;max-height:calc(94vh - 160px);margin:auto}
+.fv-text{margin:0;width:100%;white-space:pre-wrap;word-break:break-word;font-family:var(--mono);font-size:12.5px;line-height:1.5;color:var(--text)}
+.fv-msg{width:100%;padding:48px 16px;text-align:center;color:var(--text3);font-size:var(--t-md);line-height:1.6}
+.fv-card{width:100%;max-width:640px;margin:auto;background:var(--bg);border:1px solid var(--border);border-radius:var(--r-lg);padding:18px 20px}
+.fv-card-title{font-weight:700;font-size:var(--t-lg)}
 .log-flags{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:12px 0 8px}
 .log-flag{background:var(--red-dim);color:var(--red);border:1px solid rgba(220,38,38,.25);border-radius:6px;padding:3px 9px;font-size:var(--t-xs);font-weight:700;cursor:pointer}
 .log-readout{font-size:var(--t-xs);color:var(--text2);background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-md);padding:6px 10px;margin-bottom:8px;min-height:16px;font-variant-numeric:tabular-nums}
@@ -761,7 +777,7 @@ details.an-pd .an-f{padding:2px 8px}
         </div>
         <div class="sync-sub" onclick="doLogout()">Sign out</div>
         <div class="version-row">
-          <span>v1.83</span>
+          <span>v1.84</span>
           <span id="buildDate"></span>
         </div>
       </div>
@@ -3420,7 +3436,7 @@ function renderFilesTab(a){
       + '</div>'
       + '<div class="file-actions">'
       + (isTune && !f.is_current ? '<button class="btn btn-sm" onclick="setCurrentTune(\'' + a.id + '\',\'' + f.id + '\')">Mark current</button>' : '')
-      + (isLogFile(f) ? '<button class="btn btn-sm btn-teal" onclick="openLogViewer(\'' + f.id + '\',\'' + f.file_path + '\')">View</button>' : '')
+      + '<button class="btn btn-sm btn-teal" onclick="viewFile(\'' + f.id + '\')">View</button>'
       + '<button class="btn btn-sm" onclick="downloadFile(\'' + f.id + '\',\'' + f.file_path + '\')">Download</button>'
       + '<button class="btn btn-sm file-del" onclick="deleteFile(\'' + a.id + '\',\'' + f.id + '\')" title="Delete file">Delete</button>'
       + '</div>'
@@ -3928,7 +3944,7 @@ async function fetchLog(path){
   return parseLog(await resp.text());
 }
 
-async function openLogViewer(fileId, path){
+async function openLogViewer(fileId, path, opts){
   // Name/application are looked up rather than passed through onclick, so
   // file names with quotes can't break the handler.
   let fileName = 'Datalog', appId = null;
@@ -3960,6 +3976,12 @@ async function openLogViewer(fileId, path){
     renderLogViewer();
     saveLogAnalysis(fileId, analyzeLog(log));
   }catch(e){
+    // Labelled a log but not actually a datalog table (a text note, a
+    // spreadsheet export...): show it as an ordinary file rather than an error.
+    if(opts && opts.fallback){
+      const rec = findFileRecord(fileId);
+      if(rec){ fvOpen(rec, { as: FV_TEXT[fileExt(rec.file_name)] ? 'text' : 'other', note: "This isn't a datalog table, so it's shown as a regular file." }); return; }
+    }
     openModal('<div class="modal"><div class="modal-title">Could not open log</div><p class="file-meta">' + escapeHtml(e.message) + '</p>'
       + '<div class="modal-footer"><button class="btn btn-sm" onclick="downloadFile(\'' + fileId + '\',\'' + path + '\')">Download instead</button><button class="btn btn-sm" onclick="closeModal()">Close</button></div></div>');
   }
@@ -5554,18 +5576,204 @@ async function deleteLogRule(id){
 }
 window.deleteLogRule = deleteLogRule;
 
-function isLogFile(f){ return f.file_type === 'log' || /\.(csv|txt|log)$/i.test(f.file_name || ''); }
+/* ================= FILE VIEWER ================= */
+// Every file on an application opens in a viewer: images, PDFs, video, audio and
+// text show inline; datalogs go to the chart viewer; anything else (a tune
+// .bin, a zip...) gets a details card. Each one also downloads.
+const FV_IMG = { png:1, jpg:1, jpeg:1, gif:1, webp:1, bmp:1, svg:1, avif:1, ico:1, heic:1, heif:1, tif:1, tiff:1 };
+const FV_VIDEO = { mp4:1, mov:1, m4v:1, webm:1, ogv:1 };
+const FV_AUDIO = { mp3:1, wav:1, m4a:1, aac:1, ogg:1, oga:1, flac:1 };
+const FV_TEXT = { txt:1, log:1, csv:1, tsv:1, md:1, json:1, xml:1, ini:1, cfg:1, conf:1, yaml:1, yml:1, html:1, htm:1, css:1, js:1, py:1, sql:1 };
+const FV_TEXT_LIMIT = 1000000;   // bytes of a text file shown before cutting it off
+let FV_TOKEN = 0, FV_BLOB = null;
+const FV_URLS = {};
 
+function fileExt(name){ const m = /\.([a-z0-9]+)$/i.exec(String(name || '')); return m ? m[1].toLowerCase() : ''; }
+function fileViewKind(f){
+  const e = fileExt(f.file_name);
+  if(FV_IMG[e]) return 'image';
+  if(e === 'pdf') return 'pdf';
+  if(FV_VIDEO[e]) return 'video';
+  if(FV_AUDIO[e]) return 'audio';
+  // A datalog is a csv/tsv/txt/log, or something labelled "log" with no
+  // extension. A screenshot or zip labelled "log" is NOT one - it used to be
+  // sent to the chart viewer and fail.
+  if(e === 'csv' || e === 'tsv' || e === 'txt' || e === 'log') return 'log';
+  if(f.file_type === 'log' && (e === '' || e === 'dat')) return 'log';
+  if(FV_TEXT[e]) return 'text';
+  return 'other';
+}
+function isLogFile(f){ return fileViewKind(f) === 'log'; }
+const FV_KIND_LABEL = { image:'Image', pdf:'PDF', video:'Video', audio:'Audio', text:'Text file', log:'Datalog', other:'File' };
+
+function findFileRecord(fileId){
+  let hit = null;
+  Object.keys(S.files).forEach(function(k){ (S.files[k] || []).forEach(function(f){ if(f.id === fileId) hit = f; }); });
+  (S.pendingLogs || []).forEach(function(f){ if(f.id === fileId) hit = hit || f; });
+  return hit;
+}
+
+// Signed links last an hour; reuse one for 50 minutes rather than asking the
+// server again every time a file is opened or stepped through.
+async function fvSignedUrl(path, downloadName){
+  const key = path + '|' + (downloadName || '');
+  const hit = FV_URLS[key];
+  if(hit && hit.exp > Date.now()) return hit.url;
+  const { data, error } = await sb.storage.from('tuning-files').createSignedUrl(path, 3600, downloadName ? { download: downloadName } : undefined);
+  if(error) throw error;
+  FV_URLS[key] = { url: data.signedUrl, exp: Date.now() + 50 * 60 * 1000 };
+  return data.signedUrl;
+}
+
+// A real download, under the file's real name. The old version opened the raw
+// link in a new tab, which only DISPLAYS images / PDFs / text (and gets caught
+// by popup blockers after the async lookup).
 async function downloadFile(fileId, path){
   try{
-    const { data, error } = await sb.storage.from('tuning-files').createSignedUrl(path, 3600);
-    if(error) throw error;
-    window.open(data.signedUrl, '_blank');
+    const f = findFileRecord(fileId);
+    const url = await fvSignedUrl(path, (f && f.file_name) || true);
+    const a = document.createElement('a');
+    a.href = url; a.rel = 'noopener'; a.style.display = 'none';
+    document.body.appendChild(a); a.click(); a.remove();
   }catch(e){
     toast('Could not generate download link: ' + e.message, true);
   }
 }
 window.downloadFile = downloadFile;
+
+// The one entry point every "View" button uses.
+async function viewFile(fileId){
+  const f = findFileRecord(fileId);
+  if(!f) return;
+  if(fileViewKind(f) === 'log') return openLogViewer(fileId, f.file_path, { fallback: true });
+  return fvOpen(f);
+}
+window.viewFile = viewFile;
+
+function fvRevoke(){ if(FV_BLOB){ try{ URL.revokeObjectURL(FV_BLOB); }catch(e){ /* already gone */ } FV_BLOB = null; } }
+
+function fvShell(f, kind, idx, total, note){
+  const pill = '<span class="pill pill-muted">' + (FV_KIND_LABEL[kind] || 'File') + '</span>';
+  return '<div class="fv-wrap" onclick="if(event.target===this)fvClose()"><div class="modal fv-modal" role="dialog" aria-label="' + escapeHtml(f.file_name) + '">'
+    + '<div class="fv-head"><div class="fv-titles"><div class="fv-title">' + escapeHtml(f.file_name) + ' ' + pill + '</div>'
+    + '<div class="file-meta">' + escapeHtml(f.uploaded_by_name || f.uploaded_by || '') + ' &middot; ' + fmtDate(f.created_at)
+      + (total > 1 ? ' &middot; ' + (idx + 1) + ' of ' + total + ' viewable files' : '') + '</div></div>'
+    + '<div class="fv-btns">'
+      + (total > 1 ? '<button class="btn btn-sm" onclick="fvStep(-1)" title="Previous file (left arrow)">&#8249; Prev</button><button class="btn btn-sm" onclick="fvStep(1)" title="Next file (right arrow)">Next &#8250;</button>' : '')
+      + (kind !== 'other' ? '<a class="btn btn-sm hidden" id="fvOpenTab" target="_blank" rel="noopener" href="#">Open in new tab</a>' : '')
+      + '<button class="btn btn-sm btn-primary" onclick="fvDownload()">Download</button>'
+      + '<button class="btn btn-sm" onclick="fvClose()">Close</button>'
+    + '</div></div>'
+    + (note ? '<div class="lv-note" style="margin:0 0 10px">' + escapeHtml(note) + '</div>' : '')
+    + '<div class="fv-body" id="fvBody"><div class="fv-msg">Loading&hellip;</div></div>'
+    + '</div></div>';
+}
+
+async function fvOpen(f, opts){
+  opts = opts || {};
+  fvRevoke();
+  const token = ++FV_TOKEN;
+  const kind = opts.as || fileViewKind(f);
+  const appId = f.application_id || (function(){ let id = null; Object.keys(S.files).forEach(function(k){ if((S.files[k] || []).some(function(x){ return x.id === f.id; })) id = k; }); return id; })();
+  if(appId && !S.files[appId]){ try{ await loadFiles(appId); }catch(e){ /* the file stepper is optional */ } }
+  if(token !== FV_TOKEN) return;
+  // Prev / Next walks the application's other viewable files, newest first.
+  const VIEWABLE = { image:1, pdf:1, video:1, audio:1, text:1 };
+  let gallery = ((appId && S.files[appId]) || []).filter(function(x){ return VIEWABLE[fileViewKind(x)]; })
+    .sort(function(x, y){ return new Date(y.created_at) - new Date(x.created_at); });
+  if(!gallery.some(function(x){ return x.id === f.id; }) || !VIEWABLE[kind]) gallery = [f];
+  const idx = gallery.findIndex(function(x){ return x.id === f.id; });
+  S.fv = { id: f.id, ids: gallery.map(function(x){ return x.id; }), idx: idx };
+  openModal(fvShell(f, kind, idx, gallery.length, opts.note));
+  fvLoad(f, kind, token);
+}
+
+function fvFail(kind){
+  const body = document.getElementById('fvBody'); if(!body) return;
+  const why = {
+    image: "Your browser can't display this image. HEIC and TIFF photos only open in Safari.",
+    video: "Your browser can't play this video format.",
+    audio: "Your browser can't play this audio format.",
+    pdf: "Couldn't load this PDF.",
+    text: "Couldn't load this file."
+  }[kind] || "Couldn't load a preview.";
+  body.innerHTML = '<div class="fv-msg">' + why + '<br>Use <strong>Download</strong> to open it on your computer.</div>';
+}
+window.fvFail = fvFail;
+
+async function fvLoad(f, kind, token){
+  const body = document.getElementById('fvBody'); if(!body) return;
+  const stale = function(){ return token !== FV_TOKEN || !document.getElementById('fvBody'); };
+  try{
+    if(kind === 'other'){
+      const e = fileExt(f.file_name);
+      body.innerHTML = '<div class="fv-card"><div class="fv-card-title">No preview for ' + (e ? '.' + escapeHtml(e) + ' ' : '') + 'files</div>'
+        + '<p class="file-meta" style="margin:6px 0 12px">This type of file can\'t be shown in the browser. Download it to open it in the right program.</p>'
+        + '<div class="dl-grid">'
+          + '<div class="dl-item"><div class="dl-label">Name</div><div class="dl-value">' + escapeHtml(f.file_name) + '</div></div>'
+          + '<div class="dl-item"><div class="dl-label">Labelled as</div><div class="dl-value">' + escapeHtml(f.file_type || 'file') + '</div></div>'
+          + '<div class="dl-item"><div class="dl-label">Uploaded by</div><div class="dl-value">' + escapeHtml(f.uploaded_by_name || f.uploaded_by || '-') + '</div></div>'
+          + '<div class="dl-item"><div class="dl-label">Uploaded</div><div class="dl-value">' + fmtDate(f.created_at) + '</div></div>'
+          + (f.revision_number ? '<div class="dl-item"><div class="dl-label">Revision</div><div class="dl-value">' + escapeHtml(f.revision_number) + '</div></div>' : '')
+          + (f.fuel ? '<div class="dl-item"><div class="dl-label">Fuel</div><div class="dl-value">' + escapeHtml(f.fuel) + '</div></div>' : '')
+          + (f.description ? '<div class="dl-item full"><div class="dl-label">Notes</div><div class="dl-value" style="white-space:pre-wrap">' + escapeHtml(f.description) + '</div></div>' : '')
+        + '</div></div>';
+      return;
+    }
+    const url = await fvSignedUrl(f.file_path);
+    if(stale()) return;
+    const tab = document.getElementById('fvOpenTab');
+    const showTab = function(href){ if(tab){ tab.href = href; tab.classList.remove('hidden'); } };
+    if(kind === 'image'){
+      showTab(url);
+      body.innerHTML = '<img class="fv-img" alt="' + escapeHtml(f.file_name) + '" src="' + escapeHtml(url) + '" title="Click to zoom" onclick="this.classList.toggle(\'zoom\')" onerror="fvFail(\'image\')">';
+    } else if(kind === 'video' || kind === 'audio'){
+      showTab(url);
+      body.innerHTML = '<' + kind + ' class="fv-media" controls playsinline preload="metadata" src="' + escapeHtml(url) + '" onerror="fvFail(\'' + kind + '\')"></' + kind + '>';
+    } else if(kind === 'pdf'){
+      // Fetched and re-wrapped as a PDF blob, so it shows in the viewer
+      // whatever headers the storage server sends for it.
+      const resp = await fetch(url);
+      if(!resp.ok) throw new Error('Download failed (' + resp.status + ')');
+      const blob = new Blob([await resp.arrayBuffer()], { type: 'application/pdf' });
+      if(stale()) return;
+      FV_BLOB = URL.createObjectURL(blob);
+      showTab(FV_BLOB);
+      body.innerHTML = '<iframe class="fv-frame" title="' + escapeHtml(f.file_name) + '" src="' + FV_BLOB + '"></iframe>';
+    } else {   // text
+      showTab(url);
+      const resp = await fetch(url);
+      if(!resp.ok) throw new Error('Download failed (' + resp.status + ')');
+      const blob = await resp.blob();
+      const cut = blob.size > FV_TEXT_LIMIT;
+      let text = await (cut ? blob.slice(0, FV_TEXT_LIMIT) : blob).text();
+      if(stale()) return;
+      if(!cut && fileExt(f.file_name) === 'json'){ try{ text = JSON.stringify(JSON.parse(text), null, 2); }catch(e){ /* not valid JSON - show as is */ } }
+      body.innerHTML = '<pre class="fv-text" id="fvText"></pre>' + (cut ? '<div class="fv-msg" style="padding:10px 0 0;width:100%">Showing the first ' + Math.round(FV_TEXT_LIMIT / 1000) + ' KB of ' + Math.round(blob.size / 1000) + ' KB - Download for the whole file.</div>' : '');
+      document.getElementById('fvText').textContent = text;   // textContent: file contents are never run as HTML
+    }
+  }catch(e){
+    if(!stale()) fvFail(kind);
+  }
+}
+
+function fvStep(dir){
+  const V = S.fv; if(!V || V.ids.length < 2) return;
+  const n = (V.idx + dir + V.ids.length) % V.ids.length;
+  const f = findFileRecord(V.ids[n]);
+  if(f) fvOpen(f);
+}
+window.fvStep = fvStep;
+function fvDownload(){ const f = S.fv && findFileRecord(S.fv.id); if(f) downloadFile(f.id, f.file_path); }
+window.fvDownload = fvDownload;
+function fvClose(){ FV_TOKEN++; fvRevoke(); S.fv = null; closeModal(); }
+window.fvClose = fvClose;
+document.addEventListener('keydown', function(ev){
+  if(!document.querySelector('.fv-modal')) return;
+  const t = ev.target && ev.target.tagName;
+  if(ev.key === 'Escape'){ fvClose(); }
+  else if((ev.key === 'ArrowLeft' || ev.key === 'ArrowRight') && t !== 'VIDEO' && t !== 'AUDIO' && t !== 'INPUT' && t !== 'TEXTAREA'){ fvStep(ev.key === 'ArrowLeft' ? -1 : 1); }
+});
 
 /* ---- activity tab ---- */
 function describeActivity(l){
@@ -5648,9 +5856,9 @@ function renderLogReview(){
         + '<td><a href="#" onclick="event.preventDefault();jumpToApplication(\'' + f.application_id + '\',\'files\')">#' + (app ? app.application_number : '?') + ' - ' + escapeHtml(app ? app.customer_name : '') + '</a></td>'
         + '<td>' + escapeHtml(carLine) + '</td>'
         + '<td>' + escapeHtml(f.file_name) + '</td>'
-        + '<td><div class="an-findings" style="margin:0">' + analysisChips(f.analysis) + '</div></td>'
+        + '<td>' + (isLogFile(f) ? '<div class="an-findings" style="margin:0">' + analysisChips(f.analysis) + '</div>' : '<span class="file-meta">' + FV_KIND_LABEL[fileViewKind(f)] + ' - not a datalog</span>') + '</td>'
         + '<td>' + fmtDate(f.created_at) + '</td>'
-        + '<td style="white-space:nowrap"><button class="btn btn-sm btn-teal" onclick="openLogViewer(\'' + f.id + '\',\'' + f.file_path + '\')">View</button> <button class="btn btn-sm" onclick="markLogReviewed(\'' + f.id + '\')">Mark Reviewed</button></td>'
+        + '<td style="white-space:nowrap"><button class="btn btn-sm btn-teal" onclick="viewFile(\'' + f.id + '\')">View</button> <button class="btn btn-sm" onclick="markLogReviewed(\'' + f.id + '\')">Mark Reviewed</button></td>'
         + '</tr>';
     });
     html += '</tbody></table>';
