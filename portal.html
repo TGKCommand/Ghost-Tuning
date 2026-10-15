@@ -861,9 +861,33 @@ function renderActionChips(a){
   return '<div class="action-chips"><span class="action-label">To do:</span>' + chips.join('') + '</div>';
 }
 
+// A half-written message is kept - in memory and in the browser's storage -
+// until it's sent, so a refresh, a tab switch or a reload never loses it.
+let PORTAL_DRAFT_TIMER = null;
+function portalDraftKey(){ return 'tgk-portal-draft-' + (STATE.application && STATE.application.id || 'app'); }
+function portalDraftGet(){
+  if(STATE._draft === undefined){ try{ STATE._draft = localStorage.getItem(portalDraftKey()) || ''; }catch(e){ STATE._draft = ''; } }
+  return STATE._draft;
+}
+function portalDraftSave(){
+  const t = document.getElementById('msgInput'); if(!t) return;
+  STATE._draft = t.value;
+  clearTimeout(PORTAL_DRAFT_TIMER);
+  PORTAL_DRAFT_TIMER = setTimeout(function(){
+    try{ if(STATE._draft) localStorage.setItem(portalDraftKey(), STATE._draft); else localStorage.removeItem(portalDraftKey()); }catch(e){ /* storage unavailable */ }
+  }, 400);
+}
+function portalDraftClear(){
+  STATE._draft = '';
+  clearTimeout(PORTAL_DRAFT_TIMER);
+  try{ localStorage.removeItem(portalDraftKey()); }catch(e){ /* storage unavailable */ }
+}
+window.portalDraftSave = portalDraftSave;
+
 function renderMessagesTab(a){
   let html = '<div class="msg-list" id="msgList">' + renderMessages() + '</div>';
-  html += '<textarea class="form-input" id="msgInput" placeholder="Write a message to your tuner..." style="margin-bottom:10px"></textarea>';
+  // (the newline after the tag is swallowed by the HTML parser, so a draft that starts with a blank line keeps it)
+  html += '<textarea class="form-input" id="msgInput" placeholder="Write a message to your tuner..." style="margin-bottom:10px" oninput="portalDraftSave()">\n' + escapeHtml(portalDraftGet()) + '</textarea>';
   html += '<button class="btn" onclick="sendMessage()" id="sendBtn">Send Message</button>';
   html += '<div class="status-msg" id="msgErr"></div>';
   if(['declined','archived','completed'].indexOf(a.status) === -1){
@@ -981,7 +1005,7 @@ function renderFilesTab(){
   return html;
 }
 
-function renderPortal(){
+function buildPortalHtml(){
   const a = STATE.application;
   let html = '';
 
@@ -1022,8 +1046,13 @@ function renderPortal(){
   html += renderEmailPrefs(a);
   html += renderHelp();
   html += '<p class="footer-note">TGK Motorsport - Ghost Tuning</p>';
+  return html;
+}
 
-  document.getElementById('portalWrap').innerHTML = html;
+function renderPortal(){
+  const typed = document.getElementById('msgInput');
+  if(typed) STATE._draft = typed.value;       // whatever is in the box right now becomes the draft before the page is rebuilt
+  document.getElementById('portalWrap').innerHTML = buildPortalHtml();
   const unread = STATE.tab === 'messages' ? 0 : unreadMessageCount();
   document.title = (unread ? '(' + unread + ') ' : '') + BASE_TITLE;
 
@@ -1037,6 +1066,59 @@ function renderPortal(){
   wireDropzones();
 }
 window.renderPortal = renderPortal;
+
+// Is something open in the top of the page that a refresh would wipe: the
+// revision form, or a review being written?
+function topFormOpen(){
+  if(document.getElementById('revFuel')) return true;
+  const rc = document.getElementById('reviewComment');
+  return !!((rc && rc.value.trim()) || REVIEW_RATING);
+}
+
+// A refresh for someone on the Messages tab: everything is brought up to date
+// (status, queue, tab badges, the conversation, the notes below) EXCEPT the
+// message box itself and a form open under it. Those are never rebuilt - on a
+// phone, destroying a focused box closes the keyboard (and code can't reopen
+// it), and rewriting it mid-sentence upsets autocorrect.
+function renderPortalKeepComposer(opts){
+  const wrap = document.getElementById('portalWrap'), live = document.getElementById('tabCard');
+  if(!wrap || !live || !document.getElementById('msgInput')) return false;
+  const tmp = document.createElement('div'); tmp.innerHTML = buildPortalHtml();
+  const fresh = tmp.querySelector('#tabCard');
+  if(!fresh || !fresh.querySelector('#msgInput')) return false;
+  const pageY = window.scrollY;
+  const split = function(box, anchor){
+    const before = [], after = []; let seen = false;
+    Array.prototype.slice.call(box.children).forEach(function(n){ if(n === anchor) seen = true; else (seen ? after : before).push(n); });
+    return { before: before, after: after };
+  };
+  const L = split(wrap, live), F = split(tmp, fresh);
+  if(!(opts && opts.keepTop)){                      // the hero / review card, unless a form is open in them
+    L.before.forEach(function(n){ n.remove(); });
+    F.before.forEach(function(n){ wrap.insertBefore(n, live); });
+  }
+  L.after.forEach(function(n){ n.remove(); });      // email preferences, help, footer
+  F.after.forEach(function(n){ wrap.appendChild(n); });
+  // the tab card: its tab strip and the conversation only
+  const tabs = live.querySelector('.ptabs'), ftabs = fresh.querySelector('.ptabs');
+  if(tabs && ftabs) tabs.innerHTML = ftabs.innerHTML;
+  const list = live.querySelector('#msgList'), flist = fresh.querySelector('#msgList');
+  if(list && flist && list.innerHTML !== flist.innerHTML){
+    const atBottom = msgListAtBottom(list), top = list.scrollTop;
+    list.innerHTML = flist.innerHTML;
+    list.scrollTop = atBottom ? list.scrollHeight : top;
+  }
+  // the "changed your mods?" box, unless its form is open
+  if(!document.getElementById('modChanges')){
+    const mu = live.querySelector('#modUpdateBox'), fmu = fresh.querySelector('#modUpdateBox');
+    if(mu) mu.remove();
+    if(fmu){ const err = live.querySelector('#msgErr'); if(err) err.after(fmu); else live.querySelector('.ptab-body').appendChild(fmu); }
+  }
+  document.title = BASE_TITLE;
+  wireDropzones();
+  if(Math.abs(window.scrollY - pageY) > 1) window.scrollTo(0, pageY);
+  return true;
+}
 
 // Only shows once the tuner has actually sent an invoice - a fresh
 // application with no invoice yet gets nothing here, not an empty box.
@@ -1273,26 +1355,12 @@ function msgListAtBottom(list){
   return !list || list.scrollHeight - list.scrollTop - list.clientHeight < 40;
 }
 
-// Swap in the latest messages without touching anything else on the page -
-// used while the customer is typing, so the message box keeps its focus,
-// cursor and text (and a phone keyboard stays open).
-function refreshMessageListInPlace(){
-  const list = document.getElementById('msgList');
-  if(!list) return;
-  const html = renderMessages();
-  if(list.innerHTML === html) return;
-  const atBottom = msgListAtBottom(list), top = list.scrollTop;
-  list.innerHTML = html;
-  list.scrollTop = atBottom ? list.scrollHeight : top;
-}
-
 async function loadStatus(silent){
   try{
     const data = await callPortal('get_status', { silent: !!silent });   // a background refresh must not count as a visit
     // Read what the customer is doing right before deciding how to redraw.
     const draftEl = document.getElementById('msgInput');
     const draft = draftEl ? draftEl.value : '';
-    const typing = !!draftEl && document.activeElement === draftEl;
     const tunerBefore = tunerMessageCount();
     STATE.application = data.application;
     STATE.messages = data.messages;
@@ -1308,11 +1376,11 @@ async function loadStatus(silent){
     // something the customer is halfway through. The data is updated
     // either way; the re-render just waits until they submit or cancel,
     // both of which re-render on their own.
-    if(silent && isCustomerEditing()){ subscribeRealtime(); return; }
-    // Typing a message: rebuilding the page would throw them out of the box
-    // mid-sentence (and close a phone keyboard). Show new messages in place
-    // instead; the full refresh happens on the first one after they leave it.
-    if(silent && typing){ refreshMessageListInPlace(); subscribeRealtime(); return; }
+    if(silent){
+      // Messages tab: refresh everything around the message box, never the box.
+      if(STATE.tab === 'messages' && renderPortalKeepComposer({ keepTop: topFormOpen() })){ subscribeRealtime(); return; }
+      if(isCustomerEditing()){ subscribeRealtime(); return; }
+    }
     const oldList = document.getElementById('msgList');
     const listAtBottom = msgListAtBottom(oldList), listTop = oldList ? oldList.scrollTop : 0;
     const pageY = window.scrollY;
@@ -1362,6 +1430,7 @@ async function sendMessage(){
     const data = await callPortal('send_message', { body: body });
     STATE.messages.push(data.message);
     input.value = '';
+    portalDraftClear();
     document.getElementById('msgList').innerHTML = renderMessages();
     document.getElementById('msgList').scrollTop = document.getElementById('msgList').scrollHeight;
   }catch(e){

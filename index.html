@@ -779,7 +779,7 @@ details.an-pd .an-f{padding:2px 8px}
         </div>
         <div class="sync-sub" onclick="doLogout()">Sign out</div>
         <div class="version-row">
-          <span>v1.86</span>
+          <span>v1.88</span>
           <span id="buildDate"></span>
         </div>
       </div>
@@ -1299,6 +1299,40 @@ async function loadTuners(){
 // reports its status to the sidebar indicator.
 let globalChannel = null;
 const RT_STATUS = {};
+// Which columns of an application row actually changed (JSON compare, so
+// objects and arrays work too).
+function changedAppKeys(oldRow, newRow){
+  if(!oldRow) return Object.keys(newRow);
+  return Object.keys(newRow).filter(function(k){ return JSON.stringify(oldRow[k]) !== JSON.stringify(newRow[k]); });
+}
+// The customer's portal stamps the application row every time it checks for
+// news - every 25 s while it's open, about once a minute from a background tab.
+// Those stamps show nowhere in the dashboard, so they must redraw nothing. They
+// used to rebuild the whole open panel each time, emptying the reply box of
+// anyone with a customer who keeps their portal open.
+const APP_QUIET_KEYS = { portal_last_viewed_at:1, updated_at:1, customer_has_unread:1 };
+const APP_LISTONLY_KEYS = { has_unread:1, unread_count:1, last_message_at:1, last_message_by:1 };   // badges in the list, not in the open panel
+function handleApplicationChange(payload){
+  if(payload.eventType === 'DELETE'){
+    S.applications = S.applications.filter(function(a){ return a.id !== payload.old.id; });
+    renderNav(); renderPage();
+    return;
+  }
+  const row = payload.new;
+  const idx = S.applications.findIndex(function(a){ return a.id === row.id; });
+  const changed = idx !== -1 ? changedAppKeys(S.applications[idx], row) : null;
+  if(idx !== -1) Object.assign(S.applications[idx], row); else S.applications.unshift(row);
+  let panel = S.openAppId === row.id;
+  if(changed){
+    if(!changed.length) return;                                                            // nothing actually changed
+    if(changed.every(function(k){ return APP_QUIET_KEYS[k]; })) return;                    // just "the customer looked"
+    panel = panel && changed.some(function(k){ return !APP_QUIET_KEYS[k] && !APP_LISTONLY_KEYS[k]; });
+  }
+  if(panel) renderPanelShell_refresh(row, { background: true });
+  renderNav();
+  renderPage();
+}
+
 function rtChannel(name, table, event, fn){
   return sb.channel(name)
     .on('postgres_changes', { event:event, schema:'public', table:table }, fn)
@@ -1333,7 +1367,7 @@ const SEEN_FILE_IDS = {};
 async function refreshAppFiles(appId, force){
   if(!appId || (!S.files[appId] && !force)) return;
   await loadFiles(appId);
-  if(S.openAppId === appId && S.activeTab === 'files') renderPanelBody();
+  if(S.openAppId === appId && S.activeTab === 'files') renderPanelBody({ background: true });
 }
 
 function announceCustomerFile(f){
@@ -1356,18 +1390,7 @@ function subscribeGlobalRealtime(){
   // Anything already pending at startup is not "new".
   S.pendingLogs.forEach(function(f){ SEEN_FILE_IDS[f.id] = true; });
 
-  globalChannel = rtChannel('tgk-rt-applications', 'tuning_applications', '*', function(payload){
-      if(payload.eventType === 'DELETE'){
-        S.applications = S.applications.filter(function(a){ return a.id !== payload.old.id; });
-      }else{
-        const idx = S.applications.findIndex(function(a){ return a.id === payload.new.id; });
-        if(idx !== -1) Object.assign(S.applications[idx], payload.new);
-        else S.applications.unshift(payload.new);
-        if(S.openAppId === payload.new.id) renderPanelShell_refresh(payload.new);
-      }
-      renderNav();
-      renderPage();
-    });
+  globalChannel = rtChannel('tgk-rt-applications', 'tuning_applications', '*', handleApplicationChange);
 
   rtChannel('tgk-rt-invoices', 'tuning_invoices', '*', function(payload){
       const row = payload.new && payload.new.application_id ? payload.new : payload.old;
@@ -1375,7 +1398,7 @@ function subscribeGlobalRealtime(){
       const jobs = [loadUnpaidInvoices()];
       if(appId && S.invoices[appId]) jobs.push(loadInvoices(appId));
       Promise.all(jobs).then(function(){
-        if(appId && S.openAppId === appId) renderPanelBody();
+        if(appId && S.openAppId === appId) renderPanelBody({ background: true });
         renderPage();
       });
     });
@@ -1395,7 +1418,7 @@ function subscribeGlobalRealtime(){
       }
       if(S.activity[entry.application_id] && !S.activity[entry.application_id].some(function(x){ return x.id === entry.id; })) S.activity[entry.application_id].unshift(entry);
       if(S.page === 'dashboard') renderPage();
-      if(S.openAppId === entry.application_id && S.activeTab === 'activity') renderPanelBody();
+      if(S.openAppId === entry.application_id && S.activeTab === 'activity') renderPanelBody({ background: true });
     });
 
   rtChannel('tgk-rt-files', 'tuning_files', '*', function(payload){
@@ -1451,14 +1474,14 @@ function subscribeAppRealtime(appId){
       if(!S.messages[appId]) S.messages[appId] = [];
       if(!S.messages[appId].some(function(m){ return m.id === payload.new.id; })){
         S.messages[appId].push(payload.new);
-        if(S.openAppId === appId && S.activeTab === 'messages') renderPanelBody();
+        if(S.openAppId === appId && S.activeTab === 'messages') renderPanelBody({ background: true });
       }
     })
     .on('postgres_changes', { event:'INSERT', schema:'public', table:'tuning_files', filter:'application_id=eq.' + appId }, function(payload){
       if(!S.files[appId]) S.files[appId] = [];
       if(!S.files[appId].some(function(f){ return f.id === payload.new.id; })){
         S.files[appId].unshift(payload.new);
-        if(S.openAppId === appId && S.activeTab === 'files') renderPanelBody();
+        if(S.openAppId === appId && S.activeTab === 'files') renderPanelBody({ background: true });
       }
     })
     // This is the tuner-side half of the same broadcast the customer portal
@@ -1478,7 +1501,7 @@ function subscribeAppRealtime(appId){
           }
         }).catch(function(){ /* non-critical */ })
       ]).then(function(){
-        if(S.openAppId === appId) renderPanelBody();
+        if(S.openAppId === appId) renderPanelBody({ background: true });
         renderPage();
         renderNav();
       });
@@ -2201,17 +2224,118 @@ async function updateStatus(appId, newStatus, quiet, skipUndo){
 }
 window.updateStatus = updateStatus;
 
-function renderPanelShell_refresh(app){
+/* ---- keeping the tuner's place across a background redraw ----
+   Live updates (a customer message, an invoice, a file, an application change)
+   redraw the open panel by rebuilding it, which used to empty a half-typed
+   reply and throw the cursor out of the box. A redraw marked { background:true }
+   now puts back, for the same application and tab: every typed field (reply
+   box, Edit Profile form, upload card...), which field has focus and where its
+   cursor is, and the scroll position. Redraws the tuner causes themselves
+   (sending, uploading, switching tab) are NOT marked, so they still reset
+   fields as before. */
+function panelCapture(){
+  const el = document.getElementById('panelBody');
+  if(!el || !el.dataset.rk) return null;
+  const st = { key: el.dataset.rk, scroll: el.scrollTop, atBottom: el.scrollHeight - el.scrollTop - el.clientHeight < 60, fields: {}, hasFile: false, focus: null };
+  el.querySelectorAll('input, textarea, select').forEach(function(c){
+    if(c.type === 'file'){ if(c.files && c.files.length) st.hasFile = true; return; }
+    if(!c.id) return;
+    st.fields[c.id] = (c.type === 'checkbox' || c.type === 'radio') ? { checked: c.checked } : { value: c.value };
+  });
+  const a = document.activeElement;
+  if(a && a !== el && el.contains(a) && a.id){
+    st.focus = { id: a.id };
+    if(typeof a.selectionStart === 'number'){ st.focus.s = a.selectionStart; st.focus.e = a.selectionEnd; st.focus.top = a.scrollTop; }
+  }
+  return st;
+}
+function panelRestore(el, st){
+  if(!st) return;
+  Object.keys(st.fields).forEach(function(id){
+    const c = document.getElementById(id);
+    if(!c || !el.contains(c)) return;
+    const f = st.fields[id];
+    if('checked' in f) c.checked = f.checked; else if(c.value !== f.value) c.value = f.value;
+  });
+  // Content may have grown (a new message): someone at the bottom, writing a
+  // reply, stays at the bottom so the box doesn't slide out of view.
+  el.scrollTop = st.atBottom ? el.scrollHeight : st.scroll;
+  if(st.focus){
+    const c = document.getElementById(st.focus.id);
+    if(c && el.contains(c)){
+      try{ c.focus({ preventScroll: true }); }catch(e){ c.focus(); }
+      if(st.focus.s != null && c.setSelectionRange){ try{ c.setSelectionRange(st.focus.s, st.focus.e); }catch(e){ /* not a text field */ } }
+      if(st.focus.top != null) c.scrollTop = st.focus.top;
+    }
+  }
+}
+
+// Is the tuner in the middle of something in the panel body: a field focused
+// (the keyboard may be open on a phone), a dropdown open, or a file picked?
+function panelUserIsEditing(el){
+  const fi = el.querySelector('input[type=file]');
+  if(fi && fi.files && fi.files.length) return true;
+  const a = document.activeElement;
+  if(!a || a === el || !el.contains(a)) return false;
+  if(a.tagName === 'TEXTAREA' || a.tagName === 'SELECT') return true;
+  if(a.tagName === 'INPUT') return ['checkbox', 'radio', 'button', 'submit', 'file', 'range'].indexOf(a.type) === -1;
+  return !!a.isContentEditable;
+}
+
+// Header and status/assignee row refreshed in place, leaving the tabs and the
+// body (where the tuner may be typing) untouched. One the tuner has open
+// right now (a status picker) is left alone.
+function refreshPanelHead(app){
+  const live = document.getElementById('tk-panel'); if(!live) return;
+  const tmp = document.createElement('div'); tmp.innerHTML = renderPanelShell(app);
+  const cur = [live.children[0], live.children[1]], nu = [tmp.children[0], tmp.children[1]];   // snapshot first: moving a node out of tmp shifts its list
+  const a = document.activeElement;
+  for(let i = 0; i < 2; i++){
+    if(!cur[i] || !nu[i]) continue;
+    if(a && cur[i].contains(a)) continue;
+    cur[i].replaceWith(nu[i]);
+  }
+  applyGhostPanelWidth();
+}
+
+function renderPanelShell_refresh(app, opts){
+  if(opts && opts.background && document.getElementById('panelBody')){
+    refreshPanelHead(app);
+    renderPanelBody({ background: true });
+    return;
+  }
   document.getElementById('tk-panel').innerHTML = renderPanelShell(app);
   applyGhostPanelWidth();
   renderPanelBody();
 }
 
-function renderPanelBody(){
+function renderPanelBody(opts){
   const app = S.applications.find(function(a){ return a.id === S.openAppId; });
   if(!app) return;
   const el = document.getElementById('panelBody');
   if(!el) return;
+  const bg = !!(opts && opts.background), key = app.id + ':' + S.activeTab;
+  if(bg && el.dataset.rk === key){
+    // A live update. The reply box is NEVER rebuilt: on a phone, destroying a
+    // focused box closes the keyboard (and code can't reopen it), and rewriting
+    // it mid-sentence upsets autocorrect. So on the Messages tab only the
+    // conversation above it is refreshed.
+    const list = document.getElementById('msgList');
+    if(S.activeTab === 'messages' && list && document.getElementById('replyBody')){
+      const atBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 60, top = el.scrollTop;
+      list.innerHTML = renderMessageListHtml(app);
+      el.scrollTop = atBottom ? el.scrollHeight : top;      // someone writing a reply at the bottom stays at the bottom
+      const t0 = document.getElementById('panelTabs'); if(t0) t0.innerHTML = tabButtons();
+      return;
+    }
+    // Any other tab: don't rebuild it under someone who is typing in it. Their
+    // next action (save, send, switch tab) redraws with fresh data anyway.
+    if(panelUserIsEditing(el)){ S.panelStale = true; return; }
+  }
+  S.panelStale = false;
+  let st = opts && opts.captured !== undefined ? opts.captured : (bg ? panelCapture() : null);
+  if(st && st.key !== key) st = null;                // only ever restore into the same application + tab
+  if(bg && st && st.hasFile) return;                 // a file is picked but not uploaded yet: leave the picker alone
   if(S.activeTab === 'overview') el.innerHTML = S.editingOverview ? renderOverviewEdit(app) : renderOverview(app);
   else if(S.activeTab === 'messages') el.innerHTML = renderMessagesTab(app);
   else if(S.activeTab === 'files') el.innerHTML = renderFilesTab(app);
@@ -2221,6 +2345,8 @@ function renderPanelBody(){
   const tabs = document.getElementById('panelTabs');
   if(tabs) tabs.innerHTML = tabButtons();
   wireDropzones();
+  el.dataset.rk = key;
+  panelRestore(el, st);
 }
 
 function openModal(html){
@@ -3260,9 +3386,47 @@ async function saveOverviewEdit(appId){
 window.saveOverviewEdit = saveOverviewEdit;
 
 /* ---- messages tab ---- */
-function renderMessagesTab(a){
+/* ---- reply drafts: one per application, kept until it is sent ----
+   Held in memory and in localStorage, so a half-written reply survives a
+   redraw of the panel, switching tabs, closing the panel and a page reload. */
+const REPLY_DRAFT_TIMERS = {};
+function replyDraftKey(appId){ return 'tgk-reply-draft-' + appId; }
+function replyDraftGet(appId){
+  S.msgDrafts = S.msgDrafts || {};
+  if(S.msgDrafts[appId] === undefined){
+    let d = null;
+    try{ d = JSON.parse(localStorage.getItem(replyDraftKey(appId)) || 'null'); }catch(e){ d = null; }
+    S.msgDrafts[appId] = d && typeof d.t === 'string' ? { text: d.t, note: !!d.n } : null;
+  }
+  return S.msgDrafts[appId];
+}
+function replyDraftClear(appId){
+  S.msgDrafts = S.msgDrafts || {};
+  S.msgDrafts[appId] = null;
+  clearTimeout(REPLY_DRAFT_TIMERS[appId]);
+  try{ localStorage.removeItem(replyDraftKey(appId)); }catch(e){ /* storage unavailable */ }
+}
+function replyDraftSave(appId){
+  const ta = document.getElementById('replyBody'), cb = document.getElementById('replyIsNote');
+  if(!ta) return;
+  const text = ta.value, note = !!(cb && cb.checked);
+  if(!text && !note) replyDraftClear(appId);
+  else {
+    S.msgDrafts = S.msgDrafts || {};
+    S.msgDrafts[appId] = { text: text, note: note };          // in memory straight away
+    clearTimeout(REPLY_DRAFT_TIMERS[appId]);                   // to disk once typing pauses
+    REPLY_DRAFT_TIMERS[appId] = setTimeout(function(){ try{ localStorage.setItem(replyDraftKey(appId), JSON.stringify({ t: text, n: note })); }catch(e){ /* storage unavailable */ } }, 400);
+  }
+  const hint = document.getElementById('replyDraftHint');
+  if(hint) hint.textContent = text.trim() ? 'Draft saved' : '';
+}
+window.replyDraftSave = replyDraftSave;
+
+// Just the conversation - the part that can be refreshed in place while the
+// reply box underneath it stays exactly as it is.
+function renderMessageListHtml(a){
   const msgs = S.messages[a.id] || [];
-  let html = '<div class="msg-list">';
+  let html = '';
   if(!msgs.length) html += '<div class="empty-state">No messages yet. Send the first one below.</div>';
   msgs.forEach(function(m){
     // Pre-migration rows won't have message_type set yet - fall back to
@@ -3281,7 +3445,11 @@ function renderMessagesTab(a){
     html += '<div class="msg-body">' + escapeHtml(m.body) + '</div>';
     html += '</div>';
   });
-  html += '</div>';
+  return html;
+}
+
+function renderMessagesTab(a){
+  let html = '<div class="msg-list" id="msgList">' + renderMessageListHtml(a) + '</div>';
 
   html += '<div class="panel-foot" style="border:none;padding:0;margin-top:8px">';
   if(S.templates.length){
@@ -3289,9 +3457,12 @@ function renderMessagesTab(a){
     S.templates.forEach(function(t){ html += '<option value="' + t.id + '">' + escapeHtml(t.name) + '</option>'; });
     html += '</select>';
   }
-  html += '<textarea class="form-input" id="replyBody" placeholder="Write a reply to the customer..." style="min-height:90px"></textarea>';
+  const draft = replyDraftGet(a.id);
+  // (the newline after the tag is swallowed by the HTML parser, so a draft that starts with a blank line keeps it)
+  html += '<textarea class="form-input" id="replyBody" placeholder="Write a reply to the customer..." style="min-height:90px" oninput="replyDraftSave(\'' + a.id + '\')">\n' + escapeHtml(draft ? draft.text : '') + '</textarea>';
   html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px">';
-  html += '<label class="check-row"><input type="checkbox" id="replyIsNote"> Internal note (not sent to customer)</label>';
+  html += '<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap"><label class="check-row"><input type="checkbox" id="replyIsNote" onchange="replyDraftSave(\'' + a.id + '\')"' + (draft && draft.note ? ' checked' : '') + '> Internal note (not sent to customer)</label>'
+    + '<span class="file-meta" id="replyDraftHint">' + (draft && draft.text.trim() ? 'Draft saved' : '') + '</span></div>';
   html += '<button class="btn btn-primary" onclick="sendMessage(\'' + a.id + '\')">Send</button>';
   html += '</div></div>';
   return html;
@@ -3328,7 +3499,7 @@ function applyTemplate(id){
   if(!id) return;
   const t = S.templates.find(function(x){ return String(x.id) === String(id); });
   const a = S.applications.find(function(x){ return x.id === S.openAppId; });
-  if(t) document.getElementById('replyBody').value = fillTemplate(t.body, a);
+  if(t){ document.getElementById('replyBody').value = fillTemplate(t.body, a); if(S.openAppId) replyDraftSave(S.openAppId); }
 }
 window.applyTemplate = applyTemplate;
 
@@ -3358,6 +3529,7 @@ async function sendMessage(appId){
       pingPortal(appId);
     }
     await logActivity(appId, isNote ? 'internal_note' : 'message', null, null);
+    replyDraftClear(appId);          // sent: the draft is done with
     renderPanelBody();
     toast(isNote ? 'Note saved' : 'Message sent');
   }catch(e){
