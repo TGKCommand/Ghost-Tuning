@@ -61,14 +61,19 @@ html,body{margin:0;padding:0;background:#fff}
 .tgk-tuning-portal .skeleton{padding:50px 10px;text-align:center;color:var(--text3);font-size:15px}
 
 /* ===== "your car" bar, title, stats ===== */
-.tgk-tuning-portal .pit{position:relative;display:flex;align-items:center;gap:14px 14px;flex-wrap:wrap;background:var(--ink2);color:#fff;padding:11px 16px;margin:0 0 24px}
+.tgk-tuning-portal .pit{position:relative;display:flex;align-items:center;gap:10px 26px;flex-wrap:wrap;background:var(--ink2);color:#fff;padding:10px 18px;margin:0 0 24px}
 .tgk-tuning-portal .pit::before,.tgk-tuning-portal .pit::after{content:"";position:absolute;bottom:-4px;height:4px}
 .tgk-tuning-portal .pit::before{left:0;width:24%;background:var(--orange)}
 .tgk-tuning-portal .pit::after{left:25.2%;width:3.8%;background:var(--teal)}
 .tgk-tuning-portal .pit-lab{flex:none;font:700 12.5px var(--bf);letter-spacing:.25em;text-transform:uppercase;color:#fff;white-space:nowrap}
-.tgk-tuning-portal .pit-cell{flex:1 1 110px;max-width:230px;min-width:0;height:40px;display:flex;align-items:center;padding:0 13px;background:#fff;color:var(--text);font:400 17px var(--bf);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.tgk-tuning-portal .pit-state{margin-left:auto;display:inline-flex;align-items:center;gap:10px;height:40px;padding:0 26px;background:var(--status-accent,var(--orange));color:var(--text);font:800 14px var(--bf);letter-spacing:.09em;text-transform:uppercase;clip-path:var(--chip);white-space:nowrap}
-.tgk-tuning-portal .hero-live{font:700 11px var(--bf);letter-spacing:.14em;text-transform:uppercase;opacity:.75}
+.tgk-tuning-portal .pit-items{display:flex;align-items:center;flex-wrap:wrap}
+.tgk-tuning-portal .pit-item{display:flex;flex-direction:column;gap:1px;padding:0 22px;border-left:1px solid #3a434a;min-width:0}
+.tgk-tuning-portal .pit-item:first-child{border-left:0;padding-left:0}
+.tgk-tuning-portal .pit-k{font:700 11px var(--bf);letter-spacing:.14em;text-transform:uppercase;color:#9fabb1}
+.tgk-tuning-portal .pit-v{font:700 21px/1.1 var(--hf);color:#fff;white-space:nowrap}
+.tgk-tuning-portal .pit-state{margin-left:auto;display:inline-flex;align-items:center;gap:9px;color:#fff;font:700 14px var(--bf);letter-spacing:.1em;text-transform:uppercase;white-space:nowrap}
+.tgk-tuning-portal .pit-state i{width:11px;height:11px;flex:none;background:var(--status-accent,var(--orange))}
+.tgk-tuning-portal .hero-live{margin-left:4px;font:700 11px var(--bf);letter-spacing:.14em;text-transform:uppercase;color:#9fb4b8}
 .tgk-tuning-portal .pg-title{display:flex;justify-content:space-between;align-items:flex-end;gap:10px 16px;flex-wrap:wrap;padding-bottom:14px;border-bottom:1px solid #e3e5e8}
 .tgk-tuning-portal .pg-h1{font:700 clamp(26px,2.7vw,36px)/1.08 var(--hf);text-transform:uppercase;color:var(--text)}
 .tgk-tuning-portal .pg-h1 em{font-style:normal;color:var(--orange)}
@@ -361,7 +366,6 @@ html,body{margin:0;padding:0;background:#fff}
 /* ===== tablets and phones ===== */
 @media(max-width:900px){
   .tgk-tuning-portal .cells{grid-template-columns:minmax(0,1fr)}
-  .tgk-tuning-portal .pit-state{margin-left:0}
 }
 @media(max-width:700px){
   .tgk-tuning-portal .wrap{padding:16px 12px 6px}
@@ -373,10 +377,12 @@ html,body{margin:0;padding:0;background:#fff}
   .tgk-tuning-portal .site-nav-in{padding:0 4px;gap:0}
   .tgk-tuning-portal .site-nav a{padding:0 11px;min-height:44px;font-size:15px}
   .tgk-tuning-portal .site-foot-in{padding:14px 12px}
-  .tgk-tuning-portal .pit{padding:10px 12px;gap:8px;margin-bottom:22px}
-  .tgk-tuning-portal .pit-lab{order:1;flex:1 1 38%}
-  .tgk-tuning-portal .pit-state{order:2;flex:1 1 55%;justify-content:center;margin-left:0;height:36px;padding:0 14px}
-  .tgk-tuning-portal .pit-cell{order:3;flex:1 1 20%;max-width:none;height:38px;padding:0 9px;font-size:16px}
+  .tgk-tuning-portal .pit{padding:10px 12px;gap:10px 12px;margin-bottom:22px}
+  .tgk-tuning-portal .pit-lab{order:1;flex:1 1 auto}
+  .tgk-tuning-portal .pit-state{order:2;margin-left:0;font-size:13px}
+  .tgk-tuning-portal .pit-items{order:3;flex:1 0 100%;display:grid;grid-template-columns:repeat(4,minmax(0,1fr))}
+  .tgk-tuning-portal .pit-item{padding:0 8px}
+  .tgk-tuning-portal .pit-v{font-size:19px}
   .tgk-tuning-portal .pg-link{display:none}
   .tgk-tuning-portal .pg-stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 12px}
   .tgk-tuning-portal .rd{flex-direction:column;align-items:flex-start;gap:2px;border-right:0;margin:0;padding:0}
@@ -1058,10 +1064,11 @@ function renderFilesTab(){
 
 // ---------- page head (car bar, title, stats), page chips, section bars, Overview ----------
 function pitHtml(a){
-  const cell = function(label, v){ return '<div class="pit-cell" title="' + label + '">' + escapeHtml(v == null || v === '' ? '-' : String(v)) + '</div>'; };
-  return '<div class="pit" style="--status-accent:' + (STATUS_ACCENT[a.status] || '#9ca3af') + '"><span class="pit-lab">Your car</span>'
-    + cell('Year', a.car_year) + cell('Make', a.car_make) + cell('Model', a.car_model) + cell('Mileage', a.car_mileage)
-    + '<div class="pit-state"><span class="id-status">' + (STATUS_LABEL[a.status] || a.status) + '</span><span class="hero-live">Live</span></div></div>';
+  // display-only: plain text on the dark bar (white boxes would look like fields you can change)
+  const item = function(label, v){ return '<div class="pit-item"><span class="pit-k">' + label + '</span><span class="pit-v">' + escapeHtml(v == null || v === '' ? '-' : String(v)) + '</span></div>'; };
+  return '<div class="pit" style="--status-accent:' + (STATUS_ACCENT[a.status] || '#9ca3af') + '"><span class="pit-lab">Your car</span><div class="pit-items">'
+    + item('Year', a.car_year) + item('Make', a.car_make) + item('Model', a.car_model) + item('Mileage', a.car_mileage)
+    + '</div><div class="pit-state"><i></i><span class="id-status">' + (STATUS_LABEL[a.status] || a.status) + '</span><span class="hero-live">Live</span></div></div>';
 }
 function titleHtml(a){
   return '<div class="pg-title"><div><h1 class="pg-h1">Ghost Tuning Application <em>#' + a.application_number + '</em></h1>'
