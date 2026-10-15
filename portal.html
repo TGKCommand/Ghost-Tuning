@@ -293,6 +293,61 @@ html,body{margin:0;padding:0;background:#fff}
   .tgk-tuning-portal .prefs>summary{padding:0 16px}
   .tgk-tuning-portal .prefs-body{padding:4px 16px 12px}
 }
+
+/* six tabs must fit the panel on a desktop: tighter spacing (on a phone they scroll sideways as before) */
+@media(min-width:701px){
+  .tgk-tuning-portal .ptabs{gap:4px;padding:14px 14px}
+  .tgk-tuning-portal .ptab{padding:0 13px;font-size:12px;letter-spacing:.05em;gap:6px}
+}
+/* ===== added: next step, application details, timeline, receipts, upload progress, help, link recovery ===== */
+.tgk-tuning-portal [hidden]{display:none!important}
+.tgk-tuning-portal .card a:not(.btn),.tgk-tuning-portal .prefs a{color:#aef0e8;font-weight:700;text-decoration:underline;text-underline-offset:3px}
+.tgk-tuning-portal .linkbtn{display:inline-block;padding:12px 2px;border:0;background:none;color:#aef0e8;font:inherit;font-weight:700;text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+.tgk-tuning-portal .linkbtn:focus-visible,.tgk-tuning-portal .card a:focus-visible,.tgk-tuning-portal .prefs a:focus-visible{outline:2px solid #fff;outline-offset:2px}
+
+.tgk-tuning-portal .next-step{margin-top:16px;padding:12px 16px 14px;background:rgba(0,0,0,.28);border-left:5px solid var(--teal)}
+.tgk-tuning-portal .next-step.ns-act{border-left-color:var(--orange);background:rgba(232,115,28,.14)}
+.tgk-tuning-portal .ns-kicker{font-size:12px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:#aef0e8}
+.tgk-tuning-portal .ns-act .ns-kicker{color:#ffb070}
+.tgk-tuning-portal .ns-row{display:flex;align-items:center;justify-content:space-between;gap:12px 16px;flex-wrap:wrap;margin-top:4px}
+.tgk-tuning-portal .ns-text{flex:1 1 300px;font-size:15px;line-height:1.5;color:#fff}
+.tgk-tuning-portal .ns-btn{flex:none;min-height:44px;padding:0 20px;border:0;background:var(--orange);color:#14171a;font:800 12.5px var(--bf);letter-spacing:.08em;text-transform:uppercase;cursor:pointer;clip-path:polygon(9px 0,100% 0,calc(100% - 9px) 100%,0 100%)}
+.tgk-tuning-portal .ns-btn:hover{background:var(--orange-d)}
+.tgk-tuning-portal .ns-btn:focus-visible{outline:2px solid #fff;outline-offset:2px}
+.tgk-tuning-portal .rev-used{display:inline-block;vertical-align:middle;margin-left:14px;font-size:13px;font-weight:700;color:#aab3ba}
+
+.tgk-tuning-portal .kv-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 22px;margin-bottom:6px}
+.tgk-tuning-portal .kv{min-width:0}
+.tgk-tuning-portal .kv-wide{grid-column:1/-1}
+.tgk-tuning-portal .kv-k{font-size:11.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#aab3ba}
+.tgk-tuning-portal .kv-v{font-size:14.5px;color:#fff;overflow-wrap:anywhere;white-space:pre-wrap}
+.tgk-tuning-portal .kv-none{color:#8a949c;font-style:italic}
+.tgk-tuning-portal .ptab-body h2:not(:first-child){margin-top:26px}
+.tgk-tuning-portal .tl-list{list-style:none}
+.tgk-tuning-portal .tl-list li{display:flex;justify-content:space-between;gap:12px;padding:10px 14px;background:var(--ink3);border-left:5px solid var(--line);margin-bottom:6px}
+.tgk-tuning-portal .tl-list li.tl-now{border-left-color:var(--orange)}
+.tgk-tuning-portal .tl-what{font-weight:800;color:#fff}
+.tgk-tuning-portal .tl-when{color:#aab3ba;white-space:nowrap}
+
+.tgk-tuning-portal .rcpt-row{padding-top:2px}
+.tgk-tuning-portal .rcpt{display:inline-block;padding:12px 0;font-size:13.5px}
+.tgk-tuning-portal .dz-hint{font-size:12.5px;color:#aab3ba;margin-top:8px}
+.tgk-tuning-portal .up-progress{margin-top:12px}
+.tgk-tuning-portal .up-bar{position:relative;height:6px;background:var(--ink3);overflow:hidden}
+.tgk-tuning-portal .up-bar span{position:absolute;top:0;bottom:0;width:35%;background:var(--teal);animation:up-slide 1.2s infinite ease-in-out}
+@keyframes up-slide{0%{left:-35%}100%{left:100%}}
+@media (prefers-reduced-motion:reduce){.tgk-tuning-portal .up-bar span{animation:none;width:100%;opacity:.7}}
+.tgk-tuning-portal .up-text{font-size:13px;font-weight:700;color:#d6dbe0;margin-top:6px}
+
+.tgk-tuning-portal .faq-q{margin-top:16px;font:400 17px var(--hf);letter-spacing:.03em;text-transform:uppercase;color:#fff}
+.tgk-tuning-portal .faq-a{margin-top:4px;font-size:14.5px;line-height:1.6;color:#d6dbe0}
+.tgk-tuning-portal .help .pref-note{margin-top:18px}
+.tgk-tuning-portal .link-recovery{margin-top:18px;padding-top:18px;border-top:1px solid var(--line)}
+@media(max-width:700px){
+  .tgk-tuning-portal .kv-grid{grid-template-columns:1fr}
+  .tgk-tuning-portal .ns-btn{width:100%}
+  .tgk-tuning-portal .rev-used{display:block;margin:10px 0 0}
+}
 </style>
 </head>
 <body>
@@ -346,12 +401,22 @@ const STATUS_ACCENT = {
   completed:'#39c3b5', archived:'#8a949c'
 };
 
-let STATE = { application:null, messages:[], files:[], invoices:[], logGuide:null, queue:null, tab:'messages', _channel:null };
+const CURRENCY_LABEL = 'USD';
+const SUPPORT_URL = 'https://contact.tgkmotorsport.com';
+const MAX_UPLOAD_MB = 50;            // keep in step with MAX_UPLOAD_BYTES in the tuning-portal function
+const BASE_TITLE = document.title;
+function money(n){ return '$' + Number(n || 0).toFixed(2) + ' ' + CURRENCY_LABEL; }
+
+let STATE = { application:null, messages:[], files:[], invoices:[], logGuide:null, queue:null, timeline:[], flashGuide:null, revisions:null, tab:'messages', _channel:null };
 
 function escapeHtml(s){
   return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){
     return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
   });
+}
+function fmtDay(iso){
+  if(!iso) return '';
+  return new Date(iso).toLocaleDateString(undefined, { month:'short', day:'numeric', year:'numeric' });
 }
 function fmtDate(iso){
   if(!iso) return '';
@@ -379,9 +444,35 @@ function renderInvalid(msg){
   document.getElementById('portalWrap').innerHTML =
     '<div class="card"><h1>Ghost Tuning</h1>'
     + '<p class="status-blurb">' + escapeHtml(msg) + '</p>'
+    + '<div class="link-recovery"><h2>Lost your link?</h2>'
+    + '<p class="sub">Enter the email address you applied with and we will send your portal link again.</p>'
+    + '<label class="rev-label" for="linkEmail">Email address</label>'
+    + '<input class="form-input" id="linkEmail" type="email" autocomplete="email" placeholder="you@example.com">'
+    + '<button class="btn" id="linkBtn" onclick="requestLink()" style="margin-top:12px">Email me my link</button>'
+    + '<div class="status-msg" id="linkMsg" role="alert"></div></div>'
     + '<p class="footer-note" style="margin-top:14px">If you believe this is a mistake, check the link in your original confirmation email, or contact us directly.</p>'
     + '</div>';
 }
+
+// Lost-link recovery: asks the server to email the customer their portal link(s). The answer is the same whether or not the
+// address is known, so this cannot be used to find out who is a customer.
+async function requestLink(){
+  const inp = document.getElementById('linkEmail'), msg = document.getElementById('linkMsg'), btn = document.getElementById('linkBtn');
+  const email = inp.value.trim();
+  msg.className = 'status-msg'; msg.textContent = '';
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)){ msg.className = 'status-msg err'; msg.textContent = 'Enter the email address you applied with.'; return; }
+  btn.disabled = true; btn.textContent = 'Sending...';
+  try{
+    const data = await callPortal('request_link', { email: email, return_url: location.origin + location.pathname });
+    msg.className = 'status-msg ok'; msg.textContent = data.message || 'If we have an application for that email address, we have just sent it a link.';
+    btn.textContent = 'Sent - check your inbox';
+    setTimeout(function(){ btn.disabled = false; btn.textContent = 'Email me my link'; }, 30000);
+  }catch(e){
+    msg.className = 'status-msg err'; msg.textContent = e.message;
+    btn.disabled = false; btn.textContent = 'Email me my link';
+  }
+}
+window.requestLink = requestLink;
 
 function renderStageStepper(a){
   const MAIN_STAGES = [
@@ -413,6 +504,7 @@ function renderRevisionCta(a){
   if(a.status !== 'tune_sent') return '';
   return '<div class="revision-cta" id="revisionCta">'
     + '<button class="btn btn-ghost-light btn-sm" onclick="showRevisionForm()" id="revisionShowBtn">Request a Revision</button>'
+    + (STATE.revisions ? '<span class="rev-used">Revisions used: ' + Number(STATE.revisions.used) + ' of ' + Number(STATE.revisions.included) + '</span>' : '')
     + '</div>';
 }
 
@@ -451,6 +543,7 @@ function showRevisionForm(){
     + '<textarea class="form-input rev-input" id="revisionNotes" placeholder="Describe what you\'re feeling..." style="margin-bottom:10px;min-height:60px"></textarea>'
     + '<div class="rev-label">Datalog (required)</div>'
     + fileDropHtml('revLogFile', true, null)
+    + '<div class="up-progress" id="revProgress" hidden><div class="up-bar"><span></span></div><div class="up-text"></div></div>'
     + '<div style="display:flex;gap:8px;flex-wrap:wrap">'
     + '<button class="btn btn-sm" onclick="submitRevisionRequest()" id="revisionSubmitBtn">Submit Revision Request</button>'
     + '<button class="btn btn-ghost-light btn-sm" onclick="renderPortal()">Cancel</button>'
@@ -476,10 +569,12 @@ async function submitRevisionRequest(){
   if(!complaints.length) return fail('Pick at least one issue.');
   if(!fuel) return fail('Select the fuel you\'re running.');
   if(!file) return fail('Attach a datalog - your tuner needs it to diagnose the issue.');
+  if(file.size > MAX_UPLOAD_MB * 1048576) return fail('That file is too large (the limit is ' + MAX_UPLOAD_MB + ' MB).');
   const ethanol = ethanolRaw === '' ? null : Number(ethanolRaw);
   if(ethanol !== null && (isNaN(ethanol) || ethanol < 0 || ethanol > 100)) return fail('Ethanol % must be between 0 and 100.');
 
   btn.disabled = true; btn.textContent = 'Uploading log...';
+  uploadStart(file, 'revProgress');
   try{
     const req = await callPortal('request_upload_url', { file_name: file.name });
     const { error: upErr } = await sb.storage.from('tuning-files').uploadToSignedUrl(req.path, req.uploadToken, file);
@@ -487,6 +582,7 @@ async function submitRevisionRequest(){
     const up = await callPortal('confirm_upload', { path: req.path, file_name: file.name, file_type: 'log' });
     if(up.file) STATE.files.unshift(up.file);
 
+    uploadEnd();
     btn.textContent = 'Submitting...';
     const data = await callPortal('request_revision', {
       complaints: complaints, fuel: fuel, ethanol_pct: ethanol,
@@ -497,6 +593,7 @@ async function submitRevisionRequest(){
     renderPortal();
     toastLike('Revision request sent - your tuner has been notified.');
   }catch(e){
+    uploadEnd();
     fail('Failed to submit: ' + e.message);
     btn.disabled = false; btn.textContent = 'Submit Revision Request';
   }
@@ -522,6 +619,17 @@ function fileDropHtml(id, dark, enableBtnId){
     + '<span class="dz-file"><span class="dz-name"></span><span class="dz-size"></span>'
     + '<button type="button" class="dz-clear" title="Remove" onclick="event.preventDefault();dzClear(\'' + id + '\')">&times;</button></span>'
     + '</label>';
+}
+// While a file is going up: say so, and stop the browser closing the page by accident.
+let UPLOAD_GUARD = null;
+function uploadStart(file, elId){
+  const el = elId && document.getElementById(elId);
+  if(el){ el.hidden = false; el.querySelector('.up-text').textContent = 'Uploading ' + file.name + ' (' + fmtBytes(file.size) + ') - please keep this page open.'; }
+  if(!UPLOAD_GUARD){ UPLOAD_GUARD = function(e){ e.preventDefault(); e.returnValue = ''; }; window.addEventListener('beforeunload', UPLOAD_GUARD); }
+}
+function uploadEnd(){
+  ['uploadProgress','revProgress'].forEach(function(id){ const el = document.getElementById(id); if(el) el.hidden = true; });
+  if(UPLOAD_GUARD){ window.removeEventListener('beforeunload', UPLOAD_GUARD); UPLOAD_GUARD = null; }
 }
 function fmtBytes(n){ return n < 1024 ? n + ' B' : (n < 1048576 ? (n / 1024).toFixed(0) + ' KB' : (n / 1048576).toFixed(1) + ' MB'); }
 function dzChanged(id){
@@ -594,13 +702,33 @@ async function saveEmailPref(key, el){
 }
 window.saveEmailPref = saveEmailPref;
 
+// Messages from the tuner the customer has not looked at yet. "Seen" is remembered on this device (and in memory if storage is blocked).
+let SEEN_MEM = '';
+function seenKey(){ return 'tgk_portal_seen_' + (STATE.application ? STATE.application.id : ''); }
+function lastSeenAt(){ try{ return localStorage.getItem(seenKey()) || SEEN_MEM; }catch(e){ return SEEN_MEM; } }
+function tunerMessages(){ return (STATE.messages || []).filter(function(m){ return m.sender_type === 'tuner'; }); }
+function tunerMessageCount(){ return tunerMessages().length; }
+function markMessagesSeen(){
+  const m = tunerMessages(); if(!m.length) return;
+  SEEN_MEM = m[m.length - 1].created_at;
+  try{ localStorage.setItem(seenKey(), SEEN_MEM); }catch(e){ /* storage blocked: memory still works for this visit */ }
+}
+function unreadMessageCount(){
+  const seen = lastSeenAt();
+  return tunerMessages().filter(function(m){ return !seen || new Date(m.created_at) > new Date(seen); }).length;
+}
+
+function hasFlashGuide(a){ return !!STATE.flashGuide && ['tune_sent','revision_requested','completed'].indexOf(a.status) !== -1; }
+
 function portalTabs(a){
   const tabs = [
-    { id:'messages', label:'Messages' },
+    { id:'messages', label:'Messages', badge: STATE.tab === 'messages' ? 0 : unreadMessageCount() },
     { id:'files', label:'Files' }
   ];
   if((STATE.invoices || []).length) tabs.push({ id:'invoices', label:'Invoices', badge: unpaidInvoices().length });
   if(hasLoggingTab(a)) tabs.push({ id:'logging', label:'How to Log', badge: needsBaselineLog(a) ? '!' : 0 });
+  if(hasFlashGuide(a)) tabs.push({ id:'flash', label:'How to Flash' });
+  tabs.push({ id:'application', label:'Your Application' });
   return tabs;
 }
 
@@ -614,12 +742,90 @@ window.setPortalTab = setPortalTab;
 
 // Short "what do I need to do" chips in the hero - only the ones that
 // currently apply, each jumping straight to the right place.
+
+// "Your next step": one plain sentence for every status, so the customer always knows whether anything is needed from them.
+function nextStepInfo(a){
+  const s = a.status;
+  if(s === 'declined') return { act:false, t:'Nothing to do - please read the message from our team in Messages.', tab:'messages', cta:'Open messages' };
+  if(s === 'archived') return { act:false, t:'This application is archived. Message us if you need anything.' };
+  if(s === 'needs_info') return { act:true, t:'We need an answer from you. Reply in Messages so we can keep going.', tab:'messages', cta:'Open messages' };
+  if(needsBaselineLog(a)) return { act:true, t:'Record and upload your baseline (stock) datalog - your tune cannot start without it.', tab: STATE.logGuide ? 'logging' : 'files', cta: STATE.logGuide ? 'See how to log' : 'Upload your log' };
+  const unpaid = unpaidInvoices();
+  if(unpaid.length) return { act:true, t:'Pay your open invoice so we can keep your tune moving.', tab:'invoices', cta:'Go to invoices' };
+  if(s === 'tune_sent') return { act:true, t:'Download your tune from Files and flash it, then tap "I\'ve flashed this". If anything feels wrong, request a revision.', tab: hasFlashGuide(a) ? 'flash' : 'files', cta: hasFlashGuide(a) ? 'How to flash' : 'Open files' };
+  if(s === 'completed') return a.review_rating ? { act:false, t:'All done - thank you! Message us any time if you have questions.' } : { act:true, t:'Your tune is complete. Tell us how we did.', review:true, cta:'Leave a review' };
+  if(s === 'revision_requested') return { act:false, t:'Nothing needed from you. Your tuner is reviewing your revision request and will reply here.' };
+  if(s === 'active') return { act:false, t:'Nothing needed from you. Your tune is being built - we will email you when it is ready.' };
+  if(s === 'accepted') return { act:false, t:'Nothing needed from you right now. We will email you when your tune build starts.' };
+  return { act:false, t:'Nothing needed from you right now. We will email you when we have reviewed your application.' };
+}
+function renderNextStep(a){
+  const n = nextStepInfo(a);
+  const btn = n.cta ? '<button type="button" class="ns-btn" onclick="' + (n.review ? "var r=document.getElementById('reviewCard');if(r)r.scrollIntoView({behavior:'smooth'})" : "setPortalTab('" + n.tab + "')") + '">' + n.cta + '</button>' : '';
+  return '<div class="next-step' + (n.act ? ' ns-act' : ' ns-wait') + '"><div class="ns-kicker">' + (n.act ? 'Your next step' : 'Nothing needed right now') + '</div>'
+    + '<div class="ns-row"><div class="ns-text">' + n.t + '</div>' + btn + '</div></div>';
+}
+
+// "Your Application": exactly what they submitted, plus the dates of each stage and what they signed.
+function yesNo(v){ return v === true ? 'Yes' : (v === false ? 'No' : ''); }
+function kv(label, value, wide){
+  const v = (value === null || value === undefined || value === '') ? '' : String(value);
+  return '<div class="kv' + (wide ? ' kv-wide' : '') + '"><div class="kv-k">' + label + '</div><div class="kv-v">' + (v ? escapeHtml(v) : '<span class="kv-none">Not provided</span>') + '</div></div>';
+}
+function renderApplicationTab(a){
+  let h = '<p class="sub" style="margin-bottom:14px">This is what you submitted. If something is wrong or has changed, <button type="button" class="linkbtn" onclick="setPortalTab(\'messages\')">message your tuner</button> and they will update it.</p>';
+  h += '<h2>Your car</h2><div class="kv-grid">' + kv('Year', a.car_year) + kv('Make', a.car_make) + kv('Model', a.car_model) + kv('Mileage', a.car_mileage) + '</div>';
+  h += '<h2>Modifications</h2><div class="kv-grid">' + kv('Intake', a.mod_intake) + kv('Turbos', a.mod_turbos) + kv('Cooling', a.mod_cooling) + kv('Wastegates', a.mod_wastegates)
+    + kv('Map sensors', a.mod_map_sensors) + kv('Downpipes / exhaust', a.mod_downpipes_exhaust) + kv('Transmission / tune', a.mod_transmission_tune) + kv('Fueling', a.mod_fueling)
+    + kv('Water methanol', yesNo(a.has_water_meth)) + kv('Plans to run ethanol', yesNo(a.plan_ethanol)) + kv('Has Dyno Spectrum DS1', yesNo(a.has_ds1)) + kv('Buying DS1 through TGK', yesNo(a.purchasing_ds1_through_us))
+    + kv('Other modifications', a.other_mods, true) + '</div>';
+  h += '<h2>Maintenance</h2><div class="kv-grid">' + kv('Spark plugs - date', a.spark_plug_date) + kv('Spark plugs - mileage', a.spark_plug_mileage) + kv('Spark plugs - brand', a.spark_plug_brand) + kv('Spark plugs - gap', a.spark_plug_gap)
+    + kv('Oil change - date', a.oil_change_date) + kv('Oil change - mileage', a.oil_change_mileage) + kv('Oil brand / weight', a.oil_brand_weight, true)
+    + kv('Transmission service - date', a.trans_service_date) + kv('Transmission service - mileage', a.trans_service_mileage)
+    + kv('Air filter - date', a.air_filter_date) + kv('Air filter - mileage', a.air_filter_mileage)
+    + kv('Maintenance done by', a.maintenance_self_performed === true ? 'Yourself' : (a.maintenance_self_performed === false ? 'A shop' + (a.maintenance_shop_name ? ': ' + a.maintenance_shop_name : '') : '')) + '</div>';
+  h += '<h2>You</h2><div class="kv-grid">' + kv('Name', a.customer_name) + kv('Email', a.customer_email) + kv('Country', a.customer_country) + kv('Existing TGK customer', a.existing_customer) + kv('Why you want a tune', a.tuning_reason, true) + '</div>';
+  h += '<h2>What you agreed to</h2><div class="kv-grid">' + kv('Submitted on', fmtDay(a.created_at)) + kv('Agreed to the Tuning Legal Policy', yesNo(a.legal_agree))
+    + kv('Policies signed as', a.policy_agreement_signature) + kv('Legal agreement signed as', a.legal_signature) + '</div>'
+    + '<p class="sub" style="margin-top:10px">The policies are shown on the <a href="https://ghost.tgkmotorsport.com/tuning-application" target="_blank" rel="noopener">application page</a>. Questions about them? Message your tuner.</p>';
+  // dates of each stage
+  const items = [{ label:'Submitted', at:a.created_at }];
+  (STATE.timeline || []).forEach(function(t){ if(t.status !== 'submitted') items.push({ label: STATUS_LABEL[t.status] || t.status, at: t.at }); });
+  if(items.length === 1 && a.status !== 'submitted') items.push({ label: STATUS_LABEL[a.status] || a.status, at: a.status_changed_at });
+  h += '<h2>Progress</h2><ul class="tl-list">' + items.map(function(it, i){
+    return '<li' + (i === items.length - 1 ? ' class="tl-now"' : '') + '><span class="tl-what">' + escapeHtml(it.label) + '</span><span class="tl-when">' + fmtDay(it.at) + '</span></li>';
+  }).join('') + '</ul>';
+  return h;
+}
+
+// "How to Flash": text your tuner writes (tuning_settings row "flash_guide"). No tab at all until there is some.
+function renderFlashGuide(){
+  return '<h2>How to flash your tune</h2><div class="log-procedure">' + escapeHtml(STATE.flashGuide || '') + '</div>'
+    + '<div class="sub" style="margin-top:14px">Not sure about anything? Message your tuner <strong>before</strong> you flash.</div>'
+    + '<div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-sm" onclick="setPortalTab(\'files\')">Go to your tune</button>'
+    + '<button class="btn btn-sm btn-muted" onclick="setPortalTab(\'messages\')">Message your tuner</button></div>';
+}
+
+function renderHelp(){
+  const qa = [
+    ['How long does review take?', 'Please allow up to 7 business days. We email you as soon as your status changes.'],
+    ['What is a baseline log?', 'A datalog of your car as it is now, which your tuner needs before your tune can start. Follow the steps under "How to Log", then upload it in Files.'],
+    ['How do I get my tune?', 'When your status shows "Tune Ready", open Files, download your tune and flash it, then tap "I\'ve flashed this" so we know which version is on your car.'],
+    ['Something feels wrong after flashing', 'Use "Request a Revision" at the top of this page and attach a datalog - your tuner needs it to work out what is happening.'],
+    ['I did not get an email', 'Check your spam folder. Status updates, messages and files can each be switched on or off under Email notifications. Invoice emails come from our store and are always sent.'],
+    ['I lost my portal link', 'Open <a href="' + escapeHtml(location.origin + location.pathname) + '">this page without your link</a> and use "Lost your link?" to have it emailed to you again.']
+  ];
+  return '<details class="prefs help"><summary>Help &amp; FAQ</summary><div class="prefs-body">'
+    + qa.map(function(q){ return '<div class="faq-q">' + q[0] + '</div><div class="faq-a">' + q[1] + '</div>'; }).join('')
+    + '<div class="pref-note">Still stuck? Message your tuner in the Messages tab, or <a href="' + escapeHtml(SUPPORT_URL) + '" target="_blank" rel="noopener">contact TGK Motorsport support</a>.</div></div></details>';
+}
+
 function renderActionChips(a){
   const chips = [];
   const unpaid = unpaidInvoices();
   if(unpaid.length){
     const owed = unpaid.reduce(function(t, i){ return t + (Number(i.amount) || 0); }, 0);
-    chips.push('<button class="action-chip" onclick="setPortalTab(\'invoices\')">Pay invoice &middot; $' + owed.toFixed(2) + '</button>');
+    chips.push('<button class="action-chip" onclick="setPortalTab(\'invoices\')">Pay invoice &middot; ' + money(owed) + '</button>');
   }
   if(needsBaselineLog(a)) chips.push('<button class="action-chip" onclick="setPortalTab(\'' + (STATE.logGuide ? 'logging' : 'files') + '\')">Upload your baseline log</button>');
   if(a.status === 'completed' && !a.review_rating) chips.push('<button class="action-chip" onclick="var r=document.getElementById(\'reviewCard\');if(r)r.scrollIntoView({behavior:\'smooth\'})">Leave a review</button>');
@@ -699,6 +905,8 @@ function renderFilesTab(){
       }).join('')
     + '</div><input type="hidden" id="fileTypeSelect" value="log"></div>';
   html += fileDropHtml('fileInput', false, 'uploadBtn');
+  html += '<div class="dz-hint">Datalogs, dyno sheets and other files - up to ' + MAX_UPLOAD_MB + ' MB each.</div>';
+  html += '<div class="up-progress" id="uploadProgress" hidden><div class="up-bar"><span></span></div><div class="up-text"></div></div>';
   html += '<div class="upload-actions"><button class="btn btn-sm" onclick="uploadLog()" id="uploadBtn" disabled>Upload</button></div>';
   html += '<div class="status-msg" id="uploadErr"></div>';
   html += '</div>';
@@ -762,12 +970,14 @@ function renderPortal(){
     html += '<div class="queue-line"><span class="queue-num">#' + STATE.queue.position + '</span> in the build queue'
       + (STATE.queue.in_progress ? ' &middot; ' + STATE.queue.in_progress + ' tune' + (STATE.queue.in_progress > 1 ? 's' : '') + ' currently being built' : '') + '</div>';
   }
+  html += renderNextStep(a);
   html += renderActionChips(a);
   html += renderRevisionCta(a);
   html += '</div></div>';
 
   html += renderReviewCard(a);
 
+  if(STATE.tab === 'messages') markMessagesSeen();   // the conversation is on screen, so it counts as read
   const tabs = portalTabs(a);
   if(!tabs.some(function(t){ return t.id === STATE.tab; })) STATE.tab = 'messages';
   html += '<div class="card tab-card" id="tabCard"><div class="ptabs">' + tabs.map(function(t){
@@ -778,12 +988,17 @@ function renderPortal(){
   else if(STATE.tab === 'files') html += renderFilesTab();
   else if(STATE.tab === 'invoices') html += renderInvoiceCard();
   else if(STATE.tab === 'logging') html += renderLogGuideCard(a);
+  else if(STATE.tab === 'flash') html += renderFlashGuide();
+  else if(STATE.tab === 'application') html += renderApplicationTab(a);
   html += '</div></div>';
 
   html += renderEmailPrefs(a);
+  html += renderHelp();
   html += '<p class="footer-note">TGK Motorsport - Ghost Tuning</p>';
 
   document.getElementById('portalWrap').innerHTML = html;
+  const unread = STATE.tab === 'messages' ? 0 : unreadMessageCount();
+  document.title = (unread ? '(' + unread + ') ' : '') + BASE_TITLE;
 
   // Every render fully replaces this DOM (innerHTML), which resets any
   // scrollable element back to its top by default - so without this, an
@@ -810,7 +1025,7 @@ function unpaidInvoices(){ return (STATE.invoices || []).filter(function(i){ ret
 function invoiceLinesHtml(inv){
   const lines = Array.isArray(inv.line_items) ? inv.line_items : [];
   return lines.map(function(l){
-    return '<div class="invoice-line"><div style="flex:1;min-width:0">' + (l.quantity > 1 ? l.quantity + '&times; ' : '') + escapeHtml(l.title) + '</div><div style="flex-shrink:0;white-space:nowrap">$' + (Number(l.price) * Number(l.quantity||1)).toFixed(2) + '</div></div>';
+    return '<div class="invoice-line"><div style="flex:1;min-width:0">' + (l.quantity > 1 ? l.quantity + '&times; ' : '') + escapeHtml(l.title) + '</div><div style="flex-shrink:0;white-space:nowrap">' + money(Number(l.price) * Number(l.quantity||1)) + '</div></div>';
   }).join('');
 }
 
@@ -828,9 +1043,9 @@ function renderInvoiceCard(){
       return '<div class="invoice-box" style="margin-bottom:12px">'
         + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px"><span class="pill pill-yellow">Awaiting Payment</span><span class="sub" style="font-size:12px;margin:0">' + fmtDate(inv.sent_at || inv.created_at) + '</span></div>'
         + invoiceLinesHtml(inv)
-        + '<div class="invoice-total"><span>Total</span><span class="amt">$' + total + '</span></div>'
+        + '<div class="invoice-total"><span>Total</span><span class="amt">' + money(inv.amount) + '</span></div>'
         + (inv.notes ? '<p class="sub" style="margin:8px 0 0;font-size:13px">' + escapeHtml(inv.notes) + '</p>' : '')
-        + (inv.invoice_url ? '<div style="margin-top:10px"><a href="' + escapeHtml(inv.invoice_url) + '" target="_blank" rel="noopener" class="btn" style="text-decoration:none">Pay Invoice - $' + total + '</a></div>' : '')
+        + (inv.invoice_url ? '<div style="margin-top:10px"><a href="' + escapeHtml(inv.invoice_url) + '" target="_blank" rel="noopener" class="btn" style="text-decoration:none">Pay Invoice - ' + money(inv.amount) + '</a></div>' : '')
         + '</div>';
     }).join('');
   } else {
@@ -841,8 +1056,10 @@ function renderInvoiceCard(){
     html += '<h2 style="margin-top:18px">Payment history</h2>';
     html += paid.map(function(inv){
       return '<div class="paid-row" onclick="this.classList.toggle(\'open\')">'
-        + '<div class="paid-sum"><span class="pill pill-green">Paid</span><span style="flex:1">' + fmtDate(inv.paid_at || inv.sent_at) + '</span><strong>$' + Number(inv.amount || 0).toFixed(2) + '</strong><span class="chev">&#9662;</span></div>'
-        + '<div class="paid-detail">' + invoiceLinesHtml(inv) + '</div>'
+        + '<div class="paid-sum"><span class="pill pill-green">Paid</span><span style="flex:1">' + fmtDate(inv.paid_at || inv.sent_at) + '</span><strong>' + money(inv.amount) + '</strong><span class="chev">&#9662;</span></div>'
+        + '<div class="paid-detail">' + invoiceLinesHtml(inv)
+        + (inv.invoice_url ? '<div class="rcpt-row"><a class="rcpt" href="' + escapeHtml(inv.invoice_url) + '" target="_blank" rel="noopener" onclick="event.stopPropagation()">View invoice / receipt</a></div>' : '')
+        + '</div>'
         + '</div>';
     }).join('');
   }
@@ -1044,17 +1261,22 @@ function refreshMessageListInPlace(){
 
 async function loadStatus(silent){
   try{
-    const data = await callPortal('get_status', {});
+    const data = await callPortal('get_status', { silent: !!silent });   // a background refresh must not count as a visit
     // Read what the customer is doing right before deciding how to redraw.
     const draftEl = document.getElementById('msgInput');
     const draft = draftEl ? draftEl.value : '';
     const typing = !!draftEl && document.activeElement === draftEl;
+    const tunerBefore = tunerMessageCount();
     STATE.application = data.application;
     STATE.messages = data.messages;
     STATE.files = data.files;
     STATE.invoices = data.invoices || [];
     STATE.logGuide = data.log_guide || null;
     STATE.queue = data.queue || null;
+    STATE.timeline = data.timeline || [];
+    STATE.flashGuide = data.flash_guide || null;
+    STATE.revisions = data.revisions || null;
+    if(silent && tunerMessageCount() > tunerBefore && STATE.tab !== 'messages') toastLike('New message from your tuner');
     // A background refresh (25s poll or realtime ping) must never wipe out
     // something the customer is halfway through. The data is updated
     // either way; the re-render just waits until they submit or cancel,
@@ -1128,9 +1350,11 @@ async function uploadLog(){
   const errEl = document.getElementById('uploadErr');
   errEl.className = 'status-msg'; errEl.textContent = '';
   if(!file){ errEl.className = 'status-msg err'; errEl.textContent = 'Choose a file first.'; return; }
+  if(file.size > MAX_UPLOAD_MB * 1048576){ errEl.className = 'status-msg err'; errEl.textContent = 'That file is too large (the limit is ' + MAX_UPLOAD_MB + ' MB).'; return; }
 
   const btn = document.getElementById('uploadBtn');
   btn.disabled = true; btn.textContent = 'Uploading...';
+  uploadStart(file, 'uploadProgress');
   try{
     const req = await callPortal('request_upload_url', { file_name: file.name });
     const { error: upErr } = await sb.storage.from('tuning-files').uploadToSignedUrl(req.path, req.uploadToken, file);
@@ -1140,10 +1364,12 @@ async function uploadLog(){
     const data = await callPortal('confirm_upload', { path: req.path, file_name: file.name, file_type: typeEl ? typeEl.value : 'log' });
     STATE.files.unshift(data.file);
     // Full re-render so the logging card's baseline banner clears too.
+    uploadEnd();
     renderPortal();
     toastLike('Upload complete - your tuner has been notified.');
     return;
   }catch(e){
+    uploadEnd();
     errEl.className = 'status-msg err'; errEl.textContent = 'Upload failed: ' + e.message;
   }
   btn.disabled = false; btn.textContent = 'Upload';
