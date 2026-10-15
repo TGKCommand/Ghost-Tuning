@@ -478,6 +478,8 @@ details.an-pd .an-f{padding:2px 8px}
 .fx-seg{display:inline-flex;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:2px}
 .fx-seg button{background:none;border:none;border-radius:6px;padding:5px 12px;font-size:var(--t-sm);font-weight:600;color:var(--text3);cursor:pointer;font-family:inherit}
 .fx-seg button.on{background:var(--bg);color:var(--text);box-shadow:0 1px 2px rgba(0,0,0,.1)}
+.fx-seg button:disabled{opacity:.4;cursor:not-allowed}
+.fe-modal{max-width:520px !important}
 .fx-grid{display:grid;grid-template-columns:120px minmax(0,1fr) auto;gap:10px;margin-top:12px;align-items:end}
 .fx-field{display:flex;flex-direction:column;gap:5px;min-width:0}
 .fx-switch-field{align-items:flex-start}
@@ -777,7 +779,7 @@ details.an-pd .an-f{padding:2px 8px}
         </div>
         <div class="sync-sub" onclick="doLogout()">Sign out</div>
         <div class="version-row">
-          <span>v1.84</span>
+          <span>v1.85</span>
           <span id="buildDate"></span>
         </div>
       </div>
@@ -3438,6 +3440,7 @@ function renderFilesTab(a){
       + (isTune && !f.is_current ? '<button class="btn btn-sm" onclick="setCurrentTune(\'' + a.id + '\',\'' + f.id + '\')">Mark current</button>' : '')
       + '<button class="btn btn-sm btn-teal" onclick="viewFile(\'' + f.id + '\')">View</button>'
       + '<button class="btn btn-sm" onclick="downloadFile(\'' + f.id + '\',\'' + f.file_path + '\')">Download</button>'
+      + '<button class="btn btn-sm" onclick="openEditFile(\'' + f.id + '\')" title="Rename, or change the file type / tune details">Edit</button>'
       + '<button class="btn btn-sm file-del" onclick="deleteFile(\'' + a.id + '\',\'' + f.id + '\')" title="Delete file">Delete</button>'
       + '</div>'
       + '</div>';
@@ -5661,6 +5664,7 @@ function fvShell(f, kind, idx, total, note){
     + '<div class="fv-btns">'
       + (total > 1 ? '<button class="btn btn-sm" onclick="fvStep(-1)" title="Previous file (left arrow)">&#8249; Prev</button><button class="btn btn-sm" onclick="fvStep(1)" title="Next file (right arrow)">Next &#8250;</button>' : '')
       + (kind !== 'other' ? '<a class="btn btn-sm hidden" id="fvOpenTab" target="_blank" rel="noopener" href="#">Open in new tab</a>' : '')
+      + '<button class="btn btn-sm" onclick="fvEdit()" title="Rename, or change what type of file it is">Edit</button>'
       + '<button class="btn btn-sm btn-primary" onclick="fvDownload()">Download</button>'
       + '<button class="btn btn-sm" onclick="fvClose()">Close</button>'
     + '</div></div>'
@@ -5764,16 +5768,177 @@ function fvStep(dir){
   if(f) fvOpen(f);
 }
 window.fvStep = fvStep;
+function fvEdit(){ const f = S.fv && findFileRecord(S.fv.id); if(!f) return; FV_TOKEN++; fvRevoke(); openEditFile(f.id, 'viewer'); }
+window.fvEdit = fvEdit;
 function fvDownload(){ const f = S.fv && findFileRecord(S.fv.id); if(f) downloadFile(f.id, f.file_path); }
 window.fvDownload = fvDownload;
 function fvClose(){ FV_TOKEN++; fvRevoke(); S.fv = null; closeModal(); }
 window.fvClose = fvClose;
 document.addEventListener('keydown', function(ev){
+  if(ev.key === 'Escape' && document.querySelector('.fe-modal')){ feCancel(); return; }
   if(!document.querySelector('.fv-modal')) return;
   const t = ev.target && ev.target.tagName;
   if(ev.key === 'Escape'){ fvClose(); }
   else if((ev.key === 'ArrowLeft' || ev.key === 'ArrowRight') && t !== 'VIDEO' && t !== 'AUDIO' && t !== 'INPUT' && t !== 'TEXTAREA'){ fvStep(ev.key === 'ArrowLeft' ? -1 : 1); }
 });
+
+/* ================= EDIT FILE ================= */
+// Fix an upload that was filed wrongly - by the customer or by a tuner: its
+// name, its type (tune / log / dyno / other) and, for tunes, the revision,
+// fuel and changelog. The stored file itself never changes; only how it is
+// named and filed. Everything that depends on the type is kept consistent:
+// the Log Review queue, "currently flashed", and what the customer's portal
+// shows.
+const FILE_TYPES = [['tune', 'Tune'], ['log', 'Log'], ['dyno', 'Dyno'], ['other', 'Other']];
+
+function feClean(name){ return String(name || '').replace(/[\\\/\u0000-\u001f]/g, '_').trim().slice(0, 150); }
+
+// Keep what's been typed when the form is redrawn (switching the type).
+function feCapture(){
+  const E = S.fileEdit; if(!E) return;
+  const v = function(id){ const el = document.getElementById(id); return el ? el.value : undefined; };
+  ['feName:name', 'feRevision:revision', 'feFuel:fuel', 'feChangelog:changelog'].forEach(function(p){
+    const k = p.split(':'), x = v(k[0]); if(x !== undefined) E[k[1]] = x;
+  });
+}
+
+function feNotices(f, type){
+  const out = [];
+  if(f.file_type === 'tune' && type !== 'tune'){
+    out.push((f.is_current ? 'This is the tune marked "Currently flashed" - the customer\'s portal will stop showing it as their current tune. ' : '') + 'Its revision, fuel and "currently flashed" mark will be cleared.');
+  }
+  if(f.uploaded_by === 'customer'){
+    if(type === 'log' && f.file_type !== 'log') out.push('It will be added to the Log Review queue.');
+    if(type !== 'log' && f.file_type === 'log' && f.review_status === 'pending') out.push('It will be taken out of the Log Review queue.');
+  }
+  if(type === 'tune' && f.file_type !== 'tune') out.push('It will appear in the customer\'s Tune Versions list. Use "Mark current" afterwards if it\'s the one on their car.');
+  return out;
+}
+
+function renderEditFileModal(f){
+  const E = S.fileEdit, type = E.type, isCustomer = f.uploaded_by === 'customer';
+  const name = E.name !== undefined ? E.name : f.file_name;
+  const revision = E.revision !== undefined ? E.revision : (f.revision_number || nextRevisionNumber(f.application_id));
+  const fuel = E.fuel !== undefined ? E.fuel : (f.fuel || '');
+  const changelog = E.changelog !== undefined ? E.changelog : (f.description || '');
+  const fuels = TUNE_FUELS.slice();
+  if(fuel && fuels.indexOf(fuel) === -1) fuels.push(fuel);
+  let html = '<div class="modal fe-modal"><div class="modal-title">Edit file</div>'
+    + '<div class="file-meta" style="margin:-8px 0 14px">Uploaded by ' + escapeHtml(f.uploaded_by_name || f.uploaded_by || 'unknown') + ' (' + (isCustomer ? 'customer' : 'tuner') + ') &middot; ' + fmtDate(f.created_at)
+    + '. The file itself isn\'t changed - only how it\'s named and filed.</div>';
+  html += '<div class="form-group"><label class="form-label">File name</label>'
+    + '<input class="form-input" id="feName" maxlength="150" value="' + escapeHtml(name) + '" onkeydown="if(event.key===\'Enter\')saveEditFile()">'
+    + '<div class="file-meta">The ending (.jpg, .pdf, .csv...) decides how it previews here, and it\'s the name the file downloads as.</div></div>';
+  html += '<div class="form-group"><label class="form-label">Type</label><div class="fx-seg" role="group" aria-label="File type">'
+    + FILE_TYPES.map(function(t){
+        const off = t[0] === 'tune' && isCustomer;
+        return '<button type="button" class="' + (type === t[0] ? 'on' : '') + '"' + (off ? ' disabled title="Only files you upload can be tunes"' : '') + ' onclick="feSetType(\'' + t[0] + '\')">' + t[1] + '</button>';
+      }).join('') + '</div>'
+    + (isCustomer ? '<div class="file-meta">Customer uploads can be a log, dyno sheet or other file. Only your own uploads can be tunes.</div>' : '') + '</div>';
+  if(type === 'tune'){
+    html += '<div class="fx-grid">'
+      + '<label class="fx-field"><span class="form-label">Revision</span><input class="form-input" id="feRevision" type="number" inputmode="numeric" min="1" value="' + escapeHtml(revision) + '"></label>'
+      + '<label class="fx-field"><span class="form-label">Fuel</span><select class="form-input" id="feFuel"><option value="">Select...</option>'
+      + fuels.map(function(x){ return '<option' + (x === fuel ? ' selected' : '') + '>' + escapeHtml(x) + '</option>'; }).join('') + '</select></label></div>'
+      + '<label class="fx-field" style="margin-top:10px"><span class="form-label">Changelog (shown to the customer)</span>'
+      + '<textarea class="form-input" id="feChangelog" style="min-height:60px">' + escapeHtml(changelog) + '</textarea></label>';
+  }
+  feNotices(f, type).forEach(function(n){ html += '<div class="lv-note" style="margin-top:10px">' + escapeHtml(n) + '</div>'; });
+  html += '<div class="modal-footer"><button class="btn" onclick="feCancel()">Cancel</button><button class="btn btn-primary" id="feSaveBtn" onclick="saveEditFile()">Save changes</button></div></div>';
+  return html;
+}
+
+function openEditFile(fileId, from){
+  const f = findFileRecord(fileId); if(!f) return;
+  S.fileEdit = { id: f.id, from: from || 'list', type: ['tune', 'log', 'dyno', 'other'].indexOf(f.file_type) !== -1 ? f.file_type : 'other' };
+  openModal(renderEditFileModal(f));
+  const el = document.getElementById('feName'); if(el){ el.focus(); const n = el.value.lastIndexOf('.'); el.setSelectionRange(0, n > 0 ? n : el.value.length); }
+}
+window.openEditFile = openEditFile;
+
+function feSetType(type){
+  const E = S.fileEdit; if(!E) return;
+  const f = findFileRecord(E.id); if(!f) return;
+  if(type === 'tune' && f.uploaded_by === 'customer') return;
+  feCapture(); E.type = type;
+  openModal(renderEditFileModal(f));
+}
+window.feSetType = feSetType;
+
+// Back to wherever Edit was opened from.
+function feDone(){
+  const E = S.fileEdit; S.fileEdit = null;
+  const f = E && findFileRecord(E.id);
+  if(E && E.from === 'viewer' && f) fvOpen(f); else closeModal();
+}
+function feCancel(){ feDone(); }
+window.feCancel = feCancel;
+
+async function saveEditFile(){
+  const E = S.fileEdit; if(!E) return;
+  const f = findFileRecord(E.id); if(!f) return;
+  feCapture();
+  const name = feClean(E.name), type = E.type, wasTune = f.file_type === 'tune';
+  if(!name){ toast('Give the file a name', true); return; }
+  if(type === 'tune' && f.uploaded_by === 'customer'){ toast('Only files you upload can be tunes', true); return; }
+  let revision = null;
+  if(type === 'tune'){
+    revision = parseInt(E.revision, 10);
+    if(!(revision >= 1)){ toast('Enter the revision number (1 or higher)', true); return; }
+  }
+  const patch = { file_name: name, file_type: type };
+  if(type === 'tune'){
+    patch.revision_number = revision;
+    patch.fuel = (E.fuel || '').trim() || null;
+    patch.description = (E.changelog || '').trim() || null;
+  } else if(wasTune){
+    // A tune that's no longer a tune can't be the flashed one or keep tune details.
+    patch.is_current = false; patch.flashed_marked_by = null; patch.flashed_marked_at = null;
+    patch.revision_number = null; patch.fuel = null;
+  }
+  // Log Review queue: customer logs wait there until reviewed.
+  if(f.uploaded_by === 'customer'){
+    if(type === 'log' && f.file_type !== 'log' && !f.review_status){
+      patch.review_status = 'pending'; patch.analysis = null; patch.analyzed_at = null;
+    } else if(type !== 'log' && f.review_status === 'pending'){
+      patch.review_status = null;
+    }
+  }
+  const changed = Object.keys(patch).filter(function(k){ return String(f[k] == null ? '' : f[k]) !== String(patch[k] == null ? '' : patch[k]); });
+  if(!changed.length){ toast('Nothing to change'); feDone(); return; }
+  if(wasTune && f.is_current && type !== 'tune' &&
+     !confirm('"' + f.file_name + '" is the tune marked "Currently flashed". Changing it to ' + type + ' means the customer will no longer see a current tune.\n\nContinue?')) return;
+
+  const btn = document.getElementById('feSaveBtn');
+  if(btn){ btn.disabled = true; btn.textContent = 'Saving...'; }
+  try{
+    const { data, error } = await sb.from('tuning_files').update(patch).eq('id', f.id).select().single();
+    if(error) throw error;
+    const before = { name: f.file_name, type: f.file_type };
+    const appId = f.application_id;
+    // keep every local copy in step
+    const list = S.files[appId];
+    if(list){ const i = list.findIndex(function(x){ return x.id === f.id; }); if(i !== -1) list[i] = data; }
+    (S.pendingLogs || []).forEach(function(x){ if(x.id === f.id) Object.assign(x, data); });
+    if(changed.indexOf('review_status') !== -1) await loadPendingLogs();
+
+    const parts = [];
+    if(before.name !== data.file_name) parts.push('renamed to "' + data.file_name + '"');
+    if(before.type !== data.file_type) parts.push('type ' + (before.type || 'file') + ' -> ' + data.file_type);
+    if(type === 'tune' && String(f.revision_number || '') !== String(data.revision_number || '')) parts.push('revision ' + data.revision_number);
+    await logActivity(appId, 'file_edited', before.name, (parts.join('; ') || 'details updated').slice(0, 200));
+    pingPortal(appId);
+    renderNav();
+    if(S.page === 'logreview') renderPage();
+    if(S.openAppId === appId) renderPanelBody();
+    toast('File updated');
+    feDone();
+  }catch(e){
+    toast('Could not save: ' + e.message, true);
+    if(btn){ btn.disabled = false; btn.textContent = 'Save changes'; }
+  }
+}
+window.saveEditFile = saveEditFile;
 
 /* ---- activity tab ---- */
 function describeActivity(l){
@@ -5789,6 +5954,7 @@ function describeActivity(l){
   else if(l.field_changed === 'invoice_sent') desc = 'Invoice sent for ' + (l.new_value || 'an amount');
   else if(l.field_changed === 'invoice_paid') desc = 'Invoice marked paid' + (l.new_value ? ' (' + l.new_value + ')' : '');
   else if(l.field_changed === 'file_deleted') desc = 'File deleted: ' + (l.old_value || '');
+  else if(l.field_changed === 'file_edited') desc = 'File edited: ' + (l.old_value || '') + (l.new_value ? ' (' + l.new_value + ')' : '');
   else if(l.field_changed === 'review_submitted') desc = 'Customer left a review: ' + (l.new_value || '');
   else if(l.field_changed === 'log_guide') desc = 'Logging guide set: ' + (l.new_value || 'None');
   else if(l.field_changed === 'current_tune') desc = 'Currently flashed set to ' + (l.new_value || '');
@@ -5823,6 +5989,7 @@ function activityAccent(l){
   if(l.field_changed === 'log_guide') return 'muted';
   if(l.field_changed === 'review_submitted') return 'teal';
   if(l.field_changed === 'file_deleted') return 'red';
+  if(l.field_changed === 'file_edited') return 'yellow';
   if(l.field_changed === 'mods_updated') return 'orange';
   return 'muted';
 }
@@ -5858,7 +6025,7 @@ function renderLogReview(){
         + '<td>' + escapeHtml(f.file_name) + '</td>'
         + '<td>' + (isLogFile(f) ? '<div class="an-findings" style="margin:0">' + analysisChips(f.analysis) + '</div>' : '<span class="file-meta">' + FV_KIND_LABEL[fileViewKind(f)] + ' - not a datalog</span>') + '</td>'
         + '<td>' + fmtDate(f.created_at) + '</td>'
-        + '<td style="white-space:nowrap"><button class="btn btn-sm btn-teal" onclick="viewFile(\'' + f.id + '\')">View</button> <button class="btn btn-sm" onclick="markLogReviewed(\'' + f.id + '\')">Mark Reviewed</button></td>'
+        + '<td style="white-space:nowrap"><button class="btn btn-sm btn-teal" onclick="viewFile(\'' + f.id + '\')">View</button> <button class="btn btn-sm" onclick="openEditFile(\'' + f.id + '\')" title="Wrong type? Re-file it">Edit</button> <button class="btn btn-sm" onclick="markLogReviewed(\'' + f.id + '\')">Mark Reviewed</button></td>'
         + '</tr>';
     });
     html += '</tbody></table>';
