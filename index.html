@@ -779,7 +779,7 @@ details.an-pd .an-f{padding:2px 8px}
         </div>
         <div class="sync-sub" onclick="doLogout()">Sign out</div>
         <div class="version-row">
-          <span>v1.85</span>
+          <span>v1.86</span>
           <span id="buildDate"></span>
         </div>
       </div>
@@ -3428,7 +3428,7 @@ function renderFilesTab(a){
       + '<div class="file-info">'
       + '<div class="file-name">' + escapeHtml(f.file_name)
         + (f.revision_number ? ' <span class="pill pill-muted">rev ' + f.revision_number + '</span>' : '')
-        + ' <span class="pill ' + (isTune?'pill-teal':(f.file_type==='log'?'pill-orange':(f.file_type==='dyno'?'pill-green':'pill-muted'))) + '">' + escapeHtml(f.file_type||'file') + '</span>'
+        + ' <span class="pill ' + (isTune?'pill-teal':(f.file_type==='log'?'pill-orange':(f.file_type==='dyno'?'pill-green':'pill-muted'))) + '">' + escapeHtml(fileTypeLabel(f)) + '</span>'
         + (isTune && f.fuel ? ' <span class="pill pill-muted">' + escapeHtml(f.fuel) + '</span>' : '')
         + (isTune && f.is_current ? ' <span class="pill pill-green">Currently flashed</span>' : '')
         + (isTune && f.is_current && f.flashed_marked_by ? ' <span class="file-meta">' + (f.flashed_marked_by === 'customer' ? 'marked by customer' : 'marked by ' + escapeHtml(f.flashed_marked_by === (S.user && S.user.email) ? 'you' : f.flashed_marked_by)) + (f.flashed_marked_at ? ', ' + fmtDate(f.flashed_marked_at) : '') + '</span>' : '')
@@ -3437,7 +3437,7 @@ function renderFilesTab(a){
       + (isTune && f.description ? '<div class="file-meta" style="font-style:italic;white-space:pre-wrap">' + escapeHtml(f.description) + '</div>' : '')
       + '</div>'
       + '<div class="file-actions">'
-      + (isTune && !f.is_current ? '<button class="btn btn-sm" onclick="setCurrentTune(\'' + a.id + '\',\'' + f.id + '\')">Mark current</button>' : '')
+      + (isTune && f.uploaded_by !== 'customer' && !f.is_current ? '<button class="btn btn-sm" onclick="setCurrentTune(\'' + a.id + '\',\'' + f.id + '\')">Mark current</button>' : '')
       + '<button class="btn btn-sm btn-teal" onclick="viewFile(\'' + f.id + '\')">View</button>'
       + '<button class="btn btn-sm" onclick="downloadFile(\'' + f.id + '\',\'' + f.file_path + '\')">Download</button>'
       + '<button class="btn btn-sm" onclick="openEditFile(\'' + f.id + '\')" title="Rename, or change the file type / tune details">Edit</button>'
@@ -3545,6 +3545,8 @@ async function clearCurrentTune(appId){
 }
 
 async function setCurrentTune(appId, fileId){
+  const rec = (S.files[appId] || []).find(function(x){ return x.id === fileId; });
+  if(rec && rec.uploaded_by === 'customer'){ toast("A file the customer sent can't be marked as the tune on their car", true); return; }
   try{
     // One transaction server-side (clear old + set new), shared with the
     // customer portal - see tuning_set_current_tune in Phase 19.
@@ -5715,7 +5717,7 @@ async function fvLoad(f, kind, token){
         + '<p class="file-meta" style="margin:6px 0 12px">This type of file can\'t be shown in the browser. Download it to open it in the right program.</p>'
         + '<div class="dl-grid">'
           + '<div class="dl-item"><div class="dl-label">Name</div><div class="dl-value">' + escapeHtml(f.file_name) + '</div></div>'
-          + '<div class="dl-item"><div class="dl-label">Labelled as</div><div class="dl-value">' + escapeHtml(f.file_type || 'file') + '</div></div>'
+          + '<div class="dl-item"><div class="dl-label">Labelled as</div><div class="dl-value">' + escapeHtml(fileTypeLabel(f)) + '</div></div>'
           + '<div class="dl-item"><div class="dl-label">Uploaded by</div><div class="dl-value">' + escapeHtml(f.uploaded_by_name || f.uploaded_by || '-') + '</div></div>'
           + '<div class="dl-item"><div class="dl-label">Uploaded</div><div class="dl-value">' + fmtDate(f.created_at) + '</div></div>'
           + (f.revision_number ? '<div class="dl-item"><div class="dl-label">Revision</div><div class="dl-value">' + escapeHtml(f.revision_number) + '</div></div>' : '')
@@ -5790,6 +5792,11 @@ document.addEventListener('keydown', function(ev){
 // the Log Review queue, "currently flashed", and what the customer's portal
 // shows.
 const FILE_TYPES = [['tune', 'Tune'], ['log', 'Log'], ['dyno', 'Dyno'], ['other', 'Other']];
+// A tune the CUSTOMER sent (their stock / base file, for you to work from) is
+// filed as type 'tune' but is a base tune, not a delivered one: it carries no
+// revision, can't be "currently flashed", and the customer's portal keeps it
+// out of Tune Versions (that list is tuner-uploaded tunes only).
+function fileTypeLabel(f){ return f.file_type === 'tune' && f.uploaded_by === 'customer' ? 'base tune' : (f.file_type || 'file'); }
 
 function feClean(name){ return String(name || '').replace(/[\\\/\u0000-\u001f]/g, '_').trim().slice(0, 150); }
 
@@ -5803,15 +5810,17 @@ function feCapture(){
 }
 
 function feNotices(f, type){
-  const out = [];
-  if(f.file_type === 'tune' && type !== 'tune'){
+  const out = [], customer = f.uploaded_by === 'customer';
+  if(f.file_type === 'tune' && type !== 'tune' && !customer){
     out.push((f.is_current ? 'This is the tune marked "Currently flashed" - the customer\'s portal will stop showing it as their current tune. ' : '') + 'Its revision, fuel and "currently flashed" mark will be cleared.');
   }
-  if(f.uploaded_by === 'customer'){
+  if(customer){
     if(type === 'log' && f.file_type !== 'log') out.push('It will be added to the Log Review queue.');
     if(type !== 'log' && f.file_type === 'log' && f.review_status === 'pending') out.push('It will be taken out of the Log Review queue.');
+    if(type === 'tune' && f.file_type !== 'tune') out.push('Filed as a base tune - the file the customer sent for you to work from. It stays out of their Tune Versions list and can\'t be marked "Currently flashed".');
+  } else if(type === 'tune' && f.file_type !== 'tune'){
+    out.push('It will appear in the customer\'s Tune Versions list. Use "Mark current" afterwards if it\'s the one on their car.');
   }
-  if(type === 'tune' && f.file_type !== 'tune') out.push('It will appear in the customer\'s Tune Versions list. Use "Mark current" afterwards if it\'s the one on their car.');
   return out;
 }
 
@@ -5831,11 +5840,10 @@ function renderEditFileModal(f){
     + '<div class="file-meta">The ending (.jpg, .pdf, .csv...) decides how it previews here, and it\'s the name the file downloads as.</div></div>';
   html += '<div class="form-group"><label class="form-label">Type</label><div class="fx-seg" role="group" aria-label="File type">'
     + FILE_TYPES.map(function(t){
-        const off = t[0] === 'tune' && isCustomer;
-        return '<button type="button" class="' + (type === t[0] ? 'on' : '') + '"' + (off ? ' disabled title="Only files you upload can be tunes"' : '') + ' onclick="feSetType(\'' + t[0] + '\')">' + t[1] + '</button>';
+        return '<button type="button" class="' + (type === t[0] ? 'on' : '') + '" onclick="feSetType(\'' + t[0] + '\')">' + (t[0] === 'tune' && isCustomer ? 'Base tune' : t[1]) + '</button>';
       }).join('') + '</div>'
-    + (isCustomer ? '<div class="file-meta">Customer uploads can be a log, dyno sheet or other file. Only your own uploads can be tunes.</div>' : '') + '</div>';
-  if(type === 'tune'){
+    + (isCustomer ? '<div class="file-meta">"Base tune" is for a tune the customer sent you to work from.</div>' : '') + '</div>';
+  if(type === 'tune' && !isCustomer){
     html += '<div class="fx-grid">'
       + '<label class="fx-field"><span class="form-label">Revision</span><input class="form-input" id="feRevision" type="number" inputmode="numeric" min="1" value="' + escapeHtml(revision) + '"></label>'
       + '<label class="fx-field"><span class="form-label">Fuel</span><select class="form-input" id="feFuel"><option value="">Select...</option>'
@@ -5859,7 +5867,6 @@ window.openEditFile = openEditFile;
 function feSetType(type){
   const E = S.fileEdit; if(!E) return;
   const f = findFileRecord(E.id); if(!f) return;
-  if(type === 'tune' && f.uploaded_by === 'customer') return;
   feCapture(); E.type = type;
   openModal(renderEditFileModal(f));
 }
@@ -5880,14 +5887,17 @@ async function saveEditFile(){
   feCapture();
   const name = feClean(E.name), type = E.type, wasTune = f.file_type === 'tune';
   if(!name){ toast('Give the file a name', true); return; }
-  if(type === 'tune' && f.uploaded_by === 'customer'){ toast('Only files you upload can be tunes', true); return; }
+  const customer = f.uploaded_by === 'customer';
   let revision = null;
-  if(type === 'tune'){
+  if(type === 'tune' && !customer){
     revision = parseInt(E.revision, 10);
     if(!(revision >= 1)){ toast('Enter the revision number (1 or higher)', true); return; }
   }
   const patch = { file_name: name, file_type: type };
-  if(type === 'tune'){
+  if(type === 'tune' && customer){
+    // base tune: just the type - no revision, fuel or changelog (the customer
+    // sees those on their own uploads, and a base file has no revision)
+  } else if(type === 'tune'){
     patch.revision_number = revision;
     patch.fuel = (E.fuel || '').trim() || null;
     patch.description = (E.changelog || '').trim() || null;
@@ -5924,8 +5934,8 @@ async function saveEditFile(){
 
     const parts = [];
     if(before.name !== data.file_name) parts.push('renamed to "' + data.file_name + '"');
-    if(before.type !== data.file_type) parts.push('type ' + (before.type || 'file') + ' -> ' + data.file_type);
-    if(type === 'tune' && String(f.revision_number || '') !== String(data.revision_number || '')) parts.push('revision ' + data.revision_number);
+    if(before.type !== data.file_type) parts.push('type ' + (before.type || 'file') + ' -> ' + (customer && data.file_type === 'tune' ? 'base tune' : data.file_type));
+    if(type === 'tune' && !customer && String(f.revision_number || '') !== String(data.revision_number || '')) parts.push('revision ' + data.revision_number);
     await logActivity(appId, 'file_edited', before.name, (parts.join('; ') || 'details updated').slice(0, 200));
     pingPortal(appId);
     renderNav();
