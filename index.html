@@ -974,7 +974,7 @@ details.an-pd .an-f{padding:2px 8px}
         </div>
         <div class="sync-sub" onclick="doLogout()">Sign out</div>
         <div class="version-row">
-          <span>v1.90</span>
+          <span>v1.91</span>
           <span id="buildDate"></span>
         </div>
       </div>
@@ -1239,6 +1239,17 @@ window.addEventListener('message', async function(event){
   if(event.origin !== 'https://command.tgkmotorsport.com') return;
   var d = event.data;
 
+  // Back button, pressed in the Command Center while this app is open inside it: step back
+  // here first (close a pop-up, the open application, the menu, a page) and say whether
+  // something was closed - if not, the Command Center closes this app and returns to its home.
+  if(d && d.source === 'TGK_CC' && d.type === 'BACK'){
+    var did = false;
+    try{ did = backClose(); }catch(e){ did = false; }
+    try{ event.source.postMessage({ source: 'TGK_GHOST', type: 'BACK_RESULT', handled: did, id: d.id }, event.origin); }catch(e){ /* parent gone */ }
+    backSchedule();
+    return;
+  }
+
   if(d && d.source === 'TGK_CC' && d.type === 'SIGN_OUT'){
     // Command Center's own sign-out already confirmed with the user - this
     // is the follow-through, not a fresh request, so no second confirm here.
@@ -1308,6 +1319,7 @@ async function afterLogin(user){
   subscribeGlobalRealtime();
   renderNav();
   goPage('dashboard');
+  backStart();
 }
 
 /* ================= DATA LOADING ================= */
@@ -1837,6 +1849,82 @@ window.setBoardStage = setBoardStage;
 function toggleUploadOpen(v){ S.uploadOpen = !!v; renderPanelBody(); }
 window.toggleUploadOpen = toggleUploadOpen;
 
+
+/* ================= BACK BUTTON =================
+   On a phone the Back button (or swipe) should step back through the app - close
+   the pop-up, then the open application, then the menu, then return to the page
+   you came from - and only leave the app when there is nothing left to step back
+   through. The browser's history is kept the same depth as what is open: an entry
+   is added when you go a level deeper and taken away when you come back up, so one
+   press of Back is always exactly one step. Entries are added right after a tap
+   (phones skip entries a page adds on its own, which is what makes naive
+   "trap the back button" code fall straight through to closing the app). When this
+   app runs inside the Command Center it adds no history of its own: the Command
+   Center owns Back and just asks this app to step back first. */
+const BACKH = { on: false, depth: 0, ignore: 0, ignoreUntil: 0, root: false, timer: null, hold: 0, lastReported: -1 };
+const BACK_EMBEDDED = (function(){ try{ return window.self !== window.top; }catch(e){ return true; } })();
+const BACK_PARENT = 'https://command.tgkmotorsport.com';
+function backLayers(){
+  const ov = document.getElementById('modalOverlay'), dr = document.getElementById('sidebarWrap'), pn = document.getElementById('tk-panel');
+  return (ov && !ov.classList.contains('hidden') ? 1 : 0) + (dr && dr.classList.contains('open') ? 1 : 0)
+    + (pn && pn.classList.contains('open') ? 1 : 0) + (S.pageStack ? S.pageStack.length : 0);
+}
+// Close the top-most thing that is open. Returns true if something was closed.
+function backClose(){
+  if(document.querySelector('.fe-modal')){ feCancel(); return true; }               // file editor -> back to the viewer (or closes)
+  if(document.querySelector('.fv-modal')){ fvClose(); return true; }                // file viewer
+  const ov = document.getElementById('modalOverlay');
+  if(ov && !ov.classList.contains('hidden')){ closeModal(); return true; }          // any other pop-up
+  if(document.getElementById('sidebarWrap').classList.contains('open')){ closeMobileNav(); return true; }
+  if(document.getElementById('tk-panel').classList.contains('open')){ closePanel(); return true; }
+  if(S.pageStack && S.pageStack.length){
+    S._back = true;
+    try{ goPage(S.pageStack.pop()); }finally{ S._back = false; }
+    return true;
+  }
+  return false;
+}
+function backSchedule(){ if(!BACKH.timer) BACKH.timer = setTimeout(backSync, 0); }
+function backSync(){
+  BACKH.timer = null;
+  if(BACK_EMBEDDED){
+    const n = backLayers();
+    if(n !== BACKH.lastReported){ BACKH.lastReported = n; try{ window.parent.postMessage({ source: 'TGK_GHOST', type: 'DEPTH', n: n }, BACK_PARENT); }catch(e){ /* not embedded after all */ } }
+    return;
+  }
+  if(!BACKH.on) return;
+  if(Date.now() < BACKH.hold){ BACKH.timer = setTimeout(backSync, 60); return; }       // a history step is still in flight
+  const want = backLayers() + (BACKH.root ? 1 : 0);
+  while(BACKH.depth < want){
+    try{ history.pushState({ tgk: 1, n: BACKH.depth + 1 }, ''); }catch(e){ return; }
+    BACKH.depth++;
+  }
+  if(BACKH.depth > want){
+    const n = BACKH.depth - want;
+    BACKH.depth = want; BACKH.ignore++; BACKH.ignoreUntil = Date.now() + 900; BACKH.hold = Date.now() + 500;
+    try{ history.go(-n); }catch(e){ BACKH.ignore = 0; BACKH.hold = 0; }
+  }
+}
+function backArm(){ if(BACKH.on && !BACK_EMBEDDED && !BACKH.root && backLayers() === 0){ BACKH.root = true; backSchedule(); } }
+function backStart(){
+  if(BACKH.on) return;
+  BACKH.on = true;
+  setInterval(backSync, 250);                                    // catches pop-ups opened by any code path
+  document.addEventListener('pointerup', backArm, true);
+  document.addEventListener('keydown', backArm, true);
+  ['pointerup', 'click', 'keyup'].forEach(function(ev){ document.addEventListener(ev, backSchedule, true); });
+  backSchedule();
+}
+window.addEventListener('popstate', function(){
+  if(BACK_EMBEDDED || !BACKH.on) return;
+  if(BACKH.ignore > 0 && Date.now() < BACKH.ignoreUntil){ BACKH.ignore--; BACKH.hold = 0; backSchedule(); return; }   // our own tidy-up step, not the user's
+  BACKH.ignore = 0;
+  BACKH.depth = Math.max(0, BACKH.depth - 1);                    // the browser just removed one entry
+  if(!backClose() && BACKH.root){ BACKH.root = false; toast('Press back again to leave'); }
+  backSchedule();
+});
+if(BACK_EMBEDDED) document.addEventListener('DOMContentLoaded', function(){ setInterval(backSync, 250); });
+
 function setupMobileUx(){
   const ids = ['content', 'tk-panel', 'modalOverlay'];
   let queued = false;
@@ -1864,6 +1952,11 @@ function closeMobileNav(){
 window.closeMobileNav = closeMobileNav;
 
 function goPage(id){
+  if(S.page && S.page !== id && !S._back){          // remember the page you left, so Back can return to it
+    S.pageStack = S.pageStack || [];
+    S.pageStack.push(S.page);
+    if(S.pageStack.length > 20) S.pageStack.shift();
+  }
   S.page = id;
   if(id === 'reports') S.reportData = null;
   if(id === 'team') S.team = null;
@@ -1873,6 +1966,7 @@ function goPage(id){
   document.getElementById('pageTitle').textContent = (NAV.find(function(n){ return n.id===id; }) || {}).label || 'Dashboard';
   renderPage();
   closeMobileNav();
+  backSchedule();
 }
 window.goPage = goPage;
 
