@@ -683,6 +683,52 @@ details.an-pd .an-f{padding:2px 8px}
   .t-switch{transform:scale(1.15);transform-origin:left center}
 }
 
+
+/* ---- outside payments ---- */
+.inv-head-btns{display:inline-flex;gap:8px;flex-wrap:wrap}
+.modal.lp-modal{max-width:580px;width:100%;max-height:92vh;overflow-y:auto;padding:22px 24px}
+.lp-lead{margin:12px 0;font-size:var(--t-md);color:var(--text2);line-height:1.45}
+.lp-seg{display:flex;width:100%;margin-bottom:14px}
+.lp-seg button{flex:1;padding:9px 12px}
+.lp-find{display:flex;gap:8px}
+.lp-find .form-input{flex:1;min-width:0}
+.lp-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 14px}
+.lp-opt{text-transform:none;font-weight:500;letter-spacing:0}
+.lp-money{display:flex;align-items:center;gap:6px}
+.lp-money .form-input{flex:1;min-width:0}
+.lp-order{border:1px solid var(--border);border-radius:var(--r-md);padding:12px 14px;background:var(--bg2)}
+.lp-order-top{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+.lp-order-name{font-weight:800;font-size:var(--t-lg)}
+.lp-order-amt{font-weight:800;font-size:var(--t-xl);text-align:right;white-space:nowrap}
+.lp-who{margin:6px 0 2px;color:var(--text2);overflow-wrap:anywhere}
+.lp-lines{margin-top:8px;border-top:1px solid var(--border);padding-top:6px}
+.lp-line{display:flex;justify-content:space-between;gap:12px;font-size:var(--t-sm);padding:2px 0}
+.lp-line span:first-child{min-width:0;overflow-wrap:anywhere}
+.lp-line span:last-child{white-space:nowrap;color:var(--text2)}
+.lp-box{margin-top:10px;padding:10px 12px;border-radius:var(--r-md);font-size:var(--t-md);line-height:1.4}
+.lp-err{background:var(--red-bg,#fdecea);color:var(--red);border:1px solid rgba(220,38,38,.25)}
+.lp-warn{background:#fff7e0;color:#8a5a00;border:1px solid rgba(217,119,6,.35)}
+.lp-ok{background:var(--teal-bg,#e6f6f3);color:var(--teal-d);border:1px solid rgba(13,148,136,.25)}
+.lp-ack{display:flex;align-items:flex-start;gap:8px;margin-top:8px;font-weight:600;cursor:pointer}
+.lp-settle{margin-top:14px;padding-top:12px;border-top:1px solid var(--border)}
+@media(max-width:720px){
+  .lp-grid{grid-template-columns:1fr}
+  .modal.lp-modal{padding:16px 14px}
+  .lp-find{flex-direction:column}
+  .lp-find .btn,.lp-modal .inv-foot .btn,.lp-seg button{min-height:46px}
+  .lp-ack{min-height:44px;align-items:center}
+  .lp-ack input{width:22px;height:22px;flex:none}
+  .inv-head-btns{width:100%}
+  .inv-head-btns .btn{flex:1;min-height:44px;white-space:nowrap}
+  /* the footer stacks (main action on top) so a long label like "Link order #4323 - $349.00" never wraps, and the close button is a real tap target */
+  .lp-modal .inv-foot{flex-direction:column-reverse;align-items:stretch;gap:8px}
+  .lp-modal .inv-foot .btn{width:100%;justify-content:center;white-space:nowrap}
+  .lp-modal .inv-close{min-width:44px;min-height:44px;display:inline-flex;align-items:center;justify-content:center}
+}
+@media(max-width:380px){
+  .inv-head-btns{flex-direction:column}
+}
+
 /* ================= PHONE LAYOUT (tuner dashboard) =================
    On a phone the dashboard becomes an app: a bottom tab bar for the four
    places used all day, tables turned into tappable cards (nothing clipped or
@@ -974,7 +1020,7 @@ details.an-pd .an-f{padding:2px 8px}
         </div>
         <div class="sync-sub" onclick="doLogout()">Sign out</div>
         <div class="version-row">
-          <span>v1.91</span>
+          <span>v1.92</span>
           <span id="buildDate"></span>
         </div>
       </div>
@@ -2908,19 +2954,21 @@ function invoiceStatusPillClass(s){
 // scannable even with several invoices.
 function renderInvoicesSection(a){
   if(!canManageInvoice(a)){
-    return '<div class="empty-state" style="padding:24px 0">Invoicing opens once this application is accepted.</div>';
+    return '<div class="empty-state" style="padding:24px 0">Invoicing opens once this application is accepted.'
+      + '<div style="margin-top:14px"><button class="btn btn-sm" onclick="openLinkPaymentModal(\'' + a.id + '\')">Customer already paid? Link their payment</button></div></div>';
   }
   const invoices = S.invoices[a.id] || [];
   // Numbered oldest-first so "Invoice 1" stays Invoice 1 as more are added.
-  const numberOf = {};
-  invoices.slice().sort(function(x, y){ return new Date(x.created_at) - new Date(y.created_at); })
+  const numberOf = {};   // "Invoice 1, 2, 3" counts only invoices sent from the app - outside payments are labelled on their own
+  invoices.filter(function(i){ return !isOutsidePayment(i); }).sort(function(x, y){ return new Date(x.created_at) - new Date(y.created_at); })
     .forEach(function(inv, i){ numberOf[inv.id] = i + 1; });
   const owed = invoices.filter(function(i){ return i.status === 'sent'; }).reduce(function(t, i){ return t + (Number(i.amount) || 0); }, 0);
   const paid = invoices.filter(function(i){ return i.status === 'paid'; }).reduce(function(t, i){ return t + (Number(i.amount) || 0); }, 0);
 
   let html = '<div class="inv-head">'
     + '<div class="file-meta">Outstanding <strong style="color:' + (owed ? 'var(--orange)' : 'var(--text)') + '">$' + owed.toFixed(2) + '</strong> &middot; Paid <strong>$' + paid.toFixed(2) + '</strong></div>'
-    + '<button class="btn btn-sm btn-primary" onclick="openSendInvoiceModal(\'' + a.id + '\')">+ New Invoice</button>'
+    + '<span class="inv-head-btns"><button class="btn btn-sm" onclick="openLinkPaymentModal(\'' + a.id + '\')">Link outside payment</button>'
+    + '<button class="btn btn-sm btn-primary" onclick="openSendInvoiceModal(\'' + a.id + '\')">+ New Invoice</button></span>'
     + '</div>';
 
   if(!invoices.length) return html + '<div class="empty-state" style="padding:24px 0">No invoices sent yet.</div>';
@@ -2928,7 +2976,7 @@ function renderInvoicesSection(a){
   html += invoices.map(function(inv){
     const lines = Array.isArray(inv.line_items) ? inv.line_items : [];
     const when = inv.status === 'refunded' ? 'Refunded ' + fmtDate(inv.refunded_at) + (inv.refunded_amount != null && Number(inv.refunded_amount) < Number(inv.amount||0) - 0.01 ? ' (partial, $' + Number(inv.refunded_amount).toFixed(2) + ')' : '')
-      : (inv.status === 'paid' ? 'Paid ' + fmtDate(inv.paid_at)
+      : (inv.status === 'paid' ? 'Paid ' + (dateOnlyPaid(inv) ? fmtDateShort(inv.paid_at) : fmtDate(inv.paid_at)) + outsideTag(inv)
       : (inv.status === 'cancelled' ? 'Cancelled ' + fmtDate(inv.cancelled_at) : 'Sent ' + fmtDate(inv.sent_at) + ' &middot; ' + (daysSince(inv.sent_at) || 0) + 'd'));
     const stale = inv.status === 'sent' && (daysSince(inv.sent_at) || 0) >= STALE_INVOICE_DAYS;
 
@@ -2941,10 +2989,19 @@ function renderInvoicesSection(a){
         + '<a onclick="openEditInvoiceModal(\'' + a.id + '\',\'' + inv.id + '\')">Edit &amp; resend</a>'
         + '<a id="refreshInvoiceBtn-' + inv.id + '" onclick="refreshInvoiceStatus(\'' + a.id + '\',\'' + inv.id + '\')">Check payment in Shopify</a>'
         + (inv.invoice_url ? '<a onclick="copyInvoiceLink(\'' + escapeHtml(inv.invoice_url) + '\')">Copy payment link</a><a href="' + escapeHtml(inv.invoice_url) + '" target="_blank" rel="noopener">Open payment page</a>' : '')
+        + '<a onclick="closeMoreMenus();openLinkPaymentModal(\'' + a.id + '\',\'' + inv.id + '\')">Paid outside the app&hellip;</a>'
         + '<a id="cancelInvoiceBtn-' + inv.id + '" class="danger" onclick="cancelInvoice(\'' + a.id + '\',\'' + inv.id + '\')">Cancel invoice</a>'
         + '</div></div>';
     } else if(inv.status === 'paid'){
-      primary = '<button class="btn btn-sm" id="checkRefundBtn-' + inv.id + '" onclick="checkInvoiceRefund(\'' + a.id + '\',\'' + inv.id + '\')">Check for Refund</button>';
+      // A recorded payment (Zelle, cash...) has no Shopify order, so there is nothing to check for a refund.
+      const hasOrder = !!inv.shopify_order_id || (!inv.source || inv.source === 'app') && !inv.payment_method;
+      primary = hasOrder ? '<button class="btn btn-sm" id="checkRefundBtn-' + inv.id + '" onclick="checkInvoiceRefund(\'' + a.id + '\',\'' + inv.id + '\')">Check for Refund</button>' : '';
+      if(isOutsidePayment(inv) || inv.shopify_order_id){
+        menu = '<div class="more-wrap"><button class="btn btn-sm more-btn" onclick="toggleMoreMenu(this)">More &#9662;</button><div class="more-menu">'
+          + (inv.shopify_order_id ? '<a onclick="closeMoreMenus();openOrderInShopify(\'' + inv.shopify_order_id + '\')">Open order in Shopify</a>' : '')
+          + (isOutsidePayment(inv) ? '<a class="danger" onclick="closeMoreMenus();unlinkOutsidePayment(\'' + a.id + '\',\'' + inv.id + '\')">' + (inv.source === 'manual' ? 'Remove this record' : 'Remove the link') + '</a>' : '')
+          + '</div></div>';
+      }
     } else if(inv.status === 'cancelled'){
       // No live Shopify draft order left to edit or resend once cancelled -
       // "Resend" and "Edit & resend" both create a brand NEW invoice (same
@@ -2966,17 +3023,252 @@ function renderInvoicesSection(a){
     return '<div class="inv-row' + (inv.status === 'cancelled' ? ' cancelled' : '') + '">'
       + '<div class="inv-sum" onclick="this.parentNode.classList.toggle(\'open\')">'
         + '<span class="pill ' + (stale ? 'pill-red' : invoiceStatusPillClass(inv.status)) + '">' + invoiceStatusLabel(inv.status) + '</span>'
-        + '<span class="inv-title">Invoice ' + numberOf[inv.id] + '<span class="file-meta"> &middot; ' + when + (inv.reminder_count ? ' &middot; reminded ' + inv.reminder_count + 'x' : '') + '</span></span>'
+        + '<span class="inv-title">' + invTitle(inv, numberOf) + '<span class="file-meta"> &middot; ' + when + (inv.reminder_count ? ' &middot; reminded ' + inv.reminder_count + 'x' : '') + '</span></span>'
         + '<span class="inv-amt">$' + Number(inv.amount || 0).toFixed(2) + '</span>'
         + '<span class="inv-actions" onclick="event.stopPropagation()">' + primary + menu + '</span>'
       + '</div>'
-      + '<div class="inv-detail">' + linesHtml
+      + '<div class="inv-detail">' + linesHtml + outsideDetail(inv)
         + (inv.notes ? '<div class="file-meta" style="margin-top:8px;font-style:italic">' + escapeHtml(inv.notes) + '</div>' : '')
       + '</div>'
       + '</div>';
   }).join('');
   return html;
 }
+
+/* ================= OUTSIDE PAYMENTS =================
+   A customer who paid without a payment link from this app - through the regular
+   Shopify store, Zelle, cash, a check - gets that payment attached to their application
+   so it counts as paid everywhere and reminders stop. Server side: tuning-link-payment. */
+const SHOPIFY_ADMIN_ORDERS = 'https://admin.shopify.com/store/tgk-motorsport/orders/';
+const OUTSIDE_METHODS = ['Zelle', 'Venmo', 'PayPal', 'Cash App', 'Cash', 'Check', 'Bank transfer', 'Card (in person)', 'Other'];
+// A payment the tuner typed in has a date but no time of day, so show just the date.
+function dateOnlyPaid(inv){ return !!inv && (inv.source === 'manual' || (settledOutside(inv) && !inv.shopify_order_id)); }
+function isOutsidePayment(inv){ return !!inv && (inv.source === 'shopify_order' || inv.source === 'manual'); }
+function settledOutside(inv){ return !!inv && inv.status !== 'sent' && !isOutsidePayment(inv) && !!inv.payment_method; }
+function invTitle(inv, numberOf){
+  if(inv.source === 'shopify_order') return 'Order ' + escapeHtml(inv.shopify_order_name || '');
+  if(inv.source === 'manual') return 'Payment received';
+  return 'Invoice ' + (numberOf[inv.id] || '');
+}
+function outsideTag(inv){
+  if(inv.source === 'shopify_order') return ' &middot; Shopify order (outside the app)';
+  if(inv.source === 'manual') return ' &middot; ' + escapeHtml(inv.payment_method || 'Other') + (inv.payment_reference ? ' ' + escapeHtml(inv.payment_reference) : '') + ' (outside the app)';
+  if(settledOutside(inv)) return ' &middot; ' + escapeHtml(inv.payment_method) + ' (settled outside the app)';
+  return '';
+}
+function outsideDetail(inv){
+  if(!isOutsidePayment(inv) && !settledOutside(inv)) return '';
+  const bits = [];
+  if(inv.payment_method) bits.push('Paid by <strong>' + escapeHtml(inv.payment_method) + '</strong>');
+  if(inv.payment_reference) bits.push('Reference <strong>' + escapeHtml(inv.payment_reference) + '</strong>');
+  if(inv.paid_by) bits.push(escapeHtml(inv.paid_by));
+  return bits.length ? '<div class="file-meta" style="margin-top:8px">' + bits.join(' &middot; ') + '</div>' : '';
+}
+function openOrderInShopify(orderId){ window.open(SHOPIFY_ADMIN_ORDERS + encodeURIComponent(orderId), '_blank', 'noopener'); }
+window.openOrderInShopify = openOrderInShopify;
+
+async function callLinkPayment(body){
+  const { data: sess } = await sb.auth.getSession();
+  const token = sess && sess.session && sess.session.access_token;
+  if(!token) throw new Error('Not signed in');
+  const resp = await fetch(SUPABASE_URL + '/functions/v1/tuning-link-payment', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token, 'apikey': SUPABASE_ANON_KEY },
+    body: JSON.stringify(body)
+  });
+  let result = null;
+  try{ result = await resp.json(); }catch(e){ throw new Error('The link-payment service did not answer properly (is tuning-link-payment deployed?)'); }
+  return result;
+}
+
+function lpOpenInvoices(appId){
+  return (S.invoices[appId] || []).filter(function(i){ return i.status === 'sent'; })
+    .sort(function(x, y){ return new Date(x.created_at) - new Date(y.created_at); });
+}
+function lpInvoiceLabel(appId, inv){
+  const all = (S.invoices[appId] || []).filter(function(i){ return !isOutsidePayment(i); }).sort(function(x, y){ return new Date(x.created_at) - new Date(y.created_at); });
+  return 'Invoice ' + (all.findIndex(function(i){ return i.id === inv.id; }) + 1) + ' - ' + money(inv.amount) + ' - sent ' + (daysSince(inv.sent_at) || 0) + 'd ago';
+}
+function lpToday(){ const d = new Date(); return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); }
+
+async function openLinkPaymentModal(appId, settlesId){
+  const app = S.applications.find(function(a){ return a.id === appId; });
+  if(!app) return;
+  if(!Array.isArray(S.invoices[appId])){ try{ await loadInvoices(appId); }catch(e){ /* the list is only used to offer open invoices */ } }
+  S.lp = { appId: appId, tab: 'order', query: '', busy: false, order: null, err: '', settles: settlesId || '', ack: false, amount: '', method: '', ref: '', paidOn: lpToday(), desc: '' };
+  openModal(renderLinkPaymentModal());
+  setTimeout(function(){ const q = document.getElementById('lpQuery'); if(q && !isPhone()) q.focus(); }, 60);
+}
+window.openLinkPaymentModal = openLinkPaymentModal;
+
+function lpCapture(){
+  const L = S.lp; if(!L) return;
+  const v = function(id){ const e = document.getElementById(id); return e ? e.value : null; };
+  if(v('lpQuery') != null) L.query = v('lpQuery');
+  if(v('lpAmount') != null) L.amount = v('lpAmount');
+  if(v('lpMethod') != null) L.method = v('lpMethod');
+  if(v('lpRef') != null) L.ref = v('lpRef');
+  if(v('lpPaidOn') != null) L.paidOn = v('lpPaidOn');
+  if(v('lpDesc') != null) L.desc = v('lpDesc');
+  if(v('lpSettles') != null) L.settles = v('lpSettles');
+  const ack = document.getElementById('lpAck'); if(ack) L.ack = ack.checked;
+}
+function lpAmountNum(){ const n = Number(String(S.lp.amount).replace(/[$,\s]/g, '')); return isFinite(n) ? n : 0; }
+function lpCanSubmit(){
+  const L = S.lp; if(!L || L.busy) return false;
+  if(L.tab === 'order') return !!(L.order && L.order.linkable && (L.order.email_matches !== false || L.ack));
+  return lpAmountNum() > 0 && !!L.method && !!L.paidOn;
+}
+function lpSubmitLabel(){
+  const L = S.lp;
+  if(L.busy) return 'Saving&hellip;';
+  if(L.tab === 'order') return L.order && L.order.linkable ? 'Link order ' + escapeHtml(L.order.order.name) + ' &middot; ' + money(L.order.order.net) : 'Link order';
+  return lpAmountNum() > 0 ? 'Record payment &middot; ' + money(lpAmountNum()) : 'Record payment';
+}
+function lpRefreshFoot(){
+  const b = document.getElementById('lpSubmit'); if(!b) return;
+  b.innerHTML = lpSubmitLabel(); b.disabled = !lpCanSubmit();
+}
+function lpInput(){ lpCapture(); lpRefreshFoot(); }
+window.lpInput = lpInput;
+
+function lpResultHtml(){
+  const L = S.lp;
+  if(L.busy && L.tab === 'order' && !L.order) return '<div class="file-meta" style="padding:10px 0">Looking in Shopify&hellip;</div>';
+  if(L.err) return '<div class="lp-box lp-err">' + escapeHtml(L.err) + '</div>';
+  const r = L.order; if(!r) return '';
+  const o = r.order;
+  const lines = (o.line_items || []).map(function(l){ return '<div class="lp-line"><span>' + (l.quantity > 1 ? l.quantity + '&times; ' : '') + escapeHtml(l.title) + '</span><span>' + money(l.price * (l.quantity || 1)) + '</span></div>'; }).join('');
+  let html = '<div class="lp-order">'
+    + '<div class="lp-order-top"><div><div class="lp-order-name">Order ' + escapeHtml(o.name) + '</div><div class="file-meta">' + fmtDate(o.created_at) + '</div></div>'
+    + '<div class="lp-order-amt">' + money(o.net) + '<div class="file-meta">' + (o.refunded > 0 ? 'after ' + money(o.refunded) + ' refunded' : escapeHtml(String(o.financial_status || '').toLowerCase().replace(/_/g, ' '))) + '</div></div></div>'
+    + '<div class="lp-who">' + escapeHtml(o.customer_name || 'No customer name') + (o.email ? ' &middot; ' + escapeHtml(o.email) : '') + '</div>'
+    + (lines ? '<div class="lp-lines">' + lines + '</div>' : '') + '</div>';
+  if(!r.linkable) html += '<div class="lp-box lp-err">' + escapeHtml(r.reason || 'This order can\'t be linked.') + '</div>';
+  else if(r.email_matches === true) html += '<div class="lp-box lp-ok">&#10003; The order\'s email matches this customer.</div>';
+  else if(r.email_matches === false) html += '<div class="lp-box lp-warn">This order\'s email (<strong>' + escapeHtml(o.email) + '</strong>) is different from this customer\'s (<strong>' + escapeHtml(r.application.email || 'none on file') + '</strong>).'
+    + '<label class="lp-ack"><input type="checkbox" id="lpAck" onchange="lpInput()"' + (L.ack ? ' checked' : '') + '> It is the right customer - link it anyway</label></div>';
+  return html;
+}
+
+function lpBodyHtml(){
+  const L = S.lp;
+  if(L.tab === 'order'){
+    return '<label class="form-label" for="lpQuery">Order number or link</label>'
+      + '<div class="lp-find"><input class="form-input" id="lpQuery" inputmode="text" autocomplete="off" placeholder="#4321, or paste the order link from Shopify" value="' + escapeHtml(L.query) + '" onkeydown="if(event.key===\'Enter\'){event.preventDefault();lpLookup();}" oninput="lpInput()">'
+      + '<button type="button" class="btn" id="lpFind" onclick="lpLookup()">Look up</button></div>'
+      + '<div class="file-meta" style="margin:4px 0 10px">Shopify is checked directly - the amount comes from the order, not from anything typed here.</div>'
+      + '<div id="lpResult">' + lpResultHtml() + '</div>';
+  }
+  return '<div class="lp-grid">'
+    + '<div class="form-group"><label class="form-label" for="lpAmount">Amount paid</label><div class="inv-money-in lp-money"><span>$</span><input class="form-input" id="lpAmount" type="number" inputmode="decimal" min="0" step="0.01" placeholder="0.00" value="' + escapeHtml(L.amount) + '" oninput="lpInput()"></div></div>'
+    + '<div class="form-group"><label class="form-label" for="lpMethod">Paid by</label><select class="form-input" id="lpMethod" onchange="lpInput()"><option value="">Choose&hellip;</option>'
+      + OUTSIDE_METHODS.map(function(m){ return '<option' + (L.method === m ? ' selected' : '') + '>' + escapeHtml(m) + '</option>'; }).join('') + '</select></div>'
+    + '<div class="form-group"><label class="form-label" for="lpPaidOn">Date paid</label><input class="form-input" id="lpPaidOn" type="date" max="' + lpToday() + '" value="' + escapeHtml(L.paidOn) + '" onchange="lpInput()"></div>'
+    + '<div class="form-group"><label class="form-label" for="lpRef">Reference <span class="lp-opt">(optional)</span></label><input class="form-input" id="lpRef" placeholder="Confirmation or check #" value="' + escapeHtml(L.ref) + '" oninput="lpInput()"></div>'
+    + '</div>'
+    + '<div class="form-group"><label class="form-label" for="lpDesc">What it was for <span class="lp-opt">(optional - the customer sees this)</span></label><input class="form-input" id="lpDesc" placeholder="Tuning - paid outside the app" value="' + escapeHtml(L.desc) + '" oninput="lpInput()"></div>';
+}
+
+function lpSettleHtml(){
+  const L = S.lp, open = lpOpenInvoices(L.appId);
+  if(!open.length) return '';
+  return '<div class="lp-settle"><label class="form-label" for="lpSettles">This payment settles</label>'
+    + '<select class="form-input" id="lpSettles" onchange="lpInput()"><option value="">Nothing - just record the payment</option>'
+    + open.map(function(i){ return '<option value="' + i.id + '"' + (L.settles === i.id ? ' selected' : '') + '>' + escapeHtml(lpInvoiceLabel(L.appId, i)) + '</option>'; }).join('') + '</select>'
+    + '<div class="file-meta" style="margin-top:4px">Choosing an invoice marks it paid and <strong>cancels its payment link</strong>, so the customer can\'t pay it a second time.</div></div>';
+}
+
+function renderLinkPaymentModal(){
+  const L = S.lp, app = S.applications.find(function(a){ return a.id === L.appId; });
+  return '<div class="modal lp-modal">'
+    + '<div class="inv-top"><div><div class="modal-title" style="margin:0">Link an outside payment</div>'
+    + '<div class="file-meta" style="margin-top:3px">Application #' + app.application_number + ' &middot; ' + escapeHtml(app.customer_name) + (app.customer_email ? ' &middot; ' + escapeHtml(app.customer_email) : '') + '</div></div>'
+    + '<button type="button" class="inv-close" aria-label="Close" onclick="closeModal()">&times;</button></div>'
+    + '<p class="lp-lead">For a customer who paid <strong>without</strong> a payment link from this app &mdash; through the regular store, Zelle, cash and so on. It then shows as paid everywhere, and reminders stop.</p>'
+    + '<div class="fx-seg lp-seg"><button type="button" class="' + (L.tab === 'order' ? 'on' : '') + '" onclick="lpSetTab(\'order\')">Shopify order</button>'
+    + '<button type="button" class="' + (L.tab === 'other' ? 'on' : '') + '" onclick="lpSetTab(\'other\')">Other payment</button></div>'
+    + '<div id="lpBody">' + lpBodyHtml() + '</div>'
+    + lpSettleHtml()
+    + '<div class="inv-foot"><button class="btn" onclick="closeModal()">Cancel</button>'
+    + '<button class="btn btn-primary" id="lpSubmit" onclick="lpSubmit()"' + (lpCanSubmit() ? '' : ' disabled') + '>' + lpSubmitLabel() + '</button></div>'
+    + '</div>';
+}
+
+function lpSetTab(tab){
+  lpCapture(); S.lp.tab = tab; S.lp.err = '';
+  openModal(renderLinkPaymentModal());
+  setTimeout(function(){ const f = document.getElementById(tab === 'order' ? 'lpQuery' : 'lpAmount'); if(f && !isPhone()) f.focus(); }, 60);
+}
+window.lpSetTab = lpSetTab;
+
+async function lpLookup(){
+  lpCapture();
+  const L = S.lp; if(!L || L.busy) return;
+  if(!String(L.query).trim()){ L.err = 'Enter an order number like #4321, or paste the order link from Shopify.'; L.order = null; document.getElementById('lpResult').innerHTML = lpResultHtml(); lpRefreshFoot(); return; }
+  L.busy = true; L.err = ''; L.order = null; L.ack = false;
+  document.getElementById('lpResult').innerHTML = lpResultHtml();
+  const find = document.getElementById('lpFind'); if(find){ find.disabled = true; find.textContent = 'Looking...'; }
+  lpRefreshFoot();
+  try{
+    const res = await callLinkPayment({ action: 'lookup_order', application_id: L.appId, query: L.query.trim() });
+    if(!S.lp || S.lp !== L) return;                       // the modal was closed or reopened meanwhile
+    if(!res.success) L.err = res.error || 'Lookup failed';
+    else L.order = res;
+  }catch(e){ if(S.lp === L) L.err = e.message; }
+  if(S.lp !== L) return;
+  L.busy = false;
+  const out = document.getElementById('lpResult'); if(out) out.innerHTML = lpResultHtml();
+  const find2 = document.getElementById('lpFind'); if(find2){ find2.disabled = false; find2.textContent = 'Look up'; }
+  lpRefreshFoot();
+}
+window.lpLookup = lpLookup;
+
+async function lpSubmit(){
+  lpCapture();
+  const L = S.lp; if(!L || !lpCanSubmit()) return;
+  L.busy = true; lpRefreshFoot();
+  try{
+    let res;
+    if(L.tab === 'order'){
+      res = await callLinkPayment({ action: 'link_order', application_id: L.appId, order_id: L.order.order.id, settles_invoice_id: L.settles || undefined, confirm_email_mismatch: L.ack === true });
+      if(!res.success && res.code === 'email_mismatch'){
+        L.busy = false; L.err = ''; L.order = Object.assign({}, L.order, { email_matches: false, application: { email: res.application_email } });
+        document.getElementById('lpResult').innerHTML = lpResultHtml(); lpRefreshFoot();
+        toast('Please confirm this is the right customer first', true); return;
+      }
+    }else{
+      res = await callLinkPayment({ action: 'record_payment', application_id: L.appId, amount: lpAmountNum(), method: L.method, reference: L.ref || undefined, paid_on: L.paidOn || undefined, description: L.desc || undefined, settles_invoice_id: L.settles || undefined });
+    }
+    if(!res.success) throw new Error(res.error || 'Saving failed');
+    const appId = L.appId, settled = !!L.settles, name = L.tab === 'order' ? L.order.order.name : null;
+    S.lp = null; closeModal();
+    if(settled) S.unpaidInvoices = S.unpaidInvoices.filter(function(i){ return i.id !== res.invoice.id; });
+    replaceInvoiceInState(appId, res.invoice);
+    renderNav(); renderPage();
+    toast(name ? 'Order ' + name + ' linked - marked paid' : 'Payment recorded - marked paid');
+  }catch(e){
+    if(S.lp === L){ L.busy = false; lpRefreshFoot(); }
+    toast('Could not save: ' + e.message, true);
+  }
+}
+window.lpSubmit = lpSubmit;
+
+// Takes back a linked order / recorded payment that was entered by mistake (never an invoice sent from the app).
+async function unlinkOutsidePayment(appId, invoiceId){
+  const inv = (S.invoices[appId] || []).find(function(i){ return i.id === invoiceId; });
+  if(!inv) return;
+  const what = inv.source === 'manual' ? 'this recorded payment' : 'the link to ' + (inv.shopify_order_name ? 'order ' + inv.shopify_order_name : 'this order');
+  if(!confirm('Remove ' + what + ' (' + money(inv.amount) + ')? The customer will show as not having paid it. The Shopify order itself is not changed.')) return;
+  try{
+    const res = await callLinkPayment({ action: 'unlink', invoice_id: invoiceId });
+    if(!res.success) throw new Error(res.error || 'Removing failed');
+    const list = S.invoices[appId]; if(list){ const i = list.findIndex(function(x){ return x.id === invoiceId; }); if(i !== -1) list.splice(i, 1); }
+    if(S.openAppId === appId) renderPanelBody();
+    toast('Removed');
+  }catch(e){ toast('Could not remove it: ' + e.message, true); }
+}
+window.unlinkOutsidePayment = unlinkOutsidePayment;
 
 function toggleMoreMenu(btn){
   const menu = btn.nextElementSibling;
@@ -6560,6 +6852,9 @@ function describeActivity(l){
   else if(l.field_changed === 'invoice_reminder') desc = 'Payment reminder sent' + (l.new_value ? ' (' + l.new_value + ')' : '');
   else if(l.field_changed === 'invoice_cancelled') desc = 'Invoice cancelled' + (l.old_value ? ' (was ' + l.old_value + ')' : '');
   else if(l.field_changed === 'invoice_refunded') desc = 'Invoice refunded by Shopify' + (l.new_value ? ' (' + l.new_value + ')' : '');
+  else if(l.field_changed === 'invoice_linked') desc = 'Outside payment linked' + (l.new_value ? ' (' + l.new_value + ')' : '');
+  else if(l.field_changed === 'payment_recorded') desc = 'Outside payment recorded' + (l.new_value ? ' (' + l.new_value + ')' : '');
+  else if(l.field_changed === 'invoice_unlinked') desc = 'Outside payment removed' + (l.old_value ? ' (was ' + l.old_value + ')' : '');
   else if(l.field_changed === 'profile_edited') desc = 'Profile edited: ' + (l.new_value || '');
   else if(l.field_changed === 'invoice_deleted') desc = 'Invoice deleted' + (l.old_value ? ' (was ' + l.old_value + ')' : '');
   return desc;
@@ -6577,7 +6872,8 @@ function activityAccent(l){
   if(l.field_changed === 'message') return 'muted';
   if(l.field_changed === 'assigned_tuner') return 'muted';
   if(l.field_changed === 'invoice_sent') return 'yellow';
-  if(l.field_changed === 'invoice_paid') return 'teal';
+  if(l.field_changed === 'invoice_paid' || l.field_changed === 'invoice_linked' || l.field_changed === 'payment_recorded') return 'teal';
+  if(l.field_changed === 'invoice_unlinked') return 'red';
   if(l.field_changed === 'invoice_cancelled') return 'red';
   if(l.field_changed === 'invoice_refunded') return 'red';
   if(l.field_changed === 'profile_edited') return 'yellow';
