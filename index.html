@@ -928,7 +928,22 @@ details.an-pd .an-f{padding:2px 8px}
 /* brushed gunmetal on the two original carbon surfaces */
 .stat-card{background-color:#2c3237!important;background-image:linear-gradient(104deg,rgba(255,255,255,0) 30%,rgba(255,255,255,.07) 46%,rgba(255,255,255,0) 62%),linear-gradient(180deg,rgba(255,255,255,.09),rgba(255,255,255,0) 42%,rgba(0,0,0,.20)),var(--gm-tex)!important;background-size:100% 100%,100% 100%,256px 256px!important;background-position:0 0,0 0,0 0!important;background-repeat:no-repeat,no-repeat,repeat!important}
 thead{background-color:#2c3237!important;background-image:linear-gradient(104deg,rgba(255,255,255,0) 30%,rgba(255,255,255,.07) 46%,rgba(255,255,255,0) 62%),linear-gradient(180deg,rgba(255,255,255,.09),rgba(255,255,255,0) 42%,rgba(0,0,0,.20)),var(--gm-tex)!important;background-size:100% 100%,100% 100%,256px 256px!important;background-position:0 0,0 0,0 0!important;background-repeat:no-repeat,no-repeat,repeat!important}
-</style></head>
+</style><style id="tgk-msg-composer">
+/* [v1.93] Messages: only the conversation scrolls; the reply box stays pinned under it. */
+#panelBody:has(#msgList){display:flex;flex-direction:column;overflow:hidden;padding-bottom:14px}
+#panelBody:has(#msgList) #msgList{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;margin-bottom:10px;padding:2px 6px 2px 0}
+#panelBody:has(#msgList) #msgList>*{flex:none}
+#panelBody:has(#msgList) #msgList>:first-child{margin-top:auto}
+.msg-composer{flex:none;border:none!important;border-top:1px solid var(--border)!important;padding:10px 0 0!important;margin:0!important}
+.msg-composer textarea{display:block;width:100%;min-height:72px;max-height:34vh;resize:vertical}
+.msg-composer-row{display:flex;align-items:center;gap:8px 14px;flex-wrap:wrap;margin-top:8px}
+.msg-composer-row select.form-input{width:auto!important;min-width:170px;max-width:230px;min-height:36px!important;padding-top:4px;padding-bottom:4px}
+.msg-composer-row .check-row{margin:0}
+.msg-composer-row .file-meta{flex:1;min-width:0}
+.msg-composer .btn-primary{margin-left:auto;min-height:38px!important;padding:0 24px!important}
+@media (max-width:760px){.msg-composer .btn-primary{min-height:44px!important}.msg-composer-row select.form-input{min-height:44px!important}}
+</style>
+</head>
 <body>
 
 <div id="auth-gate">
@@ -1024,7 +1039,7 @@ thead{background-color:#2c3237!important;background-image:linear-gradient(104deg
         </div>
         <div class="sync-sub" onclick="doLogout()">Sign out</div>
         <div class="version-row">
-          <span>v1.92</span>
+          <span>v1.93</span>
           <span id="buildDate"></span>
         </div>
       </div>
@@ -2754,6 +2769,7 @@ function renderPanelBody(opts){
   if(!el) return;
   const bg = !!(opts && opts.background), key = app.id + ':' + S.activeTab;
   const firstTime = el.dataset.rk !== key, wasBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 160;
+  const _oldList = document.getElementById('msgList'), wasBottomMsg = _oldList ? (_oldList.scrollHeight - _oldList.scrollTop - _oldList.clientHeight < 80) : true;
   if(bg && el.dataset.rk === key){
     // A live update. The reply box is NEVER rebuilt: on a phone, destroying a
     // focused box closes the keyboard (and code can't reopen it), and rewriting
@@ -2761,9 +2777,9 @@ function renderPanelBody(opts){
     // conversation above it is refreshed.
     const list = document.getElementById('msgList');
     if(S.activeTab === 'messages' && list && document.getElementById('replyBody')){
-      const atBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 60, top = el.scrollTop;
+      const atBottom = list.scrollHeight - list.scrollTop - list.clientHeight < 60, top = list.scrollTop;
       list.innerHTML = renderMessageListHtml(app);
-      el.scrollTop = atBottom ? el.scrollHeight : top;      // someone writing a reply at the bottom stays at the bottom
+      list.scrollTop = atBottom ? list.scrollHeight : top;      // reading older messages stays put; being at the bottom stays at the bottom
       const t0 = document.getElementById('panelTabs'); if(t0) t0.innerHTML = tabButtons();
       return;
     }
@@ -2786,9 +2802,9 @@ function renderPanelBody(opts){
   wireDropzones();
   el.dataset.rk = key;
   panelRestore(el, st);
-  // On a phone a conversation opens at the newest message with the reply box
-  // right under it; the same after sending, if you were already at the bottom.
-  if(!bg && S.activeTab === 'messages' && isPhone() && (firstTime || wasBottom)) el.scrollTop = el.scrollHeight;
+  // [v1.93] A conversation opens at the newest message with the reply box pinned right under it (every device);
+  // a full redraw keeps you at the bottom if you were already there.
+  if(!bg && S.activeTab === 'messages' && (firstTime || wasBottomMsg)){ const _ml = document.getElementById('msgList'); if(_ml) _ml.scrollTop = _ml.scrollHeight; }
 }
 
 function openModal(html){
@@ -4153,20 +4169,20 @@ function renderMessageListHtml(a){
 }
 
 function renderMessagesTab(a){
+  // [v1.93] The conversation scrolls on its own and the reply box stays pinned under it (see .msg-composer in the styles).
   let html = '<div class="msg-list" id="msgList">' + renderMessageListHtml(a) + '</div>';
-
-  html += '<div class="panel-foot" style="border:none;padding:0;margin-top:8px">';
+  html += '<div class="panel-foot msg-composer">';
+  const draft = replyDraftGet(a.id);
+  // (the newline after the tag is swallowed by the HTML parser, so a draft that starts with a blank line keeps it)
+  html += '<textarea class="form-input" id="replyBody" placeholder="Write a reply to the customer..." oninput="replyDraftSave(\'' + a.id + '\')">\n' + escapeHtml(draft ? draft.text : '') + '</textarea>';
+  html += '<div class="msg-composer-row">';
   if(S.templates.length){
-    html += '<select class="form-input" style="margin-bottom:8px" onchange="applyTemplate(this.value)"><option value="">Insert a template...</option>';
+    html += '<select class="form-input" onchange="applyTemplate(this.value)"><option value="">Insert a template...</option>';
     S.templates.forEach(function(t){ html += '<option value="' + t.id + '">' + escapeHtml(t.name) + '</option>'; });
     html += '</select>';
   }
-  const draft = replyDraftGet(a.id);
-  // (the newline after the tag is swallowed by the HTML parser, so a draft that starts with a blank line keeps it)
-  html += '<textarea class="form-input" id="replyBody" placeholder="Write a reply to the customer..." style="min-height:90px" oninput="replyDraftSave(\'' + a.id + '\')">\n' + escapeHtml(draft ? draft.text : '') + '</textarea>';
-  html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px">';
-  html += '<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap"><label class="check-row"><input type="checkbox" id="replyIsNote" onchange="replyDraftSave(\'' + a.id + '\')"' + (draft && draft.note ? ' checked' : '') + '> Internal note (not sent to customer)</label>'
-    + '<span class="file-meta" id="replyDraftHint">' + (draft && draft.text.trim() ? 'Draft saved' : '') + '</span></div>';
+  html += '<label class="check-row"><input type="checkbox" id="replyIsNote" onchange="replyDraftSave(\'' + a.id + '\')"' + (draft && draft.note ? ' checked' : '') + '> Internal note (not sent to customer)</label>'
+    + '<span class="file-meta" id="replyDraftHint">' + (draft && draft.text.trim() ? 'Draft saved' : '') + '</span>';
   html += '<button class="btn btn-primary" onclick="sendMessage(\'' + a.id + '\')">Send</button>';
   html += '</div></div>';
   return html;
@@ -4235,6 +4251,7 @@ async function sendMessage(appId){
     await logActivity(appId, isNote ? 'internal_note' : 'message', null, null);
     replyDraftClear(appId);          // sent: the draft is done with
     renderPanelBody();
+    { const _ml = document.getElementById('msgList'); if(_ml) _ml.scrollTop = _ml.scrollHeight; }
     toast(isNote ? 'Note saved' : 'Message sent');
   }catch(e){
     toast('Failed to send: ' + e.message, true);
